@@ -1,110 +1,87 @@
 <h1 align="center">AI Starter Templates</h1>
 
 <p align="center">
-  <em>Production-grade scaffolding for the apps AI agents build.</em>
+  <strong>SaaS starters with the boring parts already thought through.</strong><br />
+  <em>Auth, billing, an API contract, and a deploy story you can run locally, not a slideshow.</em>
+</p>
+
+<p align="center">
+  <a href="https://github.com/agjs/api-template">api-template</a> ·
+  <a href="https://github.com/agjs/ui-template">ui-template</a> ·
+  <a href="https://github.com/agjs/infra-template">infra-template</a>
 </p>
 
 ---
 
-## Why this exists
+## What you get
 
-Tools like Lovable, Replit Agent, v0, Bolt and friends are genuinely
-incredible for prototyping. You can validate an idea in hours and _see_
-your product before you commit to building it.
+Three **independent** template repos, cut from codebases that have been in production for **15 years**. Think auth, persistence, payments, email, logs, and how you actually boot the stack. The point is to stop rebuilding the same spine on every greenfield, whether a human or an agent is driving the editor.
 
-But the moment you open the generated code as a working engineer, the
-cracks show:
+- **Typed API surface.** The API publishes OpenAPI; the UI codegen keeps paths and response shapes lined up with the server.
+- **Lint that backs up the folders.** A pile of custom ESLint rules on the API and UI sides so “where does this go?” and “did we just log a secret?” are mostly mechanical questions.
+- **SaaS-shaped defaults.** Sessions, OAuth, Stripe webhooks, queues, audit trail, structured logging, env checks. Not a toy login page.
+- **Runs on your machine.** Compose for dependencies, and infra manifests when you outgrow a single box.
 
-- No domain-driven design, no separation of concerns, no DRY.
-- Tokens hard-coded in frontend code.
-- Database calls inside route handlers.
-- "Auth" that's a vibe, not an implementation.
-- Webhook handlers without signature verification.
-- Logs leaking PII straight into whatever observability stack picks them up.
+## Prototypes vs something you’d run
 
-That code is great for a demo. It is **not** code you ship to
-production. Not unless you enjoy leaking your customers' data, losing
-their money, and getting sued for it.
+Lovable, Replit Agent, v0, Bolt, and similar tools are great for **seeing** whether an idea sticks. Pain shows up when that output gets treated like finished product: keys in the browser, SQL in handlers, unsigned webhooks, “auth” that falls over under basic review, logs full of customer data.
 
-## What this is
+These repos start from the other assumption: you want defaults, a written contract for agents (`AGENT_CONTRACT.md` on the API), and a short security checklist, and you still want to move quickly.
 
-A set of starter templates I built from codebases I've been running in
-production for **15 years** — the boring, load-bearing, audited bits
-every serious app needs, distilled into three repos you can spawn from
-on day one:
+## The three repos
 
-| Repo        | What it is                                                                                                                                                                                        |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`api`**   | Bun + Elysia + Drizzle + Postgres. Auth, OAuth, Stripe billing, pluggable email, cache, queues, audit log, structured logging. Strict types. 14 custom ESLint plugins enforcing the architecture. |
-| **`ui`**    | React + Vite + TypeScript SPA shell. Auth flow wired to the API. Design tokens. _(coming next)_                                                                                                   |
-| **`infra`** | Docker Compose for local + single-host. Kustomize manifests for K3s / Kubernetes (CNPG, Vault, Traefik, cert-manager).                                                                            |
+| Repo | Role | Start here |
+| --- | --- | --- |
+| [**api-template**](https://github.com/agjs/api-template) | **Bun + Elysia + Drizzle + Postgres.** JWT cookies, bcrypt, OAuth (Google / GitHub / LinkedIn), pluggable email, Stripe billing, cache, BullMQ, audit log, Pino, CSP/CORS/rate limits, Docker image. **14** custom ESLint plugins. | [README](https://github.com/agjs/api-template#readme) · [AGENT_CONTRACT.md](https://github.com/agjs/api-template/blob/main/AGENT_CONTRACT.md) · [SECURITY.md](https://github.com/agjs/api-template/blob/main/SECURITY.md) |
+| [**ui-template**](https://github.com/agjs/ui-template) | **Vite + React + TypeScript** SPA: React Router, TanStack Query, Zustand, shadcn/ui, Tailwind tokens, **openapi-typescript** + **openapi-fetch** from the API (`pnpm generate:api`), MSW, Vitest, Playwright, Storybook, Sentry. **6** ESLint plugins, same architectural family as the API. | [README](https://github.com/agjs/ui-template#readme) |
+| [**infra-template**](https://github.com/agjs/infra-template) | **Docker Compose** for local and small single-host setups; **Kustomize** toward K3s/Kubernetes (CNPG, Vault, Traefik, cert-manager). | [README](https://github.com/agjs/infra-template#readme) |
 
-The three are **deliberately decoupled**. Not a monolith. Not a
-mega-repo. Each one stands alone, has its own CI, and ships its own
-contract.
+Each repo is its own clone with its own CI and merge bar. No monolith, no accidental 50k-line context window.
 
-## Why decoupled
+## How they fit together
 
-- **Smaller context per task.** Editing a route handler shouldn't pull
-  K3s manifests into the agent's window. Tweaking ingress shouldn't
-  load the Drizzle schema. Sharper context, cheaper tokens.
-- **Independent change cadence.** Bumping Postgres or rolling out a
-  Traefik middleware doesn't touch the API codebase. Shipping an API
-  release doesn't rebuild the UI bundle.
-- **Reusable across projects.** The infra repo applies to the next
-  product you spin up. So does the API auth flow. Coupling them once
-  means disentangling them every time.
+Infra brings up what the API expects (Postgres and Redis in the Compose path from the API README). The API owns the domain and exports **OpenAPI** (Swagger while developing). The UI treats that file as truth: regenerate types when the server changes and let TypeScript argue with you before users do.
 
-Three repos, three contracts, three independent CI runs. Each one
-stays small enough to fit comfortably in an agent's working memory.
-
-## The token-cost argument
-
-The other reason: **tokens are expensive**.
-
-Every time you start a new project with an AI agent, it re-implements
-the same infrastructure from scratch. Auth, sessions, password reset,
-email verification, OAuth handshakes, Stripe webhooks, rate limiting,
-secret validation, cache layers — the same scaffolding, every time,
-tokens burning.
-
-The honest truth is that the **majority** of code an AI writes for
-a typical SaaS is boilerplate: the same auth flow, the same email
-provider integration, the same Stripe setup, the same set of admin
-endpoints. You don't want to pay for that to be regenerated on every
-new project.
-
-You want the agent to focus on **your product** — the differentiated
-part — and treat the rest as a solved problem.
-
-That's what this is for.
-
-## How to use it
-
-Click **"Use this template"** on each of the three repos to spawn your
-own copy. They're set up to live as siblings:
-
+```mermaid
+flowchart LR
+  infraNode[Infra]
+  apiNode[API]
+  uiNode[UI]
+  infraNode -->|postgres_redis| apiNode
+  apiNode -->|openapi| uiNode
 ```
+
+Hit **Use this template** on each GitHub repo, then lay the checkouts out as siblings (rename folders if you want shorter paths):
+
+```text
 your-project/
-├── api/
-├── infra/
-└── ui/
+├── api/      # from api-template
+├── infra/    # from infra-template
+└── ui/       # from ui-template
 ```
 
-Then read the `README.md` in each. The `api` repo has the most depth —
-14 ESLint plugins, an `AGENT_CONTRACT.md` for AI agents, a
-`SECURITY.md` checklist, and a strict separation between routes /
-services / schemas / types that lint enforces automatically.
+Skim each `README.md`. The API repo is the heaviest read (plugins, agent contract, security list).
+
+## Why three repos (and fewer wasted tokens)
+
+Smaller context per task: editing a route shouldn’t drag in Kustomize patches; fiddling Traefik shouldn’t load the Drizzle schema.
+
+Infra, API, and UI can move on different schedules. A Postgres bump doesn’t need to ship with a UI tweak.
+
+Most “new SaaS” code is the same wiring repeated. Put that wiring in templates once, then spend the budget on the parts that are actually yours.
+
+## Community
+
+Stack and pattern questions: **[Discussions](https://github.com/agjs/ai-starter-templates/discussions)** on `ai-starter-templates`.
 
 ## Status
 
-| Repo    | Status                                                                        |
-| ------- | ----------------------------------------------------------------------------- |
-| `api`   | ✅ Ready — auth, billing, email, OAuth, queues, audit log, structured logging |
-| `infra` | ✅ Ready — Compose + K3s/Kustomize with CNPG, Vault, Traefik                  |
-| `ui`    | 🚧 In progress                                                                |
+| Repo | Status |
+| --- | --- |
+| [api-template](https://github.com/agjs/api-template) | Ready: auth, billing, email, OAuth, queues, audit log, structured logging, OpenAPI |
+| [ui-template](https://github.com/agjs/ui-template) | Ready: SPA shell, contract-typed client, tests, E2E, Storybook |
+| [infra-template](https://github.com/agjs/infra-template) | Ready: Compose + Kustomize (CNPG, Vault, Traefik, cert-manager) |
 
 ## License
 
-Each repo is MIT. Use them, fork them, instantiate them, change them
-— just don't blame me when your `.env` ends up on GitHub anyway.
+MIT on each template. Fork, rename, use it. Keep secrets out of git.
