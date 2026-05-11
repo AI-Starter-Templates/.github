@@ -8,7 +8,7 @@
 <p align="center">
   <a href="https://github.com/AI-Starter-Templates/api-template">api-template</a> ·
   <a href="https://github.com/AI-Starter-Templates/ui-template">ui-template</a> ·
-  <a href="https://github.com/AI-Starter-Templates/infrastructure-template">infrastructure-template</a>
+  <a href="https://github.com/AI-Starter-Templates/infra-docker-compose-template">infra-docker-compose-template</a>
 </p>
 
 ---
@@ -20,7 +20,7 @@ Three **independent** template repos, cut from codebases that have been in produ
 - **Typed API surface.** The API publishes OpenAPI; the UI codegen keeps paths and response shapes lined up with the server.
 - **Lint that backs up the folders.** A pile of custom ESLint rules on the API and UI sides so “where does this go?” and “did we just log a secret?” are mostly mechanical questions.
 - **SaaS-shaped defaults.** Sessions, OAuth, Stripe webhooks, queues, audit trail, structured logging, env checks. Not a toy login page.
-- **Runs on your machine.** Compose for dependencies, and infra manifests when you outgrow a single box.
+- **Runs on your machine.** [infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template) gives Postgres, Redis, and Traefik for local or single-VPS flows. A **separate** K3s-focused repo is planned so Compose and cluster manifests never share one mega-repo.
 
 ## Prototypes vs Production
 
@@ -34,29 +34,29 @@ These repos start from the other assumption: you want defaults, a written contra
 | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [**api-template**](https://github.com/AI-Starter-Templates/api-template)     | **Bun + Elysia + Drizzle + Postgres.** JWT cookies, bcrypt, OAuth (Google / GitHub / LinkedIn), pluggable email, Stripe billing, cache, BullMQ, audit log, Pino, CSP/CORS/rate limits, Docker image. **14** custom ESLint plugins.                                                           | [README](https://github.com/AI-Starter-Templates/api-template#readme) · [AGENT_CONTRACT.md](https://github.com/AI-Starter-Templates/api-template/blob/main/AGENT_CONTRACT.md) · [SECURITY.md](https://github.com/AI-Starter-Templates/api-template/blob/main/SECURITY.md) |
 | [**ui-template**](https://github.com/AI-Starter-Templates/ui-template)       | **Vite + React + TypeScript** SPA: React Router, TanStack Query, Zustand, shadcn/ui, Tailwind tokens, **openapi-typescript** + **openapi-fetch** from the API (`pnpm generate:api`), MSW, Vitest, Playwright, Storybook, Sentry. **6** ESLint plugins, same architectural family as the API. | [README](https://github.com/AI-Starter-Templates/ui-template#readme)                                                                                                                                                                      |
-| [**infrastructure-template**](https://github.com/AI-Starter-Templates/infrastructure-template) | **Docker Compose** for local and small single-host setups; **Kustomize** toward K3s/Kubernetes (CNPG, Vault, Traefik, cert-manager).                                                                                                                                                         | [README](https://github.com/AI-Starter-Templates/infrastructure-template#readme)                                                                                                                                                                   |
+| [**infra-docker-compose-template**](https://github.com/AI-Starter-Templates/infra-docker-compose-template) | **Docker Compose + Traefik v3:** Postgres, Redis, dev routing to host-run API/UI, prod profile with ACME, optional Prometheus/Grafana, runbooks (backups, firewall, hardening). **K3s/Kustomize** will ship in its **own** template repo later, not mixed here.                                | [README](https://github.com/AI-Starter-Templates/infra-docker-compose-template#readme)                                                                                                                                                                   |
 
 Each repo is its own clone with its own CI and merge bar. No monolith, no accidental 50k-line context window.
 
 ## How they fit together
 
-Infra brings up what the API expects (Postgres and Redis in the Compose path from the API README). The API owns the domain and exports **OpenAPI** (Swagger while developing). The UI treats that file as truth: regenerate types when the server changes and let TypeScript argue with you before users do.
+[infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template) brings up what the API expects (Postgres and Redis in Compose). The API owns the domain and exports **OpenAPI** (Swagger while developing). The UI treats that file as truth: regenerate types when the server changes and let TypeScript argue with you before users do.
 
 ```mermaid
 flowchart LR
-  infraNode[Infra]
+  composeNode[Compose_infra]
   apiNode[API]
   uiNode[UI]
-  infraNode -->|postgres_redis| apiNode
+  composeNode -->|postgres_redis| apiNode
   apiNode -->|openapi| uiNode
 ```
 
-Hit **Use this template** on each GitHub repo, then lay the checkouts out as siblings (rename folders if you want shorter paths):
+Hit **Use this template** on each GitHub repo, then lay the checkouts out as siblings. The API README assumes the Compose repo lives next to it as **`infra`** (rename the clone if you want that path):
 
 ```text
 your-project/
 ├── api/      # from api-template
-├── infra/    # from infrastructure-template
+├── infra/    # from infra-docker-compose-template (rename clone to "infra" for ../infra/compose)
 └── ui/       # from ui-template
 ```
 
@@ -64,7 +64,7 @@ Skim each `README.md`. The API repo is the heaviest read (plugins, agent contrac
 
 ## Why three repos (and fewer wasted tokens)
 
-Smaller context per task: editing a route shouldn’t drag in Kustomize patches; fiddling Traefik shouldn’t load the Drizzle schema.
+Smaller context per task: editing a route shouldn’t drag in Compose overlays or cluster YAML; tuning Traefik shouldn’t load the Drizzle schema.
 
 Infra, API, and UI can move on different schedules. A Postgres bump doesn’t need to ship with a UI tweak.
 
@@ -80,7 +80,7 @@ Stack and pattern questions: **[Org discussions](https://github.com/orgs/AI-Star
 | -------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | [api-template](https://github.com/AI-Starter-Templates/api-template)     | Ready: auth, billing, email, OAuth, queues, audit log, structured logging, OpenAPI |
 | [ui-template](https://github.com/AI-Starter-Templates/ui-template)       | Ready: SPA shell, contract-typed client, tests, E2E, Storybook                     |
-| [infrastructure-template](https://github.com/AI-Starter-Templates/infrastructure-template) | Ready: Compose + Kustomize (CNPG, Vault, Traefik, cert-manager)                    |
+| [infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template) | Ready: Compose, Traefik, Postgres, Redis, optional observability, runbooks |
 
 ## License
 
