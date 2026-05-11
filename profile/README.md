@@ -6,9 +6,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/agjs/api-template">api-template</a> ·
-  <a href="https://github.com/agjs/ui-template">ui-template</a> ·
-  <a href="https://github.com/agjs/infra-template">infra-template</a>
+  <a href="https://github.com/AI-Starter-Templates/api-template">api-template</a> ·
+  <a href="https://github.com/AI-Starter-Templates/ui-template">ui-template</a> ·
+  <a href="https://github.com/AI-Starter-Templates/infrastructure-template">infrastructure-template</a>
 </p>
 
 ---
@@ -32,9 +32,9 @@ These repos start from the other assumption: you want defaults, a written contra
 
 | Repo                                                         | Role                                                                                                                                                                                                                                                                                         | Start here                                                                                                                                                                                                                |
 | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**api-template**](https://github.com/agjs/api-template)     | **Bun + Elysia + Drizzle + Postgres.** JWT cookies, bcrypt, OAuth (Google / GitHub / LinkedIn), pluggable email, Stripe billing, cache, BullMQ, audit log, Pino, CSP/CORS/rate limits, Docker image. **14** custom ESLint plugins.                                                           | [README](https://github.com/agjs/api-template#readme) · [AGENT_CONTRACT.md](https://github.com/agjs/api-template/blob/main/AGENT_CONTRACT.md) · [SECURITY.md](https://github.com/agjs/api-template/blob/main/SECURITY.md) |
-| [**ui-template**](https://github.com/agjs/ui-template)       | **Vite + React + TypeScript** SPA: React Router, TanStack Query, Zustand, shadcn/ui, Tailwind tokens, **openapi-typescript** + **openapi-fetch** from the API (`pnpm generate:api`), MSW, Vitest, Playwright, Storybook, Sentry. **6** ESLint plugins, same architectural family as the API. | [README](https://github.com/agjs/ui-template#readme)                                                                                                                                                                      |
-| [**infra-template**](https://github.com/agjs/infra-template) | **Docker Compose** for local and small single-host setups; **Kustomize** toward K3s/Kubernetes (CNPG, Vault, Traefik, cert-manager).                                                                                                                                                         | [README](https://github.com/agjs/infra-template#readme)                                                                                                                                                                   |
+| [**api-template**](https://github.com/AI-Starter-Templates/api-template)     | **Bun + Elysia + Drizzle + Postgres.** JWT cookies, bcrypt, OAuth (Google / GitHub / LinkedIn), pluggable email, Stripe billing, cache, BullMQ, audit log, Pino, CSP/CORS/rate limits, Docker image. **14** custom ESLint plugins.                                                           | [README](https://github.com/AI-Starter-Templates/api-template#readme) · [AGENT_CONTRACT.md](https://github.com/AI-Starter-Templates/api-template/blob/main/AGENT_CONTRACT.md) · [SECURITY.md](https://github.com/AI-Starter-Templates/api-template/blob/main/SECURITY.md) |
+| [**ui-template**](https://github.com/AI-Starter-Templates/ui-template)       | **Vite + React + TypeScript** SPA: React Router, TanStack Query, Zustand, shadcn/ui, Tailwind tokens, **openapi-typescript** + **openapi-fetch** from the API (`pnpm generate:api`), MSW, Vitest, Playwright, Storybook, Sentry. **6** ESLint plugins, same architectural family as the API. | [README](https://github.com/AI-Starter-Templates/ui-template#readme)                                                                                                                                                                      |
+| [**infrastructure-template**](https://github.com/AI-Starter-Templates/infrastructure-template) | **Docker Compose** for local and small single-host setups; **Kustomize** toward K3s/Kubernetes (CNPG, Vault, Traefik, cert-manager).                                                                                                                                                         | [README](https://github.com/AI-Starter-Templates/infrastructure-template#readme)                                                                                                                                                                   |
 
 Each repo is its own clone with its own CI and merge bar. No monolith, no accidental 50k-line context window.
 
@@ -56,7 +56,7 @@ Hit **Use this template** on each GitHub repo, then lay the checkouts out as sib
 ```text
 your-project/
 ├── api/      # from api-template
-├── infra/    # from infra-template
+├── infra/    # from infrastructure-template
 └── ui/       # from ui-template
 ```
 
@@ -72,15 +72,15 @@ Most “new SaaS” code is the same wiring repeated. Put that wiring in templat
 
 ## Community
 
-Stack and pattern questions: **[Discussions](https://github.com/agjs/ai-starter-templates/discussions)** on `ai-starter-templates`.
+Stack and pattern questions: **[Org discussions](https://github.com/orgs/AI-Starter-Templates/discussions)** or the [org home](https://github.com/AI-Starter-Templates).
 
 ## Status
 
 | Repo                                                     | Status                                                                             |
 | -------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| [api-template](https://github.com/agjs/api-template)     | Ready: auth, billing, email, OAuth, queues, audit log, structured logging, OpenAPI |
-| [ui-template](https://github.com/agjs/ui-template)       | Ready: SPA shell, contract-typed client, tests, E2E, Storybook                     |
-| [infra-template](https://github.com/agjs/infra-template) | Ready: Compose + Kustomize (CNPG, Vault, Traefik, cert-manager)                    |
+| [api-template](https://github.com/AI-Starter-Templates/api-template)     | Ready: auth, billing, email, OAuth, queues, audit log, structured logging, OpenAPI |
+| [ui-template](https://github.com/AI-Starter-Templates/ui-template)       | Ready: SPA shell, contract-typed client, tests, E2E, Storybook                     |
+| [infrastructure-template](https://github.com/AI-Starter-Templates/infrastructure-template) | Ready: Compose + Kustomize (CNPG, Vault, Traefik, cert-manager)                    |
 
 ## License
 
