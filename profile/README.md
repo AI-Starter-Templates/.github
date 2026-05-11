@@ -51,13 +51,13 @@ flowchart LR
   apiNode -->|openapi| uiNode
 ```
 
-Hit **Use this template** on each GitHub repo, then lay the checkouts out as siblings. The API README assumes the Compose repo lives next to it as **`infra`** (rename the clone if you want that path):
+Hit **Use this template** on each GitHub repo, then lay the checkouts out as siblings. The API README uses **`../infra-docker-compose-template/compose`** from a sibling clone of that repo.
 
 ```text
 your-project/
-├── api/      # from api-template
-├── infra/    # from infra-docker-compose-template (rename clone to "infra" for ../infra/compose)
-└── ui/       # from ui-template
+├── api/                              # from api-template
+├── infra-docker-compose-template/    # from AI-Starter-Templates/infra-docker-compose-template
+└── ui/                               # from ui-template
 ```
 
 Skim each `README.md`. The API repo is the heaviest read (plugins, agent contract, security list).
