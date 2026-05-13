@@ -22,6 +22,20 @@ Three **independent** template repos, cut from codebases that have been in produ
 - **SaaS-shaped defaults.** Sessions, OAuth, Stripe webhooks, queues, audit trail, structured logging, env checks. Not a toy login page.
 - **Runs on your machine.** [infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template) gives Postgres, Redis, and Traefik for local or single-VPS flows. A **separate** K3s-focused repo is planned so Compose and cluster manifests never share one mega-repo.
 
+## What we optimize for
+
+### Minimal cost to run and maintain (COGS)
+
+The templates bias toward **open source** and **self-hosted** building blocks for the spine—database, cache, queue, reverse proxy, and how you boot the stack with [infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template) (and K8s paths later)—so recurring **vendor spend and surprise line items** stay low and as much of the **data plane** as possible runs on primitives you control.
+
+### Maturity
+
+Core infra is **battle-tested for years**: **Postgres**, **Redis**, **Traefik**, standard Docker workflows—not experimental hosted-only databases or bespoke orchestration for your system of record.
+
+### Ownership
+
+**No vendor lock-in** on that core: you run the infra, you hold the data, and there are **no hidden platform fees** for those layers. **Stripe** (billing) and **optional observability** (e.g. **Sentry** in the UI template) are integrations you can swap or self-host later; defaults still favor boring, portable foundations where it matters most.
+
 ## Prototypes vs Production
 
 Lovable, Replit Agent, v0, Bolt, and similar tools are great for **seeing** whether an idea sticks. Pain shows up when that output gets treated like finished product: keys in the browser, SQL in handlers, unsigned webhooks, “auth” that falls over under basic review, logs full of customer data.
@@ -30,17 +44,17 @@ These repos start from the other assumption: you want defaults, a written contra
 
 ## The three repos
 
-| Repo                                                         | Role                                                                                                                                                                                                                                                                                         | Start here                                                                                                                                                                                                                |
-| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**api-template**](https://github.com/AI-Starter-Templates/api-template)     | **Bun + Elysia + Drizzle + Postgres.** JWT cookies, bcrypt, OAuth (Google / GitHub / LinkedIn), pluggable email, Stripe billing, cache, BullMQ, audit log, Pino, CSP/CORS/rate limits, Docker image. **14** custom ESLint plugins.                                                           | [README](https://github.com/AI-Starter-Templates/api-template#readme) · [AGENT_CONTRACT.md](https://github.com/AI-Starter-Templates/api-template/blob/main/AGENT_CONTRACT.md) · [SECURITY.md](https://github.com/AI-Starter-Templates/api-template/blob/main/SECURITY.md) |
-| [**ui-template**](https://github.com/AI-Starter-Templates/ui-template)       | **Vite + React + TypeScript** SPA: React Router, TanStack Query, Zustand, shadcn/ui, Tailwind tokens, **openapi-typescript** + **openapi-fetch** from the API (`pnpm generate:api`), MSW, Vitest, Playwright, Storybook, Sentry. **6** ESLint plugins, same architectural family as the API. | [README](https://github.com/AI-Starter-Templates/ui-template#readme)                                                                                                                                                                      |
-| [**infra-docker-compose-template**](https://github.com/AI-Starter-Templates/infra-docker-compose-template) | **Docker Compose + Traefik v3:** Postgres, Redis, dev routing to host-run API/UI, prod profile with ACME, optional Prometheus/Grafana, runbooks (backups, firewall, hardening). **K3s/Kustomize** will ship in its **own** template repo later, not mixed here.                                | [README](https://github.com/AI-Starter-Templates/infra-docker-compose-template#readme)                                                                                                                                                                   |
+| Repo                                                                                                       | Role                                                                                                                                                                                                                                                                                                 | Start here                                                                                                                                                                                                                                                                |
+| ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [**api-template**](https://github.com/AI-Starter-Templates/api-template)                                   | **Bun + Elysia + Drizzle + Postgres.** JWT cookies, bcrypt, OAuth (Google / GitHub / LinkedIn), pluggable email, Stripe billing, cache, BullMQ, audit log, Pino, CSP/CORS/rate limits, Docker image. **14** custom ESLint plugins.                                                                   | [README](https://github.com/AI-Starter-Templates/api-template#readme) · [AGENT_CONTRACT.md](https://github.com/AI-Starter-Templates/api-template/blob/main/AGENT_CONTRACT.md) · [SECURITY.md](https://github.com/AI-Starter-Templates/api-template/blob/main/SECURITY.md) |
+| [**ui-template**](https://github.com/AI-Starter-Templates/ui-template)                                     | **Vite + React + TypeScript** SPA: React Router, TanStack Query, Zustand, shadcn/ui, Tailwind tokens, **openapi-typescript** + **openapi-fetch** from the API (`pnpm generate:api`), MSW, Vitest, Playwright, Storybook, Sentry. **6** ESLint plugins, same architectural family as the API.         | [README](https://github.com/AI-Starter-Templates/ui-template#readme)                                                                                                                                                                                                      |
+| [**infra-docker-compose-template**](https://github.com/AI-Starter-Templates/infra-docker-compose-template) | **Docker Compose + Traefik v3:** Postgres, Redis, **dev stack runs API + UI in Compose** (bind mounts for hot reload), prod profile with ACME, optional Prometheus/Grafana, runbooks (backups, firewall, hardening). **K3s/Kustomize** will ship in its **own** template repo later, not mixed here. | [README](https://github.com/AI-Starter-Templates/infra-docker-compose-template#readme)                                                                                                                                                                                    |
 
 Each repo is its own clone with its own CI and merge bar. No monolith, no accidental 50k-line context window.
 
 ## How they fit together
 
-[infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template) brings up what the API expects (Postgres and Redis in Compose). The API owns the domain and exports **OpenAPI** (Swagger while developing). The UI treats that file as truth: regenerate types when the server changes and let TypeScript argue with you before users do.
+[infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template) brings up Postgres, Redis, Traefik, and **containerized** API/UI in dev (or production images when you use the prod profile). The API owns the domain and exports **OpenAPI** (Swagger while developing). The UI treats that file as truth: regenerate types when the server changes and let TypeScript argue with you before users do.
 
 ```mermaid
 flowchart LR
@@ -76,11 +90,11 @@ Stack and pattern questions: **[Org discussions](https://github.com/orgs/AI-Star
 
 ## Status
 
-| Repo                                                     | Status                                                                             |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| [api-template](https://github.com/AI-Starter-Templates/api-template)     | Ready: auth, billing, email, OAuth, queues, audit log, structured logging, OpenAPI |
-| [ui-template](https://github.com/AI-Starter-Templates/ui-template)       | Ready: SPA shell, contract-typed client, tests, E2E, Storybook                     |
-| [infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template) | Ready: Compose, Traefik, Postgres, Redis, optional observability, runbooks |
+| Repo                                                                                                   | Status                                                                             |
+| ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| [api-template](https://github.com/AI-Starter-Templates/api-template)                                   | Ready: auth, billing, email, OAuth, queues, audit log, structured logging, OpenAPI |
+| [ui-template](https://github.com/AI-Starter-Templates/ui-template)                                     | Ready: SPA shell, contract-typed client, tests, E2E, Storybook                     |
+| [infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template) | Ready: Compose, Traefik, Postgres, Redis, optional observability, runbooks         |
 
 ## License
 
