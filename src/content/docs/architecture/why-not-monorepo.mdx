@@ -1,0 +1,18 @@
+---
+title: Why not a monorepo?
+description: Three repos vs. one mega-repo — the trade-off we made and why.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+BoringStack is three separate repos (api, ui, infra) instead of one monorepo. The short version: independent release cadences, narrower CI, and zero "which package am I in?" confusion. The long version lives in the parent README for now.
+
+<Aside type="note" title="Coming soon">
+  This page will cover the full trade-off: when monorepos make sense, when
+  they don't, how the three-repo split keeps CI lean, and how the
+  OpenAPI-as-contract pattern removes most of the coordination pain.
+
+  Current source-of-truth: the [parent
+  README](https://github.com/AI-Starter-Templates/.github) and the
+  [Three-repo split](/architecture/three-repos/) page.
+</Aside>

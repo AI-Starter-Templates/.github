@@ -1,0 +1,17 @@
+---
+title: Testing
+description: Vitest for units, Testing Library for components, Playwright for end-to-end with visual baselines.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+The ui-template ships three test layers: Vitest for pure logic, Testing Library for component behavior, and Playwright for end-to-end (including visual baselines via `pnpm e2e:visual:update`).
+
+<Aside type="note" title="Coming soon">
+  Full reference will cover: where each layer earns its keep, how to
+  write a component test that survives a refactor, the visual-baseline
+  workflow, and how `pnpm validate` ties it all to the merge gate.
+
+  Current source-of-truth: `tests/` and `e2e/` in the [ui-template
+  repo](https://github.com/AI-Starter-Templates/ui-template).
+</Aside>

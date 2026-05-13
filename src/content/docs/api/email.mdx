@@ -1,0 +1,20 @@
+---
+title: Email
+description: Pluggable email service — Cloudflare Email Service by default, with Resend and SendGrid implementations.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+The api-template ships an `IEmailService` abstraction with three concrete implementations: Cloudflare (default), Resend, and SendGrid. Provider selection is a single env var; in dev with no keys, a noop provider logs the rendered payload to stdout.
+
+<Aside type="note" title="Coming soon">
+  Full reference will cover: the `IEmailService` interface, retry +
+  backoff behavior, template rendering (`build:templates`), provider
+  capability differences, and how to add a fourth provider.
+
+  Cloudflare specifics live on the [Cloudflare Email
+  Service](/topics/cloudflare-email/) page.
+
+  Current source-of-truth: `src/lib/email/` in the [api-template
+  repo](https://github.com/AI-Starter-Templates/api-template/tree/main/src/lib/email).
+</Aside>

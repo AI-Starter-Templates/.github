@@ -1,0 +1,18 @@
+---
+title: OpenAPI client
+description: Typed API client auto-generated from the API's `/swagger/json` — no hand-written fetch wrappers.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+The ui-template's API client is generated from the api-template's live OpenAPI schema via `openapi-typescript` + `openapi-fetch`. Run `pnpm generate:api` and you get a fully typed `client.GET("/path/:id")` surface. No drift, no hand-edited types.
+
+<Aside type="note" title="Coming soon">
+  Full reference will cover: the generation pipeline, when to
+  regenerate, how to handle breaking API changes during development,
+  and the typed-response patterns that pair with TanStack Query.
+
+  Current source-of-truth: `src/lib/api/` and the `generate:api`
+  script in [ui-template's
+  package.json](https://github.com/AI-Starter-Templates/ui-template/blob/main/package.json).
+</Aside>

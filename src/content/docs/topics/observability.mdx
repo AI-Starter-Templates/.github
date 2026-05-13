@@ -1,0 +1,19 @@
+---
+title: Observability
+description: Prometheus + Grafana + Loki + Promtail overlay, with exporters for Postgres, Redis, and Traefik.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+`WITH_OBSERVABILITY=1` brings up the metrics + logs stack: Prometheus scrapes the API and service exporters, Grafana renders pre-provisioned dashboards, Loki + Promtail tail container logs. Zero per-event cost; lives on the same host.
+
+<Aside type="note" title="Coming soon">
+  Full reference will cover: the scrape config, the bundled
+  dashboards, alert routing via Alertmanager, log labels and how to
+  filter in Grafana, and how to add a custom metric from the API.
+
+  Current source-of-truth: `compose/docker-compose.observability.yml`,
+  `compose/prometheus/`, `compose/grafana/`, and `compose/promtail/`
+  in the [infra-docker-compose-template
+  repo](https://github.com/AI-Starter-Templates/infra-docker-compose-template/tree/main/compose).
+</Aside>

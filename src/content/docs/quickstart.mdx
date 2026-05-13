@@ -1,0 +1,94 @@
+---
+title: Quickstart
+description: Clone three repos, run a script, log in. Five minutes from zero to a working full-stack.
+---
+
+import { Steps, Aside } from "@astrojs/starlight/components";
+
+This walks you from nothing to a logged-in dashboard, locally, in about five minutes. You'll end up with Postgres, Redis, Traefik, the API, and the UI all running under Docker, with a seeded demo user you can sign in as.
+
+## Prerequisites
+
+- **Docker** + **Docker Compose v2** (`docker compose version` should print `v2.x` or newer).
+- **Git** with access to the [`AI-Starter-Templates`](https://github.com/AI-Starter-Templates) repos.
+- About 4 GB of free RAM for the dev stack.
+
+You don't need Node or Bun locally for the quickstart — the dev stack runs everything inside containers.
+
+## Clone the three repos as siblings
+
+The infra `docker-compose.yml` references the API + UI repos via relative paths (`../../api-template`, `../../ui-template`). All three must be siblings under one parent directory.
+
+```bash
+mkdir boringstack && cd boringstack
+
+git clone https://github.com/AI-Starter-Templates/api-template
+git clone https://github.com/AI-Starter-Templates/ui-template
+git clone https://github.com/AI-Starter-Templates/infra-docker-compose-template
+```
+
+<Aside type="tip" title="Optional: setup.sh">
+  The parent repo ships a `setup.sh` that bootstraps `compose/.env`, generates a
+  `GLITCHTIP_SECRET_KEY`, and (with `--up`) boots the stack. Skip if you prefer
+  to do the steps by hand.
+</Aside>
+
+## Boot the dev stack
+
+<Steps>
+
+1. Seed the compose env:
+
+   ```bash
+   cd infra-docker-compose-template/compose
+   cp .env.example .env
+   ```
+
+2. Make the scripts executable:
+
+   ```bash
+   chmod +x dev.sh ../scripts/*.sh
+   ```
+
+3. Boot:
+
+   ```bash
+   ./dev.sh up -d --build
+   ```
+
+   First boot pulls images, builds the api/ui dev images, runs migrations, and seeds the demo user. ~3 minutes on a fast laptop.
+
+</Steps>
+
+## Sign in
+
+Open **http://localhost:3001** in a browser.
+
+- **Email**: `demo@example.com`
+- **Password**: `password123`
+
+You should land on the dashboard with real counts of users + widgets pulled from the live Postgres.
+
+## What just happened
+
+| Service       | Where it lives              | What it does                                                |
+| ------------- | --------------------------- | ----------------------------------------------------------- |
+| `postgres`    | container, host port 5432   | App database with `auth`, `billing`, `audit`, `app` schemas |
+| `redis`       | container, host port 6379   | Cache + BullMQ queues                                       |
+| `traefik`     | container, host port 80/443 | Routes `api.localhost` → api, `app.localhost` → ui          |
+| `api-migrate` | one-shot                    | Ran `db:push` + seeded the demo user, then exited           |
+| `api-dev`     | container, host port 3000   | The Bun + Elysia API (hot-reload via bind mount)            |
+| `ui-dev`      | container, host port 3001   | Vite dev server (hot-reload via bind mount)                 |
+
+## Common next steps
+
+- **Add observability**: `WITH_OBSERVABILITY=1 ./dev.sh up -d` brings up Prometheus, Grafana, Loki, Promtail. See [Observability](/topics/observability/).
+- **Add self-hosted error tracking**: `WITH_GLITCHTIP=1 ./dev.sh up -d` adds GlitchTip. See [Error tracking](/topics/error-tracking/).
+- **Move to production**: read [Deployment](/topics/deployment/) for the prod profile + ACME + secrets.
+
+## Stop the stack
+
+| Task               | Command                           | Data preserved?                     |
+| ------------------ | --------------------------------- | ----------------------------------- |
+| Stop, keep data    | `./scripts/compose-down.sh`       | ✅                                  |
+| Stop and wipe data | `./scripts/compose-down-clean.sh` | ❌ (prompts; `CONFIRM=yes` to skip) |

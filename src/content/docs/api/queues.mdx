@@ -1,0 +1,18 @@
+---
+title: Queues
+description: BullMQ on Redis for background jobs, with an optional Bull-board dashboard overlay.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+Background work uses BullMQ over the same Redis the cache lives on. The infra template ships an optional Bull-board overlay (`WITH_BULLMQ=1`) for inspecting jobs at `bullmq.localhost`.
+
+<Aside type="note" title="Coming soon">
+  Full reference will cover: queue registration, worker patterns,
+  retry/backoff policy, dead-letter handling, idempotency expectations,
+  and graceful shutdown.
+
+  Current source-of-truth: `src/lib/queues/` in the [api-template
+  repo](https://github.com/AI-Starter-Templates/api-template/tree/main/src/lib/queues)
+  and the BullMQ overlay in [infra-docker-compose-template/compose/docker-compose.bullmq.yml](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/compose/docker-compose.bullmq.yml).
+</Aside>

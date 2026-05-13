@@ -1,0 +1,20 @@
+---
+title: Architecture rules
+description: Custom ESLint plugins that enforce the route/service/types split and module boundaries.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+The ui-template (and api-template) ship custom ESLint plugins that make the architecture self-enforcing: `resource-architecture` keeps routes thin, `module-boundaries/single-semantic-module` prevents mixed-concern files, and a handful of smaller rules block common foot-guns.
+
+<Aside type="note" title="Coming soon">
+  Full reference will cover: every rule's purpose, what triggers it,
+  how to fix violations, and when to write a new rule vs. accept a
+  one-off exception.
+
+  Current source-of-truth: `eslint-plugin-resource-architecture/` and
+  `eslint-plugin-module-boundaries/` inside the [ui-template
+  repo](https://github.com/AI-Starter-Templates/ui-template) and
+  [api-template
+  repo](https://github.com/AI-Starter-Templates/api-template).
+</Aside>

@@ -1,0 +1,106 @@
+---
+title: API template — overview
+description: Bun + Elysia + Drizzle + Postgres + Redis + BullMQ. What's wired and where it lives.
+---
+
+import { Aside, FileTree } from "@astrojs/starlight/components";
+
+The api-template is a production-shaped HTTP API. It has the bits every SaaS rebuilds: auth, sessions, OAuth, email, queues, audit log, structured logs, an env validator that refuses to boot if anything's missing.
+
+## Directory layout
+
+<FileTree>
+- src/
+  - index.ts                      Entrypoint — listens on `PORT`
+  - config/
+    - app.ts                      Elysia app composition + middleware
+    - routes.ts                   Route group imports
+    - env/                        Env schema + validator
+    - logger.ts                   Pino setup
+    - sentry.ts                   Sentry init (Sentry-compatible, points at GlitchTip or sentry.io)
+    - error-handlers.ts           Global handlers + Sentry capture
+    - setup-queues.ts             BullMQ bootstrap
+  - api/                          Feature folders
+    - auth/                       Register/login/logout, OAuth, password reset
+    - users/                      `/me`, profile updates
+    - widgets/                    Example resource — the pattern you copy
+    - dashboard/                  Counts + recent activity
+    - billing/                    Stripe subscription
+    - admin/                      Role-gated ops
+    - health/                     `/`, `/health`, `/ready`
+  - clients/postgres/             Drizzle client + schemas
+  - lib/                          Shared utilities
+    - auth/                       Cookie helpers, JWT
+    - email/                      Provider switch + templates
+    - audit-log/                  Append-only event log
+    - ai/                         Pluggable AI provider
+    - cache/                      Memory or Redis
+    - errors/                     `ApiErrors.unauthorized()` etc.
+  - middleware/                   Per-route Elysia plugins
+  - queues/                       BullMQ job definitions
+  - templates/email/              Handlebars sources → compiled JSON
+</FileTree>
+
+## The route/service/types pattern
+
+A feature folder has three responsibilities and three matching files:
+
+<FileTree>
+- src/api/widgets/
+  - widgets.routes.ts        HTTP layer — never imports drizzle or `db`
+  - widgets.service.ts       DB + business logic — never imports `t` (Elysia)
+  - widgets.types.ts         Interfaces, shared between routes + service
+  - widgets.schemas.ts       (optional) TypeBox request/response shapes
+</FileTree>
+
+This split is **enforced by ESLint**. A `*.routes.ts` file that imports `drizzle-orm` or `../../clients/postgres` will fail `bun run lint`. Try it — it's not advice, it's a wall.
+
+```ts
+// src/api/widgets/widgets.routes.ts — fine
+import { widgetsService } from "./widgets.service";
+
+const widgetsRoutes = createAuthMiddleware()
+  .get("/", async ({ user }) => widgetsService.listForUser(user.id), { ... });
+```
+
+```ts
+// src/api/widgets/widgets.routes.ts — FAILS lint
+import { eq } from "drizzle-orm";              // ← rule fires here
+import { db } from "../../clients/postgres";   // ← and here
+```
+
+## The env validator
+
+Every process.env read goes through `src/config/env/`. The validator:
+
+- declares every var in `schema.ts` (TypeBox)
+- coerces `process.env` into the schema shape in `validate.ts`
+- runs **cross-field invariants** for prod (e.g. "if `EMAIL_PROVIDER=cloudflare`, both `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_EMAIL_API_TOKEN` must be set")
+- freezes the result and exports as `env`
+
+If anything's missing or malformed, the boot dies with a single, readable error listing every problem at once. Not the kind of bug that ships to prod.
+
+See [Env validator](/api/env-validator/) for the full breakdown.
+
+## Authentication
+
+Cookie-based sessions: register → password hash via bcryptjs → JWT signed with `JWT_SECRET` → stored in an HttpOnly cookie. OAuth is server-side (Arctic), state/verifier in Redis. See [Authentication](/api/auth/).
+
+## Email
+
+Pluggable provider. `EMAIL_PROVIDER=cloudflare` (default) sends through [Cloudflare Email Service](/topics/cloudflare-email/). `resend` and `sendgrid` are also wired. In dev with all keys empty, a noop provider logs payloads instead of sending. See [Email](/api/email/).
+
+## Queues
+
+`QUEUES_ENABLED=true` flips email send + arbitrary jobs from inline to BullMQ. The dashboard at `bullmq.localhost` (when `WITH_BULLMQ=1`) shows running/completed/failed jobs. See [Queues](/api/queues/).
+
+## Audit log
+
+Every state-changing action calls `auditLogService.record({ action, userId, metadata })` fire-and-forget. The table is append-only. The dashboard's "recent activity" surface reads from here. See [Audit log](/api/audit-log/).
+
+<Aside type="tip" title="Adding a new resource">
+  The api-template ships a scaffolder: `bun run new:resource widgets`
+  generates the route/service/types triple, wires it into
+  `src/config/routes.ts`, and adds a Drizzle migration stub. The pattern
+  is the same as `widgets.*` everywhere.
+</Aside>

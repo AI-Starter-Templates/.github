@@ -1,0 +1,100 @@
+---
+title: UI template — overview
+description: Vite + React 19 + TanStack Query + shadcn/ui + Zustand. A typed OpenAPI client, architecture rules in the lint config, full e2e via Playwright.
+---
+
+import { FileTree, Aside } from "@astrojs/starlight/components";
+
+The ui-template is a production-shaped SPA. The point of this template is not "look, a login page" — it's the **architecture rules around the login page** that make a team scale past three features without devolving into spaghetti.
+
+## Directory layout
+
+<FileTree>
+- src/
+  - app/                          App shell — providers, routes, main entry
+    - main.tsx                    Sentry init, React mount
+    - App.tsx                     Providers tree
+    - router/                     `react-router-dom` config, `ProtectedRoute`
+    - providers/                  Query/Toast/I18n/ErrorBoundary
+  - features/                     Vertical feature folders
+    - auth/                       Login, OAuth, queries, schemas
+    - dashboard/                  Real-data dashboard, hooks, queries
+    - onboarding/                 Multi-step form with sub-steps as files
+  - components/
+    - ui/                         shadcn/ui primitives (owned by shadcn conventions)
+    - core/                       Composed components
+    - global/                     App-shell wrappers (NotFoundPage, etc.)
+  - lib/
+    - api/                        openapi-fetch client + generated schema
+    - env/                        Zod-validated env + `import.meta.env`
+    - auth/                       OAuth start helper (server-side flow)
+    - logger/                     Structured client logs
+    - storage/                    Namespaced localStorage
+    - i18n/                       react-i18next setup + locales
+  - hooks/                        Cross-feature hooks
+  - store/                        App-level Zustand stores
+  - assets/                       Tailwind entry + static assets
+</FileTree>
+
+## The component anatomy
+
+A page like `DashboardPage/` is **not** a single `.tsx` file. It's a folder with one job per file, all enforced by ESLint:
+
+<FileTree>
+- src/features/dashboard/components/DashboardPage/
+  - DashboardPage.tsx              Pure JSX, no state, no queries
+  - DashboardPage.hooks.ts         All `useState`, `useEffect`, `useCallback`
+  - DashboardPage.types.ts         `IDashboardPageView` (the hook's return shape)
+  - DashboardPage.constants.ts     Literals only — no imports
+  - DashboardPage.utils.ts         Pure helpers
+  - DashboardPage.test.tsx         Component test
+  - DashboardPage.stories.tsx      Storybook
+  - StatsSection.tsx               Sub-component (if needed)
+  - StatsSection.types.ts          Its props
+  - index.ts                       Re-export
+</FileTree>
+
+The lint config rejects `useState` inside a `.tsx`, rejects component files that import `*.queries.ts` directly, rejects multi-kind modules, etc. See [Architecture rules](/ui/architecture-rules/).
+
+## State vs. server-state
+
+| Kind | Lives in | Owner |
+|---|---|---|
+| **Server state** (anything fetched) | `*.queries.ts`, consumed via `useXxx()` hooks | TanStack Query |
+| **UI / client state** (modal open, current step) | `*.store.ts` (Zustand) — feature-scoped | Zustand |
+| **Form state** | `*.hooks.ts` with React Hook Form + Zod | RHF |
+| **Render state** (purely computed) | `*.hooks.ts` returning `IXxxView` | none |
+
+Components only see the **view object** from their hook. They never read TanStack Query directly, never read Zustand directly, never read `import.meta.env` directly.
+
+## The typed OpenAPI client
+
+The API exposes `/swagger/json`. The UI runs `pnpm generate:api` (against either the live api-dev or a saved spec) to regenerate `src/lib/api/schema.d.ts`. Then:
+
+```ts
+import { apiClient } from "@/lib/api/client";
+
+const { data } = await apiClient.GET("/api/v1/users/me");
+//      ^? typed exactly as the API's response shape
+```
+
+A call to a path that doesn't exist in the schema is a compile error. A body that doesn't match the OpenAPI shape is a compile error. The middleware in `src/lib/api/openapi.ts` handles 401 → silent refresh, then re-throws as `ApiError` for TanStack Query.
+
+See [OpenAPI client](/ui/openapi-client/).
+
+## Testing
+
+| Layer | Tool | What it tests |
+|---|---|---|
+| Unit | Vitest + Testing Library | Hooks, utilities, schemas |
+| Component | Vitest + Testing Library | One component + its hook |
+| e2e | Playwright | Multi-page flows against the real stack |
+| Visual | Playwright snapshots | Per-platform baselines |
+
+The unit + component tests don't need a backend. Playwright e2e requires the dev stack running (`./dev.sh up -d` from infra). There's no MSW layer — we removed it deliberately; mocking a real backend is rarely worth the cost.
+
+<Aside type="tip" title="Scaffolding">
+  `pnpm new:component MyThing` writes the eight-file anatomy.
+  `pnpm new:feature reports` writes a full feature folder. Both validate
+  against the lint config.
+</Aside>

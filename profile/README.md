@@ -6,6 +6,10 @@
 </p>
 
 <p align="center">
+  <strong>📖 Full docs: <a href="https://boringstack.xyz">boringstack.xyz</a></strong>
+</p>
+
+<p align="center">
   <a href="https://github.com/AI-Starter-Templates/api-template">api-template</a> ·
   <a href="https://github.com/AI-Starter-Templates/ui-template">ui-template</a> ·
   <a href="https://github.com/AI-Starter-Templates/infra-docker-compose-template">infra-docker-compose-template</a>
@@ -36,6 +40,10 @@ Core infra is **battle-tested for years**: **Postgres**, **Redis**, **Traefik**,
 
 **No vendor lock-in** on that core: you run the infra, you hold the data, and there are **no hidden platform fees** for those layers. **Stripe** (billing) and **optional observability** (e.g. **Sentry** in the UI template) are integrations you can swap or self-host later; defaults still favor boring, portable foundations where it matters most.
 
+### Plain SPA, sharp boundaries
+
+The UI is a **Vite + React** SPA on purpose: **strong DX**, dev and bundling that stay **fast**, and **not** a hybrid stack that blurs server and client in ways that are awkward to own long term. **Separation of concerns** is strict—the UI owns rendering and client state; the **API delivers JSON** behind **OpenAPI**, not double duty as a document or template runtime. Each side does one job well, with less accidental coupling and less pressure on the API for presentation-shaped work.
+
 ## Prototypes vs Production
 
 Lovable, Replit Agent, v0, Bolt, and similar tools are great for **seeing** whether an idea sticks. Pain shows up when that output gets treated like finished product: keys in the browser, SQL in handlers, unsigned webhooks, “auth” that falls over under basic review, logs full of customer data.
@@ -47,7 +55,7 @@ These repos start from the other assumption: you want defaults, a written contra
 | Repo                                                                                                       | Role                                                                                                                                                                                                                                                                                                 | Start here                                                                                                                                                                                                                                                                |
 | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [**api-template**](https://github.com/AI-Starter-Templates/api-template)                                   | **Bun + Elysia + Drizzle + Postgres.** JWT cookies, bcrypt, OAuth (Google / GitHub / LinkedIn), pluggable email, Stripe billing, cache, BullMQ, audit log, Pino, CSP/CORS/rate limits, Docker image. **14** custom ESLint plugins.                                                                   | [README](https://github.com/AI-Starter-Templates/api-template#readme) · [AGENT_CONTRACT.md](https://github.com/AI-Starter-Templates/api-template/blob/main/AGENT_CONTRACT.md) · [SECURITY.md](https://github.com/AI-Starter-Templates/api-template/blob/main/SECURITY.md) |
-| [**ui-template**](https://github.com/AI-Starter-Templates/ui-template)                                     | **Vite + React + TypeScript** SPA: React Router, TanStack Query, Zustand, shadcn/ui, Tailwind tokens, **openapi-typescript** + **openapi-fetch** from the API (`pnpm generate:api`), MSW, Vitest, Playwright, Storybook, Sentry. **6** ESLint plugins, same architectural family as the API.         | [README](https://github.com/AI-Starter-Templates/ui-template#readme)                                                                                                                                                                                                      |
+| [**ui-template**](https://github.com/AI-Starter-Templates/ui-template)                                     | **Vite + React + TypeScript** SPA: React Router, TanStack Query, Zustand, shadcn/ui, Tailwind tokens, **openapi-typescript** + **openapi-fetch** from the API (`pnpm generate:api`), Vitest, Playwright, Storybook, Sentry. **6** ESLint plugins, same architectural family as the API.         | [README](https://github.com/AI-Starter-Templates/ui-template#readme)                                                                                                                                                                                                      |
 | [**infra-docker-compose-template**](https://github.com/AI-Starter-Templates/infra-docker-compose-template) | **Docker Compose + Traefik v3:** Postgres, Redis, **dev stack runs API + UI in Compose** (bind mounts for hot reload), prod profile with ACME, optional Prometheus/Grafana, runbooks (backups, firewall, hardening). **K3s/Kustomize** will ship in its **own** template repo later, not mixed here. | [README](https://github.com/AI-Starter-Templates/infra-docker-compose-template#readme)                                                                                                                                                                                    |
 
 Each repo is its own clone with its own CI and merge bar. No monolith, no accidental 50k-line context window.

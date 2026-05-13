@@ -1,0 +1,74 @@
+---
+title: BoringStack
+description: SaaS starters with the boring parts already thought through. Auth, billing, an API contract, and a deploy story you can run locally — not a slideshow.
+template: splash
+hero:
+  tagline: Three independent templates, cut from codebases that have been in production for 15 years. Stop rebuilding the same spine on every greenfield.
+  actions:
+    - text: Quickstart
+      link: /quickstart/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/AI-Starter-Templates
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from "@astrojs/starlight/components";
+
+## What you get
+
+<CardGrid>
+  <Card title="api-template" icon="rocket">
+    Bun · Elysia · Drizzle · Postgres · Redis · BullMQ. Auth, OAuth, email,
+    queues, audit log, structured logging, an env validator that fails the
+    boot rather than your customers.
+    <br /><a href="/api/overview/">Read more →</a>
+  </Card>
+  <Card title="ui-template" icon="laptop">
+    Vite · React 19 · TanStack Query · shadcn/ui · Zustand · Playwright. A
+    typed OpenAPI client kept in sync with the API, custom ESLint rules
+    that enforce the architecture, and a working e2e harness.
+    <br /><a href="/ui/overview/">Read more →</a>
+  </Card>
+  <Card title="infra-docker-compose-template" icon="setting">
+    Postgres 17 · Redis 8 · Traefik v3.7. Optional overlays for
+    GlitchTip, Prometheus/Grafana/Loki, BullMQ dashboard, and image-update
+    detection. One `./dev.sh up -d` boots the full stack.
+    <br /><a href="/infra/overview/">Read more →</a>
+  </Card>
+</CardGrid>
+
+## What we optimize for
+
+<CardGrid>
+  <Card title="Cost to run (COGS)" icon="approve-check">
+    Biased toward open-source, self-hosted spine: Postgres, Redis,
+    Traefik. Cloudflare Email Service as the default mail provider for
+    near-zero per-message cost. Your data plane runs on primitives you
+    control.
+  </Card>
+  <Card title="Lint that backs up the folders" icon="puzzle">
+    Custom ESLint plugins on both API and UI sides codify the architecture
+    so "where does this go?" is a mechanical question. The merge gate
+    fails on architecture drift, not just style.
+  </Card>
+  <Card title="Boots on your machine" icon="bars">
+    `./dev.sh up -d` brings up the whole stack: Postgres, Redis, Traefik,
+    migrations, demo user seeded. Sign in at `http://localhost:3001` with
+    `demo@example.com` / `password123` and you're in.
+  </Card>
+  <Card title="Typed at every layer" icon="setting">
+    OpenAPI from the API, codegen on the UI side, env validators on both
+    sides, strict TS everywhere. Drift between server and client is a
+    compile error.
+  </Card>
+</CardGrid>
+
+## Where to next
+
+- **Never seen this before?** Start with the [Quickstart](/quickstart/).
+- **Want to understand the shape?** Read [The three repos](/architecture/three-repos/).
+- **Deploying to a real VPS?** See the [Firewall & TLS runbook](/runbooks/firewall-and-tls/) and the [Cloudflare Email setup](/runbooks/cloudflare-email-setup/).
+- **Looking up an env var or a command?** [Environment variables](/reference/env-vars/) · [Commands cheatsheet](/reference/commands/).

@@ -1,0 +1,17 @@
+---
+title: Resource limits
+description: Per-service CPU and memory limits, env-driven, sized for a 4-vCPU / 8 GB host by default.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+Every service in the compose stack has `deploy.resources.limits` and `reservations` driven by env vars. Defaults target a 4-vCPU / 8 GB single-host VPS; bump the relevant `*_CPUS` / `*_MEMORY` knobs in `compose/.env` for bigger boxes.
+
+<Aside type="note" title="Coming soon">
+  Full reference will cover: the env knobs per service, sizing guidance
+  for common VPS shapes (Hetzner CX series, OVH VPS, DO droplets), and
+  how to diagnose an OOM-killed container.
+
+  Current source-of-truth: `compose/.env.example` and the `deploy.resources`
+  blocks in [docker-compose.yml](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/compose/docker-compose.yml).
+</Aside>

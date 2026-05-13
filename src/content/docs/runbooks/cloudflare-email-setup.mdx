@@ -1,0 +1,22 @@
+---
+title: Cloudflare Email setup
+description: End-to-end walkthrough — enable Workers Paid, enable Email Service, scope a token, smoke-test.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+The full setup runbook for Cloudflare Email Service: enable Workers Paid on your account, enable Email Service on your domain, capture the account ID, scope an API token with `Email Sending: Edit`, and run a smoke-test send from the api-template.
+
+<Aside type="note" title="Coming soon">
+  Full runbook will cover: account-level setup, domain enablement, DNS
+  auto-provisioning details (SPF / DKIM / DMARC), the verified-sender
+  unlock path for new accounts, token rotation, and the smoke-test
+  curl + the api-template's noop-provider verification.
+
+  Background on why Cloudflare Email is the default lives on the
+  [Cloudflare Email Service](/topics/cloudflare-email/) page.
+
+  Current source-of-truth: the [Cloudflare Email Service
+  docs](https://developers.cloudflare.com/email-service/) and the
+  api-template's `src/lib/email/cloudflare/` source.
+</Aside>

@@ -1,0 +1,18 @@
+---
+title: Backups
+description: Postgres → rclone backups with retention, driven by a wrapper script and a host cron.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+The infra template ships `scripts/backup-wrapper.example.sh`: `pg_dump` → gzip → rclone to your chosen remote (S3, B2, Storj, anywhere rclone speaks). Retention policy is configurable; dry-run mode prints the plan without uploading.
+
+<Aside type="note" title="Coming soon">
+  Full runbook will cover: setting up the rclone remote, the cron
+  installation, retention math (daily/weekly/monthly), a restore drill,
+  and how to verify backups are actually readable.
+
+  Current source-of-truth:
+  [`scripts/backup-wrapper.example.sh`](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/scripts/backup-wrapper.example.sh)
+  in the infra-docker-compose-template repo.
+</Aside>

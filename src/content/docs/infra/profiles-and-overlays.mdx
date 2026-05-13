@@ -1,0 +1,19 @@
+---
+title: Profiles & overlays
+description: How `STACK=` and `WITH_*=1` flags compose docker-compose files.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+The infra template uses docker-compose profiles + overlay files to keep the dev path small and let you opt into observability, error tracking, queue dashboards, and image-update detection independently.
+
+<Aside type="note" title="Coming soon">
+  Full reference will cover: every overlay's contents, what flags
+  combine cleanly, what each adds in terms of resource cost, and the
+  one-shot vs. always-on services.
+
+  Current source-of-truth: `compose/docker-compose.*.yml` files and
+  `./dev.sh` in the [infra-docker-compose-template
+  repo](https://github.com/AI-Starter-Templates/infra-docker-compose-template/tree/main/compose).
+  See also the [Infra overview](/infra/overview/).
+</Aside>

@@ -1,0 +1,86 @@
+---
+title: Stack at a glance
+description: Every dependency, every choice, in one table.
+---
+
+The full set of runtime + dev dependencies, what each does, and why we picked it.
+
+## api-template
+
+| Concern | Choice | Why |
+|---|---|---|
+| Runtime | **Bun** 1.x | Bun-native APIs, fastest install + cold boot |
+| HTTP framework | **Elysia** 1.4 | TypeBox-typed routes, OpenAPI auto-emit, fast |
+| ORM | **Drizzle** 0.45 | TS-first, SQL-shaped, real migrations |
+| Database | **Postgres** 17 | Boring, durable, well-tooled |
+| Cache + queue | **Redis** 8 | Same |
+| Queues | **BullMQ** | The canonical Redis-backed job queue |
+| Auth | **bcryptjs** + **JWT** + **Arctic** (OAuth) | Hand-rolled, server-side, no third-party hosted auth |
+| Email | **Cloudflare Email Service** (default), **Resend**, **SendGrid** | Pluggable; Cloudflare for cost |
+| Error tracking | **@sentry/bun** | Points at hosted Sentry or self-hosted GlitchTip |
+| AI | **OpenAI SDK**, **Anthropic SDK**, or **noop** | Pluggable; `OPENAI_BASE_URL` enables any OpenAI-compatible endpoint |
+| Logger | **Pino** + **pino-pretty** | Structured logs, JSON in prod |
+| Templates | **Handlebars** (compiled to JSON at build time) | Email templates as static JSON, zero runtime parse cost |
+
+## ui-template
+
+| Concern | Choice | Why |
+|---|---|---|
+| Build tool | **Vite** 8 | Fast HMR, native ESM |
+| Framework | **React** 19 | New compiler, server components if needed later |
+| Server state | **TanStack Query** 5 | Industry-standard, has the cache invariants right |
+| Client state | **Zustand** 5 | Small, no provider chain |
+| Forms | **React Hook Form** + **Zod** | Typed forms, schema validation |
+| Routing | **React Router** 7 | Stable, well-known, no app-router surprise |
+| Component primitives | **shadcn/ui** + **Radix** | Copy-paste primitives, no UI dependency lock-in |
+| Styling | **Tailwind** 4 + `@theme` tokens | Utility-first, design tokens at the CSS layer |
+| HTTP | **openapi-fetch** + generated schema | Typed against the live API spec |
+| Error tracking | **@sentry/react** | Matching API-side wiring |
+| i18n | **react-i18next** | en + de out of the box |
+| Tests | **Vitest** + **Testing Library** + **Playwright** | Unit + integration + e2e |
+| Visual regression | **Playwright snapshots** | Per-platform baselines |
+| Storybook | **Storybook** 8 | Component catalog with controls |
+
+## infra-docker-compose-template
+
+| Concern | Choice | Why |
+|---|---|---|
+| Reverse proxy | **Traefik** v3.7 | Docker-label-driven, ACME built in |
+| Cert provider | **Let's Encrypt** via ACME HTTP-01 | Free, automatic, renewed by Traefik |
+| Metrics | **Prometheus** v2.54 + **node-exporter** + **postgres-exporter** | Standard |
+| Logs | **Loki** 3.2 + **Promtail** 3.2 | Per-container labels, queryable in Grafana |
+| Dashboards | **Grafana** 11 | Auto-provisions Prometheus + Loki datasources |
+| Alerts | **Alertmanager** v0.27 | Routes Prometheus alerts |
+| Error tracking (self-hosted) | **GlitchTip** | Sentry-compatible, runs on the same Postgres + Redis |
+| Image update detection | **WUD** (What's Up Docker) | Notify-only mode, Discord webhook |
+| Queue dashboard | **bull-board** (deadly0) | Dev-only Bull/BullMQ UI |
+| Firewall | **UFW** | Single-host VPS hardening, Cloudflare IP allowlist |
+| Backups | **rclone** | Off-site, timestamped, retention-managed |
+
+## Architecture-enforcement plugins
+
+Each app repo ships custom ESLint plugins that codify the patterns:
+
+**api-template:**
+
+- `eslint-plugin-resource-architecture` — routes ≠ services ≠ types boundaries
+- `eslint-plugin-drizzle-conventions` — schema patterns
+- `eslint-plugin-db-transactions` — transactional boundaries
+- `eslint-plugin-elysia` — Elysia idioms
+- `eslint-plugin-jwt-cookies` — cookie + JWT safety
+- `eslint-plugin-oauth-security` — state + PKCE invariants
+- `eslint-plugin-bullmq` — queue patterns
+- `eslint-plugin-cache-keys` — Redis key naming
+- `eslint-plugin-audit-log` — audit log writes
+- `eslint-plugin-stripe-webhooks` — Stripe handler safety
+- `eslint-plugin-structured-logging` — Pino discipline
+- `eslint-plugin-env-access` — no direct `process.env` outside the validator
+- `eslint-plugin-module-boundaries` — single-concern modules
+- `eslint-plugin-test-conventions` — test-mirrors-source pattern
+
+**ui-template:**
+
+- `eslint-plugin-react-component-architecture` — component anatomy, hooks placement, classNames discipline
+- Same `module-boundaries`, `structured-logging`, `env-access`, `test-conventions`, `resource-architecture` as the API
+
+These rules are why "where does this go?" is mostly a mechanical question once you're inside a feature folder.

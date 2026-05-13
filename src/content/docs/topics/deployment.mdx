@@ -1,0 +1,18 @@
+---
+title: Deployment
+description: How to take a single-host VPS from blank Ubuntu to running BoringStack with HTTPS.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+The deployment story is intentionally boring: SSH into a VPS, install Docker, clone the three repos, fill in `compose/.env`, `STACK=prod ./scripts/compose-up.sh`. Traefik handles HTTPS via ACME; UFW + Cloudflare IP allowlist locks down the perimeter.
+
+<Aside type="note" title="Coming soon">
+  Full reference will cover: VPS provider notes (Hetzner / OVH / DO),
+  the initial user + SSH hardening checklist, DNS setup on Cloudflare,
+  the production env walkthrough, deploy strategies (manual pull vs.
+  Watchtower vs. WUD), and rollback.
+
+  See also: [Firewall & TLS](/runbooks/firewall-and-tls/) and the
+  [Infra overview](/infra/overview/).
+</Aside>

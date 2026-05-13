@@ -1,0 +1,76 @@
+---
+title: Error tracking
+description: Sentry SDK on both API and UI sides; pointed at hosted Sentry or self-hosted GlitchTip.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+Both `api-template` and `ui-template` ship a Sentry SDK. Same wire protocol works against:
+
+- **Hosted [Sentry](https://sentry.io)** — fastest, paid past the free tier.
+- **Self-hosted [GlitchTip](https://glitchtip.com)** — Sentry-compatible, runs as an overlay in the infra stack (`WITH_GLITCHTIP=1`). Zero per-event cost.
+
+You pick by changing **only the DSN**. The SDKs don't know or care which one they're talking to.
+
+## API side (`@sentry/bun`)
+
+Initialized once at the top of `src/index.ts`:
+
+```ts
+// src/index.ts
+import { initializeSentry } from "./config/sentry";
+
+initializeSentry();
+const app = createApp().listen(env.PORT);
+```
+
+`initializeSentry()` (in `src/config/sentry.ts`) reads `SENTRY_DSN` and `SENTRY_TRACES_SAMPLE_RATE` from env. If `SENTRY_DSN` is empty, the function is a no-op — dev stays clean.
+
+It also exports `captureError(error, context?)` which is wired into the unhandled-rejection and uncaught-exception handlers in `src/config/error-handlers.ts`. Anything that escapes the request loop reaches Sentry.
+
+```bash
+SENTRY_DSN=https://<key>@glitchtip.example.com/<project>
+SENTRY_TRACES_SAMPLE_RATE=0.1
+```
+
+## UI side (`@sentry/react`)
+
+Initialized once in `src/app/main.tsx`:
+
+```ts
+if (env.VITE_SENTRY_DSN !== "") {
+  Sentry.init({
+    dsn: env.VITE_SENTRY_DSN,
+    environment: env.MODE,
+    tracesSampleRate: env.PROD ? 0.1 : 1.0,
+    replaysSessionSampleRate: 0,
+    replaysOnErrorSampleRate: 1.0,
+  });
+}
+```
+
+```bash
+VITE_SENTRY_DSN=https://<key>@glitchtip.example.com/<project>
+```
+
+Replays-on-error are on by default; full session replays are off.
+
+## Self-hosted with GlitchTip
+
+GlitchTip is an Apache-licensed, Sentry-API-compatible error tracker. Run it as an overlay in the infra stack:
+
+```bash
+WITH_GLITCHTIP=1 ./dev.sh up -d
+```
+
+On first boot, the overlay's entrypoint creates a superuser (`admin@localhost` / `admin123456`, override via env), a default org (`Local`), and two projects (`API` and `Frontend`). Visit `http://glitchtip.localhost` and copy each project's DSN into the matching env var.
+
+The overlay reuses the base stack's Postgres (separate `glitchtip` DB) and Redis (DB 1). So adding GlitchTip costs **two extra containers**, not a separate database server.
+
+See the [GlitchTip docs in the infra repo](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/docs/glitchtip.md) for prod hardening (Basic Auth, HTTPS, real SMTP).
+
+<Aside type="tip" title="When to use which">
+  **Hosted Sentry**: you'd rather pay $26/mo than run another container.
+  **GlitchTip**: you're already on the infra stack, and "another container"
+  is free. Same DX either way.
+</Aside>

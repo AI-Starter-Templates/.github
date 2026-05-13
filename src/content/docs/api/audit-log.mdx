@@ -1,0 +1,18 @@
+---
+title: Audit log
+description: Append-only audit trail for security- and compliance-relevant events.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+The api-template writes high-signal events (logins, permission changes, OAuth link/unlink, resource mutations on flagged tables) to an append-only `audit_log` table. The dashboard's "Recent activity" feed reads from it directly.
+
+<Aside type="note" title="Coming soon">
+  Full reference will cover: the schema, what's logged vs. what's
+  intentionally not, how to add a new audit event, retention strategy,
+  and the trade-off between audit-log writes and request latency.
+
+  Current source-of-truth: `src/lib/audit/` and the `audit_log` table in
+  `src/db/schema.ts` in the [api-template
+  repo](https://github.com/AI-Starter-Templates/api-template).
+</Aside>

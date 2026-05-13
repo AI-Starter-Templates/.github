@@ -1,0 +1,19 @@
+---
+title: Env vars
+description: Consolidated index of every env var across api-template, ui-template, and the infra stack.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+A single place to look up "what does `FOO_BAR` do, and where does it live?" across the three repos.
+
+<Aside type="note" title="Coming soon">
+  Full reference will list every var with: which repo owns it, default
+  value, dev-vs-prod expectations, and the link to wherever it's
+  consumed.
+
+  Current source-of-truth: the `.env.example` files in each repo —
+  [api-template](https://github.com/AI-Starter-Templates/api-template/blob/main/.env.example),
+  [ui-template](https://github.com/AI-Starter-Templates/ui-template/blob/main/.env.example),
+  [infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/compose/.env.example).
+</Aside>

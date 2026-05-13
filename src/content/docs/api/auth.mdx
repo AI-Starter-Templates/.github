@@ -1,0 +1,18 @@
+---
+title: Authentication
+description: Session-cookie auth with optional Google OAuth, server-side flow with PKCE in Redis.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+The api-template ships email-and-password auth with bcrypt-hashed credentials, opaque session cookies, and an optional Google OAuth flow (server-side, Arctic + PKCE-in-Redis — no SPA-side secret handling).
+
+<Aside type="note" title="Coming soon">
+  Full reference will cover: session model, cookie attributes, CSRF
+  posture, OAuth callback flow, account linking, and how to add a second
+  provider.
+
+  Current source-of-truth: `src/api/auth/` and `src/lib/auth/` in the
+  [api-template
+  repo](https://github.com/AI-Starter-Templates/api-template/tree/main/src/api/auth).
+</Aside>

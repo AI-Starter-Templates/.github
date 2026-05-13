@@ -1,0 +1,18 @@
+---
+title: i18n
+description: Translation pipeline with type-safe keys and a missing-translation linter.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+The ui-template ships i18n with type-safe translation keys (no typos, no missing keys at runtime). A linter rule catches references to keys that don't exist in the catalog.
+
+<Aside type="note" title="Coming soon">
+  Full reference will cover: catalog structure, adding a new locale,
+  pluralization, ICU message format, lazy-loading per route, and how the
+  type-safety is implemented.
+
+  Current source-of-truth: `src/lib/i18n/` and the locale catalogs in
+  the [ui-template
+  repo](https://github.com/AI-Starter-Templates/ui-template/tree/main/src/lib/i18n).
+</Aside>

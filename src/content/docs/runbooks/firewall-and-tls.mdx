@@ -1,0 +1,98 @@
+---
+title: Firewall & TLS (single-host)
+description: UFW + Cloudflare IP allowlist + Traefik ACME for a single-VPS deployment.
+---
+
+import { Aside, Steps } from "@astrojs/starlight/components";
+
+This walks through the firewall + TLS setup we recommend for a single-host VPS sitting behind Cloudflare. Goal: only Cloudflare can reach port 80/443; SSH stays open from anywhere (or your jump host); Traefik handles TLS termination via ACME HTTP-01.
+
+<Aside type="caution" title="Read before running">
+  The `scripts/ufw.example.sh` script in the infra repo resets your UFW
+  config. Read it before pointing it at a real server. It refuses to run
+  without `CONFIRM=yes`.
+</Aside>
+
+## What you'll end up with
+
+- **Inbound 22**: SSH from anywhere (change `SSH_PORT` if you've moved it).
+- **Inbound 80, 443**: only from Cloudflare IP ranges (IPv4 + IPv6).
+- **All other inbound**: dropped.
+- **Outbound**: unrestricted.
+- **Traefik on 80/443**: HTTPS via Let's Encrypt ACME HTTP-01, cert renewal automatic, HTTP redirects to HTTPS.
+
+## Prerequisites
+
+- Your domain's DNS is managed by Cloudflare (orange-cloud / proxied mode for the host records).
+- The server has a static IPv4 address.
+- You have an ACME contact email (real address — Let's Encrypt rejects `example.com`).
+
+## Apply
+
+<Steps>
+
+1. Edit `compose/.env`:
+
+   ```bash
+   PUBLIC_API_HOST=api.example.com
+   PUBLIC_UI_HOST=app.example.com
+   ACME_EMAIL=ops@example.com
+   ```
+
+   The domains must resolve to this server (via Cloudflare proxied A/AAAA records).
+
+2. Boot the prod stack:
+
+   ```bash
+   STACK=prod ./scripts/compose-up.sh
+   ```
+
+   Traefik starts requesting ACME certs on first boot. Watch `docker compose logs traefik` for `obtain certificate` events.
+
+3. Run the firewall script:
+
+   ```bash
+   CONFIRM=yes ./scripts/ufw.example.sh
+   ```
+
+   This resets UFW, sets default-deny, allows SSH, fetches the current Cloudflare IP ranges, and allows 80/443 from those ranges only.
+
+</Steps>
+
+## Verify
+
+```bash
+# From the server itself (should reach Traefik dashboard if enabled in dev,
+# 404 in prod since the dashboard is disabled there):
+curl -sI -H "Host: api.example.com" https://localhost/health -k
+
+# From a Cloudflare-proxied request (real client):
+curl -sI https://api.example.com/health
+# → 200 + Cloudflare's CF-Ray header
+
+# From a direct connection (bypassing Cloudflare):
+curl -sI --resolve api.example.com:443:<your-server-ip> https://api.example.com/health
+# → connection timeout (UFW blocked it)
+```
+
+The third check is the proof: a direct hit to the server's IP, bypassing Cloudflare's edge, gets dropped by UFW.
+
+## Rotation: when Cloudflare publishes new IP ranges
+
+Cloudflare publishes [IPv4](https://www.cloudflare.com/ips-v4) and [IPv6](https://www.cloudflare.com/ips-v6) ranges and updates them rarely (semi-annual at most). When they change, re-run the script:
+
+```bash
+CONFIRM=yes ./scripts/ufw.example.sh
+```
+
+It resets to a clean state, re-fetches the current ranges, and re-applies. Idempotent.
+
+## When the firewall is NOT enough
+
+UFW + Cloudflare-IP-allowlist protects you from random scans hitting your origin IP. It does **not** protect against:
+
+- **Cloudflare-routed attacks** (DDoS aimed at your hostname). Use Cloudflare's WAF + rate-limiting rules for that.
+- **App-layer abuse** (credential stuffing, scraping). Use Traefik's rate-limit middleware (already configured for the API router in prod) and per-account rate limits in the API.
+- **Compromise via SSH**. Move SSH to a non-standard port, disable password auth, use a hardware key.
+
+The infra repo's `docs/security-hardening.md` has a full checklist.
