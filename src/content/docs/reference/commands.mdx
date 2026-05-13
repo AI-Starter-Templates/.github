@@ -75,6 +75,6 @@ docker compose exec api-dev sh
 docker compose logs -f --tail=100 api-dev
 # Connect to Postgres
 docker compose exec postgres psql -U app -d app
-# Connect to Redis
-docker compose exec redis redis-cli
+# Connect to Valkey
+docker compose exec valkey valkey-cli
 ```

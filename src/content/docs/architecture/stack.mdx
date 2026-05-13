@@ -9,12 +9,12 @@ The full set of runtime + dev dependencies, what each does, and why we picked it
 
 | Concern | Choice | Why |
 |---|---|---|
-| Runtime | **Bun** 1.x | Bun-native APIs, fastest install + cold boot |
-| HTTP framework | **Elysia** 1.4 | TypeBox-typed routes, OpenAPI auto-emit, fast |
-| ORM | **Drizzle** 0.45 | TS-first, SQL-shaped, real migrations |
-| Database | **Postgres** 17 | Boring, durable, well-tooled |
-| Cache + queue | **Redis** 8 | Same |
-| Queues | **BullMQ** | The canonical Redis-backed job queue |
+| Runtime | **Bun** | Bun-native APIs, fastest install + cold boot |
+| HTTP framework | **Elysia** | TypeBox-typed routes, OpenAPI auto-emit, fast |
+| ORM | **Drizzle** | TS-first, SQL-shaped, real migrations |
+| Database | **Postgres** | Boring, durable, well-tooled |
+| Cache + queue store | **Valkey** | OSS-licensed Redis fork (BSD-3) backed by the Linux Foundation; drop-in compatible with Redis clients |
+| Queues | **BullMQ** | Canonical Valkey/Redis-protocol job queue |
 | Auth | **bcryptjs** + **JWT** + **Arctic** (OAuth) | Hand-rolled, server-side, no third-party hosted auth |
 | Email | **Cloudflare Email Service** (default), **Resend**, **SendGrid** | Pluggable; Cloudflare for cost |
 | Error tracking | **@sentry/bun** | Points at hosted Sentry or self-hosted GlitchTip |
@@ -26,39 +26,39 @@ The full set of runtime + dev dependencies, what each does, and why we picked it
 
 | Concern | Choice | Why |
 |---|---|---|
-| Build tool | **Vite** 8 | Fast HMR, native ESM |
-| Framework | **React** 19 | New compiler, server components if needed later |
-| Server state | **TanStack Query** 5 | Widely used; cache invariants are well documented |
-| Client state | **Zustand** 5 | Small, no provider chain |
+| Build tool | **Vite** | Fast HMR, native ESM |
+| Framework | **React 19** | New compiler, server components if needed later |
+| Server state | **TanStack Query** | Widely used; cache invariants are well documented |
+| Client state | **Zustand** | Small, no provider chain |
 | Forms | **React Hook Form** + **Zod** | Typed forms, schema validation |
-| Routing | **React Router** 7 | Stable, well-known, no app-router surprise |
+| Routing | **React Router** | Stable, well-known |
 | Component primitives | **shadcn/ui** + **Radix** | Copy-paste primitives, no UI dependency lock-in |
-| Styling | **Tailwind** 4 + `@theme` tokens | Utility-first, design tokens at the CSS layer |
+| Styling | **Tailwind** + `@theme` tokens | Utility-first, design tokens at the CSS layer |
 | HTTP | **openapi-fetch** + generated schema | Typed against the live API spec |
 | Error tracking | **@sentry/react** | Matching API-side wiring |
 | i18n | **react-i18next** | en + de out of the box |
 | Tests | **Vitest** + **Testing Library** + **Playwright** | Unit + integration + e2e |
 | Visual regression | **Playwright snapshots** | Per-platform baselines |
-| Storybook | **Storybook** 8 | Component catalog with controls |
+| Storybook | **Storybook** | Component catalog with controls |
 
 ## infra-docker-compose-template
 
 | Concern | Choice | Why |
 |---|---|---|
-| Reverse proxy | **Traefik** v3.7 | Docker-label-driven, ACME built in |
+| Reverse proxy | **Traefik** | Docker-label-driven, ACME built in |
 | Cert provider | **Let's Encrypt** via ACME HTTP-01 | Free, automatic, renewed by Traefik |
-| Metrics | **Prometheus** v2.54 + **node-exporter** + **postgres-exporter** | Standard |
-| Logs | **Loki** 3.2 + **Promtail** 3.2 | Per-container labels, queryable in Grafana |
-| Dashboards | **Grafana** 11 | Auto-provisions Prometheus + Loki datasources |
-| Alerts | **Alertmanager** v0.27 | Routes Prometheus alerts |
-| Error tracking (self-hosted) | **GlitchTip** | Sentry-compatible, runs on the same Postgres + Redis |
+| Metrics | **Prometheus** + node-exporter + postgres-exporter + valkey-exporter | Standard exporters; per-component metrics |
+| Logs | **Loki** + **Promtail** | Per-container labels, queryable in Grafana |
+| Dashboards | **Grafana** | Auto-provisions Prometheus + Loki datasources |
+| Alerts | **Alertmanager** | Routes Prometheus alerts |
+| Error tracking (self-hosted) | **GlitchTip** | Sentry-compatible, runs on the same Postgres + Valkey |
 | Image update detection | **WUD** (What's Up Docker) | Notify-only mode, Discord webhook |
-| Queue dashboard | **bull-board** (deadly0) | Dev-only Bull/BullMQ UI |
+| Queue dashboard | **bull-board** | Dev-only Bull/BullMQ UI |
 | Firewall | **UFW** | Single-host VPS hardening, Cloudflare IP allowlist |
 | Backups | **rclone** | Off-site, timestamped, retention-managed |
 
 ## Architecture-enforcement plugins
 
-Each app repo ships custom ESLint plugins (15 in total, all open-sourced) that codify the patterns and stop drift at the lint gate. That matters most for agent-driven edits: `AGENTS.md` gets skipped; the linter does not.
+Each app repo ships custom ESLint plugins (all open-sourced) that codify the patterns and stop drift at the lint gate. That matters most for agent-driven edits: `AGENTS.md` gets skipped; the linter does not.
 
 → Full inventory with GitHub links: [Lint as the contract](/architecture/lint-as-contract/).

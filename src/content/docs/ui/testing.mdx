@@ -40,7 +40,7 @@ flowchart LR
 
 Unit and component tests focus on pure logic; anything HTTP-shaped is e2e against the real backend. Three reasons:
 
-- **Drift.** Hand-written mocks fall behind the real API shape — tests pass while the real backend doesn't.
+- **Drift.** Hand-written mocks fall behind the real API shape, and tests pass while the real backend drifts.
 - **Mental tax.** Contributors would have to learn the mocking framework *and* the real API.
 - **False signal.** "Mock tests are green" is not "the feature works." Only the e2e tier proves the feature.
 

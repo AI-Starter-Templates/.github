@@ -5,13 +5,13 @@ description: How `STACK=` and `WITH_*=1` flags compose docker-compose files. The
 
 import { Aside } from "@astrojs/starlight/components";
 
-The infra stack is built so the **default** is small (Postgres + Redis + Traefik + your apps) and everything else; observability, error tracking, queue dashboard, image-update detection; is **opt-in via a flag**. The composition happens in `dev.sh`, which assembles the `docker-compose` invocation based on env vars.
+The infra stack is built so the **default** is small (Postgres + Valkey + Traefik + your apps) and everything else; observability, error tracking, queue dashboard, image-update detection; is **opt-in via a flag**. The composition happens in `dev.sh`, which assembles the `docker-compose` invocation based on env vars.
 
 ## How a stack is assembled
 
 ```mermaid
 flowchart LR
-  base["base stack<br/>postgres · redis<br/>traefik · api · ui"]
+  base["base stack<br/>postgres · valkey<br/>traefik · api · ui"]
   stack{"STACK= ?"}
   dev["+ development-labels<br/>HTTP · host ports"]
   prod["+ production-labels<br/>HTTPS · ACME"]
@@ -45,7 +45,7 @@ The result is a single `docker compose -f ... -f ... --profile ...` command. `de
 | Flag | Adds |
 |---|---|
 | `WITH_OBSERVABILITY=1` | Prometheus, Grafana, Loki, Promtail, Alertmanager + exporters |
-| `WITH_GLITCHTIP=1` | GlitchTip (Sentry-compatible error tracking); reuses base Postgres + Redis |
+| `WITH_GLITCHTIP=1` | GlitchTip (Sentry-compatible error tracking); reuses base Postgres + Valkey |
 | `WITH_BULLMQ=1` | Bull-board UI at `bullmq.localhost`; dev only |
 | `WITH_WUD=1` | What's-Up-Docker image-update detector; Discord webhook optional |
 
@@ -58,9 +58,9 @@ Combinations: `WITH_OBSERVABILITY=1 WITH_GLITCHTIP=1 ./scripts/compose-up.sh` is
 | API + UI | Bind-mounted source, hot reload | Built images from Dockerfile.prod |
 | Traefik | HTTP, no TLS, dashboard exposed | HTTPS via Let's Encrypt ACME, dashboard off |
 | Hosts | `app.localhost`, `api.localhost`, etc. | `PUBLIC_UI_HOST` / `PUBLIC_API_HOST` from env |
-| Data ports | Postgres on `:5432`, Redis on `:6379` published to host | Internal-only, not published |
+| Data ports | Postgres on `:5432`, Valkey on `:6379` published to host | Internal-only, not published |
 
-`STACK=prod` is mostly the same compose graph with different routing + builds. The data plane (Postgres, Redis) is identical.
+`STACK=prod` is mostly the same compose graph with different routing + builds. The data plane (Postgres, Valkey) is identical.
 
 ## Reading what's actually running
 

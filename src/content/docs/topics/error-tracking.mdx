@@ -17,7 +17,7 @@ The SDKs don't know which one they're talking to. Choosing is a one-env-var chan
 | Decision | Reason |
 |---|---|
 | Sentry SDK on both sides (not a custom shim) | One vocabulary, one DX, one set of breadcrumbs |
-| GlitchTip as the self-host option | Wire-compatible with Sentry; runs on the same Postgres + Redis the app already uses |
+| GlitchTip as the self-host option | Wire-compatible with Sentry; runs on the same Postgres + Valkey the app already uses |
 | Empty DSN → SDK is a no-op | Dev stays clean; tests don't ship error reports |
 | Replay-on-error on, full-session replays off | Captures the broken flow without storing healthy sessions |
 | Single env var per side: `SENTRY_DSN` (API), `VITE_SENTRY_DSN` (UI) | Same protocol regardless of backend; swap is one redeploy |
@@ -46,7 +46,7 @@ WITH_GLITCHTIP=1 ./dev.sh up -d
 
 First boot bootstraps a superuser, a default org, and two projects (`API` and `Frontend`). Visit `http://glitchtip.localhost`, grab each project's DSN, and drop them into the matching env vars.
 
-The overlay reuses the base stack's Postgres (in a separate `glitchtip` database) and Redis (DB 1). Adding GlitchTip costs **two extra containers**, not a separate database server.
+The overlay reuses the base stack's Postgres (in a separate `glitchtip` database) and Valkey (DB 1). Adding GlitchTip costs **two extra containers**, not a separate database server.
 
 For production hardening (Basic Auth, HTTPS, real SMTP), see the [GlitchTip docs in the infra repo](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/docs/glitchtip.md).
 

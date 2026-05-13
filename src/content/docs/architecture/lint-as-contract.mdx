@@ -37,7 +37,7 @@ The **custom ESLint plugins** are how the architecture survives anyway. Every ru
 | [`jwt-cookies`](https://github.com/agjs/eslint-plugin-jwt-cookies) | Cookie attributes (`HttpOnly`, `Secure`, `SameSite`) and JWT verify call sites. |
 | [`oauth-security`](https://github.com/agjs/eslint-plugin-oauth-security) | OAuth state + PKCE invariants on the server-side flow. |
 | [`bullmq`](https://github.com/agjs/eslint-plugin-bullmq) | Queue + worker patterns: idempotency, dead-letter handling, name discipline. |
-| [`cache-keys`](https://github.com/agjs/eslint-plugin-cache-keys) | Redis key naming + TTL discipline. No unnamespaced keys, no TTL-free writes by accident. |
+| [`cache-keys`](https://github.com/agjs/eslint-plugin-cache-keys) | Cache key naming + TTL discipline. No unnamespaced keys, no TTL-free writes by accident. |
 | [`audit-log`](https://github.com/agjs/eslint-plugin-audit-log) | Audit-log writes on flagged mutations. Security-relevant events can't be silently skipped. |
 | [`stripe-webhooks`](https://github.com/agjs/eslint-plugin-stripe-webhooks) | Stripe handler safety: signature verification, idempotency, raw-body access. |
 
@@ -45,7 +45,7 @@ The **custom ESLint plugins** are how the architecture survives anyway. Every ru
 
 | Plugin | What it enforces |
 |---|---|
-| [`react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture) | Component anatomy, hook placement, `className` discipline, file-naming, prop ordering — a multi-rule package covering the whole component contract. |
+| [`react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture) | Component anatomy, hook placement, `className` discipline, file-naming, prop ordering; a multi-rule package covering the whole component contract. |
 
 ## How they're wired
 

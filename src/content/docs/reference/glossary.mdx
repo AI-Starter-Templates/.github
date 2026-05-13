@@ -39,10 +39,13 @@ An opt-in `docker-compose.<name>.yml` file that adds services to the base stack.
 A docker-compose feature for grouping services within a single file. The infra stack uses profiles (`--profile dev`, `--profile observability`) alongside overlays; profiles activate services within a file, overlays add files.
 
 **Base stack**
-The always-on services: Postgres + Redis + Traefik + api-migrate (one-shot) + the app containers. Everything else is an overlay.
+The always-on services: Postgres + Valkey + Traefik + api-migrate (one-shot) + the app containers. Everything else is an overlay.
 
 **Data plane**
-Postgres + Redis. The services that hold state. Deliberately not exposed to the `frontend` Docker network, so the only path from the world to the data plane is through the API.
+Postgres + Valkey. The services that hold state. Deliberately not exposed to the `frontend` Docker network, so the only path from the world to the data plane is through the API.
+
+**Valkey**
+The BSD-licensed Redis-protocol-compatible store BoringStack uses for cache + queues. Drop-in compatible with Redis: same wire protocol, same client libraries (`ioredis`, BullMQ), same env-var names (`REDIS_HOST`, etc.; those are protocol-level identifiers). Maintained by the Linux Foundation with AWS, Google, and Oracle as primary sponsors.
 
 ## Architecture rules vocabulary
 
@@ -69,7 +72,7 @@ The append-only `audit.audit_log` table. Records security- and compliance-releva
 ## Background work
 
 **Queue**
-A named work buffer in Redis, owned by a directory under `src/queues/<name>/`. Producers enqueue; workers consume. The directory follows a fixed pattern (constants, types, queue, worker, setup) so producer + consumer can't drift on names.
+A named work buffer in Valkey, owned by a directory under `src/queues/<name>/`. Producers enqueue; workers consume. The directory follows a fixed pattern (constants, types, queue, worker, setup) so producer + consumer can't drift on names.
 
 **QueueManager**
 The process-singleton that owns all queues + workers. Application code never imports BullMQ's `Queue` class directly; it calls `manager.enqueueX(...)`. [Read more](/api/queues/).

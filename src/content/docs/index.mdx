@@ -21,7 +21,7 @@ import { Card, CardGrid } from "@astrojs/starlight/components";
 
 <CardGrid>
   <Card title="api-template" icon="rocket">
-    Bun · Elysia · Drizzle · Postgres · Redis · BullMQ. Auth, OAuth, email,
+    Bun · Elysia · Drizzle · Postgres · Valkey · BullMQ. Auth, OAuth, email,
     queues, audit log, structured logging, an env validator that fails the
     boot rather than your customers.
     <br /><a href="/api/overview/">Read more →</a>
@@ -33,7 +33,7 @@ import { Card, CardGrid } from "@astrojs/starlight/components";
     <br /><a href="/ui/overview/">Read more →</a>
   </Card>
   <Card title="infra-docker-compose-template" icon="setting">
-    Postgres 17 · Redis 8 · Traefik v3.7. Optional overlays for
+    Postgres · Valkey · Traefik. Optional overlays for
     GlitchTip, Prometheus/Grafana/Loki, BullMQ dashboard, and image-update
     detection. One `./dev.sh up -d` boots the full stack.
     <br /><a href="/infra/overview/">Read more →</a>
@@ -44,7 +44,7 @@ import { Card, CardGrid } from "@astrojs/starlight/components";
 
 <CardGrid>
   <Card title="Cost to run (COGS)" icon="approve-check">
-    Biased toward open-source, self-hosted spine: Postgres, Redis,
+    Biased toward open-source, self-hosted spine: Postgres, Valkey,
     Traefik. Cloudflare Email Service as the default mail provider for
     near-zero per-message cost. Your data plane runs on primitives you
     control.
@@ -56,7 +56,7 @@ import { Card, CardGrid } from "@astrojs/starlight/components";
     <br /><a href="/architecture/lint-as-contract/">See the inventory →</a>
   </Card>
   <Card title="Boots on your machine" icon="bars">
-    `./dev.sh up -d` brings up the whole stack: Postgres, Redis, Traefik,
+    `./dev.sh up -d` brings up the whole stack: Postgres, Valkey, Traefik,
     migrations, demo user seeded. Sign in at `http://localhost:3001` with
     `demo@example.com` / `password123` and you're in.
   </Card>

@@ -15,7 +15,7 @@ The default install is "enough to debug a production incident at 3 AM": app metr
 flowchart LR
   api["api-template<br/>/metrics endpoint"]
   pg["postgres-exporter"]
-  redis["redis-exporter"]
+  valkey_exp["valkey-exporter"]
   node["node-exporter<br/>host metrics"]
   prom["Prometheus<br/>scrape every 15s"]
   containers["every container<br/>stdout/stderr"]
@@ -25,7 +25,7 @@ flowchart LR
   alert["Alertmanager<br/>routes alerts"]
   api --> prom
   pg --> prom
-  redis --> prom
+  valkey_exp --> prom
   node --> prom
   containers --> promtail --> loki
   prom --> grafana
@@ -42,7 +42,7 @@ flowchart LR
 | Promtail labels logs per container | "Show me api-prod errors in the last hour" is one filter, not a regex |
 | Grafana auto-provisions datasources | Stack boots usable; no manual wiring after `up -d` |
 | Alertmanager included but not wired by default | Pager strategy is project-specific; the plumbing's there when you need it |
-| Bundled exporters: node, postgres, redis | The metrics you'll actually consult during an incident |
+| Bundled exporters: node, postgres, valkey | The metrics you'll actually consult during an incident |
 
 ## What you get out of the box
 
@@ -54,7 +54,7 @@ flowchart LR
 | Promtail | sidecar | Scrapes `/var/lib/docker/containers/*.log` |
 | node-exporter | host metrics | CPU, memory, disk, network |
 | postgres-exporter | Postgres metrics | Connections, transactions, table sizes |
-| redis-exporter | Redis metrics | Hit ratio, evictions, memory |
+| valkey-exporter | Valkey metrics | Hit ratio, evictions, memory |
 | Alertmanager | internal | Routes defined in `alertmanager/` |
 
 Dashboards are pre-provisioned from `compose/grafana/`. Add new ones by dropping JSON files there.
@@ -102,7 +102,7 @@ The api-template's `/metrics` endpoint uses the standard Prometheus client libra
 
 ## Cost
 
-The overlay is light on memory at the default sizing — see [Resource limits](/infra/resource-limits/) for the per-service knobs. Disk grows with retention windows; tune them in `compose/prometheus/prometheus.yml` and `compose/docker-compose.observability.yml` if storage matters.
+The overlay is light on memory at the default sizing; see [Resource limits](/infra/resource-limits/) for the per-service knobs. Disk grows with retention windows; tune them in `compose/prometheus/prometheus.yml` and `compose/docker-compose.observability.yml` if storage matters.
 
 ## Source
 

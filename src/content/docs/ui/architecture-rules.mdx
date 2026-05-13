@@ -3,7 +3,7 @@ title: Architecture rules
 description: "The UI-specific lint rules that hold the component anatomy in place: hook placement, className discipline, file-naming, prop ordering."
 ---
 
-The ui-template enforces its architecture through ESLint, not vibes. The UI-specific work is [`eslint-plugin-react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture); the rules below are what it catches, grouped by intent. It composes with the shared plugins (resource-architecture, module-boundaries, structured-logging, env-access, test-conventions) that both repos use — full inventory at [Lint as the contract](/architecture/lint-as-contract/).
+The ui-template enforces its architecture through ESLint, not vibes. The UI-specific work is [`eslint-plugin-react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture); the rules below are what it catches, grouped by intent. It composes with the shared plugins (resource-architecture, module-boundaries, structured-logging, env-access, test-conventions) that both repos use; full inventory at [Lint as the contract](/architecture/lint-as-contract/).
 
 ## What it enforces
 
@@ -14,14 +14,14 @@ The ui-template enforces its architecture through ESLint, not vibes. The UI-spec
 | **`className` discipline** | Long inline class strings without `cn(...)`; classes pulled out so conditional logic is readable |
 | **File-naming** | PascalCase for components, kebab-case for non-components, suffix matches purpose (`.hooks.ts`, `.queries.ts`, `.store.ts`) |
 | **Prop ordering** | Required props first, then optional, then handlers; predictable readout in JSX call sites |
-| **View object boundary** | Components don't import TanStack Query / Zustand / `import.meta.env` directly — they read the view object their hook returns |
+| **View object boundary** | Components don't import TanStack Query / Zustand / `import.meta.env` directly; they read the view object their hook returns |
 | **Queries layer** | `useQuery` only inside `*.queries.ts`; component hooks consume the resulting query hooks, never call TanStack Query directly |
 
 Each rule has a fix-it suggestion where mechanical; the rest fail the lint gate and need a real edit.
 
 ## Why the component anatomy matters
 
-The anatomy makes any component **mechanically testable**. A `.tsx` with no state is pure JSX — a snapshot test or a single render assertion. A `.hooks.ts` returning a typed view object is testable via `renderHook`, no DOM needed. Together they give you full coverage of behavior without ever simulating a click.
+The anatomy makes any component **mechanically testable**. A `.tsx` with no state is pure JSX: a snapshot test or a single render assertion. A `.hooks.ts` returning a typed view object is testable via `renderHook`, no DOM needed. Together they give you full coverage of behavior without ever simulating a click.
 
 The rules above are what keeps that split from collapsing back into one-big-`.tsx`-file under deadline pressure.
 
@@ -40,5 +40,5 @@ Plugin source + per-rule docs: [`eslint-plugin-react-component-architecture`](ht
 
 ## Related
 
-- [Lint as the contract](/architecture/lint-as-contract/) — the full family across both repos.
-- [UI template overview](/ui/overview/) — the component anatomy these rules enforce.
+- [Lint as the contract](/architecture/lint-as-contract/): the full family across both repos.
+- [UI template overview](/ui/overview/): the component anatomy these rules enforce.

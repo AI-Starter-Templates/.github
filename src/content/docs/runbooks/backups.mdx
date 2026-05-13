@@ -97,7 +97,7 @@ For sensitive data, client-side is the right answer. Document the password in yo
 
 ## What's NOT backed up
 
-- **Redis.** It's cache + queues; not authoritative. If you can't rebuild it, you have an architecture problem, not a backup problem.
+- **Valkey.** It's cache + queues; not authoritative. If you can't rebuild it, you have an architecture problem, not a backup problem.
 - **Audit log table.** It *is* backed up because it's part of Postgres. Just noting it explicitly because some templates treat audit separately.
 - **`compose/.env`.** Back up separately; it's small enough to live in a private secrets repo or password manager.
 - **Container images.** Pull from registry on restore; not part of the backup loop.

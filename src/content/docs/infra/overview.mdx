@@ -1,6 +1,6 @@
 ---
 title: "Infra template: overview"
-description: docker-compose for single-host deployments. Postgres + Redis + Traefik, with optional overlays for observability, error tracking, queue dashboards, and image-update detection.
+description: docker-compose for single-host deployments. Postgres + Valkey + Traefik, with optional overlays for observability, error tracking, queue dashboards, and image-update detection.
 ---
 
 import { FileTree } from "@astrojs/starlight/components";
@@ -13,9 +13,9 @@ The base stack (always on) plus per-profile services:
 
 | Service | Profile | Role |
 |---|---|---|
-| `postgres` (17-alpine) | always | App DB |
-| `redis` (8-alpine) | always | Cache + queues |
-| `traefik` (v3.7) | always | Reverse proxy + ACME |
+| `postgres` | always | App DB |
+| `valkey` | always | Cache + queues (Redis-protocol; BSD-licensed Redis fork) |
+| `traefik` | always | Reverse proxy + ACME |
 | `api-migrate` | always (one-shot) | Schema push + demo user seed |
 | `api-dev` | dev | Bun + Elysia API, bind-mounted source |
 | `ui-dev` | dev | Vite dev server, bind-mounted source |
@@ -39,7 +39,7 @@ Flags compose: `WITH_OBSERVABILITY=1 WITH_GLITCHTIP=1 ./dev.sh up -d` brings up 
 
 <FileTree>
 - compose/
-  - docker-compose.yml                         Base: postgres/redis/traefik/api-migrate/api[-dev]/ui[-dev]
+  - docker-compose.yml                         Base: postgres/valkey/traefik/api-migrate/api[-dev]/ui[-dev]
   - docker-compose.development-labels.yml      Dev overlay: Traefik HTTP routers + host-published data ports
   - docker-compose.production-labels.yml       Prod overlay: HTTPS, ACME, security headers, rate limit
   - docker-compose.observability.yml           Prom/Grafana/Loki/Promtail + exporters
@@ -68,10 +68,10 @@ Two bridge networks. Services are intentionally split:
 
 | Network | Members |
 |---|---|
-| `backend` | postgres, redis, api[-dev], api-migrate, exporters, glitchtip, etc. |
+| `backend` | postgres, valkey, api[-dev], api-migrate, exporters, glitchtip, etc. |
 | `frontend` | traefik, ui[-dev], api[-dev], glitchtip-web (HTTPS routing only) |
 
-Traefik joins both, so it can route HTTPS from the `frontend` network into services that only live on `backend`. The data plane (Postgres, Redis) is never exposed to the `frontend` network.
+Traefik joins both, so it can route HTTPS from the `frontend` network into services that only live on `backend`. The data plane (Postgres, Valkey) is never exposed to the `frontend` network.
 
 ## Resource budgets
 
@@ -81,4 +81,4 @@ Every service has `deploy.resources.limits` and `reservations` driven by env var
 
 - **Kubernetes manifests.** Planned as a separate repo. This template is Compose-first; mixing Compose and cluster YAML in one repo is exactly the kind of confusion BoringStack tries to avoid.
 - **Application code.** The api-template and ui-template own that.
-- **Cloud-provider Terraform.** Out of scope; this is "what to run on a box," not "how to provision the box."
+- **Cloud-provider provisioning.** A separate [OpenTofu template](/topics/provisioning-with-tofu/) handles that.

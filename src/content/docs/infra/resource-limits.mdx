@@ -39,7 +39,7 @@ Same pattern for `REDIS_`, `TRAEFIK_`, `API_DEV_`, `UI_DEV_`, `API_`, `UI_`, and
 | Service | Limit CPU | Limit RAM | Notes |
 |---|---|---|---|
 | Postgres | 1.0 | 512 MB | Heaviest of the data plane; bump first |
-| Redis | 0.5 | 256 MB | Plenty for cache + queues at small scale |
+| Valkey | 0.5 | 256 MB | Plenty for cache + queues at small scale |
 | Traefik | 0.5 | 256 MB | Steady-state usage is low |
 | API (dev/prod) | 1.5 | 1 GB | Generous for Bun + Drizzle; covers burst on cold caches |
 | UI (dev) | 1.5 | 1 GB | Vite dev server eats memory during HMR |
@@ -55,7 +55,7 @@ Rough scaling guide:
 |---|---|---|
 | 4 vCPU / 8 GB | Default | One of each |
 | 8 vCPU / 16 GB | `POSTGRES_LIMITS_MEMORY=2G`, `POSTGRES_LIMITS_CPUS=2.0` | Consider horizontal API replication |
-| 16+ vCPU / 32+ GB | Postgres deserves its own host | Multiple API + worker replicas; revisit Redis Cluster |
+| 16+ vCPU / 32+ GB | Postgres deserves its own host | Multiple API + worker replicas; revisit Valkey Cluster |
 
 Above the 16 vCPU mark, the single-host model itself becomes the bottleneck; that's the right time to look at the planned Kubernetes path.
 

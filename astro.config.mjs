@@ -165,6 +165,11 @@ export default defineConfig({
             { label: "Error tracking", link: "/topics/error-tracking/" },
             { label: "Observability", link: "/topics/observability/" },
             { label: "Deployment", link: "/topics/deployment/" },
+            {
+              label: "Provisioning with OpenTofu",
+              link: "/topics/provisioning-with-tofu/",
+              badge: { text: "planned", variant: "caution" },
+            },
           ],
         },
         {

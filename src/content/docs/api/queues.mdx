@@ -1,13 +1,13 @@
 ---
 title: Queues
-description: BullMQ on Redis for background jobs. One QueueManager owns lifecycle; dispatch falls back to inline execution when queues are off.
+description: BullMQ on Valkey (Redis-protocol) for background jobs. One QueueManager owns lifecycle; dispatch falls back to inline execution when queues are off.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-Background work uses [BullMQ](https://docs.bullmq.io) over the same Redis the cache lives on. The mental model:
+Background work uses [BullMQ](https://docs.bullmq.io) over the same Valkey the cache lives on. The mental model:
 
-- A **queue** is a named work buffer in Redis.
+- A **queue** is a named work buffer in Valkey.
 - A **worker** is a long-lived process that pulls jobs off the queue and runs them.
 - A **`QueueManager`** is a process-singleton that owns all queues + workers, so application code only ever talks to one object.
 
@@ -19,17 +19,17 @@ When `QUEUES_ENABLED=false`, every dispatch helper falls back to inline executio
 sequenceDiagram
   participant Producer
   participant Manager as QueueManager
-  participant Redis
+  participant Valkey
   participant Worker
   Producer->>Manager: enqueueX(data)
-  Manager->>Redis: ZADD with retry config
-  Redis-->>Worker: next job
+  Manager->>Valkey: ZADD with retry config
+  Valkey-->>Worker: next job
   Worker->>Worker: process(data)
   alt success
-    Worker->>Redis: mark complete (TTL 1h)
+    Worker->>Valkey: mark complete (TTL 1h)
   else failure
-    Worker->>Redis: schedule retry (exp backoff)
-    Note over Redis,Worker: up to 5 attempts, then dead-letter
+    Worker->>Valkey: schedule retry (exp backoff)
+    Note over Valkey,Worker: up to 5 attempts, then dead-letter
   end
 ```
 
@@ -39,8 +39,8 @@ sequenceDiagram
 |---|---|
 | One `QueueManager` per process | Centralized lifecycle, shutdown, admin stats; new queues can't accidentally skip the retry config |
 | Per-queue directory with five small files | Constants + queue + worker + setup + types stay together; producer & consumer can't disagree on names |
-| Inline fallback when `QUEUES_ENABLED=false` | Dev and tests boot without Redis or a separate worker process |
-| `removeOnComplete: { age: 1h, count: 100 }` | Bounded Redis usage without losing recent successes for the dashboard |
+| Inline fallback when `QUEUES_ENABLED=false` | Dev and tests boot without Valkey or a separate worker process |
+| `removeOnComplete: { age: 1h, count: 100 }` | Bounded Valkey usage without losing recent successes for the dashboard |
 | `removeOnFail: false` | Failed jobs stick around for inspection; manual purge if needed |
 
 ## The shape of a queue

@@ -5,7 +5,7 @@ description: Clone three repos, run a script, log in. Five minutes from zero to 
 
 import { Steps, Aside } from "@astrojs/starlight/components";
 
-This walks you from nothing to a logged-in dashboard, locally, in about five minutes. You'll end up with Postgres, Redis, Traefik, the API, and the UI all running under Docker, with a seeded demo user you can sign in as.
+This walks you from nothing to a logged-in dashboard, locally, in about five minutes. You'll end up with Postgres, Valkey, Traefik, the API, and the UI all running under Docker, with a seeded demo user you can sign in as.
 
 ## Prerequisites
 
@@ -74,7 +74,7 @@ You should land on the dashboard with real counts of users + widgets pulled from
 | Service       | Where it lives              | What it does                                                |
 | ------------- | --------------------------- | ----------------------------------------------------------- |
 | `postgres`    | container, host port 5432   | App database with `auth`, `billing`, `audit`, `app` schemas |
-| `redis`       | container, host port 6379   | Cache + BullMQ queues                                       |
+| `valkey`      | container, host port 6379   | Cache + BullMQ queues                                       |
 | `traefik`     | container, host port 80/443 | Routes `api.localhost` → api, `app.localhost` → ui          |
 | `api-migrate` | one-shot                    | Ran `db:push` + seeded the demo user, then exited           |
 | `api-dev`     | container, host port 3000   | The Bun + Elysia API (hot-reload via bind mount)            |
