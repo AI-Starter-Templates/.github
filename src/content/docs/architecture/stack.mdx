@@ -28,7 +28,7 @@ The full set of runtime + dev dependencies, what each does, and why we picked it
 |---|---|---|
 | Build tool | **Vite** 8 | Fast HMR, native ESM |
 | Framework | **React** 19 | New compiler, server components if needed later |
-| Server state | **TanStack Query** 5 | Industry-standard, has the cache invariants right |
+| Server state | **TanStack Query** 5 | Widely used; cache invariants are well documented |
 | Client state | **Zustand** 5 | Small, no provider chain |
 | Forms | **React Hook Form** + **Zod** | Typed forms, schema validation |
 | Routing | **React Router** 7 | Stable, well-known, no app-router surprise |
@@ -63,24 +63,24 @@ Each app repo ships custom ESLint plugins that codify the patterns:
 
 **api-template:**
 
-- `eslint-plugin-resource-architecture` — routes ≠ services ≠ types boundaries
-- `eslint-plugin-drizzle-conventions` — schema patterns
-- `eslint-plugin-db-transactions` — transactional boundaries
-- `eslint-plugin-elysia` — Elysia idioms
-- `eslint-plugin-jwt-cookies` — cookie + JWT safety
-- `eslint-plugin-oauth-security` — state + PKCE invariants
-- `eslint-plugin-bullmq` — queue patterns
-- `eslint-plugin-cache-keys` — Redis key naming
-- `eslint-plugin-audit-log` — audit log writes
-- `eslint-plugin-stripe-webhooks` — Stripe handler safety
-- `eslint-plugin-structured-logging` — Pino discipline
-- `eslint-plugin-env-access` — no direct `process.env` outside the validator
-- `eslint-plugin-module-boundaries` — single-concern modules
-- `eslint-plugin-test-conventions` — test-mirrors-source pattern
+- `eslint-plugin-resource-architecture`: routes ≠ services ≠ types boundaries
+- `eslint-plugin-drizzle-conventions`: schema patterns
+- `eslint-plugin-db-transactions`: transactional boundaries
+- `eslint-plugin-elysia`: Elysia idioms
+- `eslint-plugin-jwt-cookies`: cookie + JWT safety
+- `eslint-plugin-oauth-security`: state + PKCE invariants
+- `eslint-plugin-bullmq`: queue patterns
+- `eslint-plugin-cache-keys`: Redis key naming
+- `eslint-plugin-audit-log`: audit log writes
+- `eslint-plugin-stripe-webhooks`: Stripe handler safety
+- `eslint-plugin-structured-logging`: Pino discipline
+- `eslint-plugin-env-access`: no direct `process.env` outside the validator
+- `eslint-plugin-module-boundaries`: single-concern modules
+- `eslint-plugin-test-conventions`: test-mirrors-source pattern
 
 **ui-template:**
 
-- `eslint-plugin-react-component-architecture` — component anatomy, hooks placement, classNames discipline
+- `eslint-plugin-react-component-architecture`: component anatomy, hooks placement, classNames discipline
 - Same `module-boundaries`, `structured-logging`, `env-access`, `test-conventions`, `resource-architecture` as the API
 
 These rules are why "where does this go?" is mostly a mechanical question once you're inside a feature folder.

@@ -1,11 +1,11 @@
 ---
 title: Image updates
-description: WUD (What's-Up-Docker) overlay — get a Discord ping when a base image has a newer tag.
+description: "WUD (What's-Up-Docker) overlay: Discord ping when a base image has a newer tag."
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-`WITH_WUD=1` brings up the What's-Up-Docker overlay: it watches every running container's image and pings a Discord webhook when a newer tag is available. Manual `docker compose pull` is still the apply step — no surprise restarts.
+`WITH_WUD=1` brings up the What's-Up-Docker overlay: it watches every running container's image and pings a Discord webhook when a newer tag is available. Manual `docker compose pull` is still the apply step, so there are no surprise restarts.
 
 <Aside type="note" title="Coming soon">
   Full runbook will cover: configuring the Discord webhook, scoping

@@ -1,5 +1,5 @@
 ---
-title: API template — overview
+title: "API template: overview"
 description: Bun + Elysia + Drizzle + Postgres + Redis + BullMQ. What's wired and where it lives.
 ---
 
@@ -11,7 +11,7 @@ The api-template is a production-shaped HTTP API. It has the bits every SaaS reb
 
 <FileTree>
 - src/
-  - index.ts                      Entrypoint — listens on `PORT`
+  - index.ts                      Entrypoint; listens on `PORT`
   - config/
     - app.ts                      Elysia app composition + middleware
     - routes.ts                   Route group imports
@@ -23,7 +23,7 @@ The api-template is a production-shaped HTTP API. It has the bits every SaaS reb
   - api/                          Feature folders
     - auth/                       Register/login/logout, OAuth, password reset
     - users/                      `/me`, profile updates
-    - widgets/                    Example resource — the pattern you copy
+    - widgets/                    Example resource (the pattern you copy)
     - dashboard/                  Counts + recent activity
     - billing/                    Stripe subscription
     - admin/                      Role-gated ops
@@ -47,16 +47,16 @@ A feature folder has three responsibilities and three matching files:
 
 <FileTree>
 - src/api/widgets/
-  - widgets.routes.ts        HTTP layer — never imports drizzle or `db`
-  - widgets.service.ts       DB + business logic — never imports `t` (Elysia)
+  - widgets.routes.ts        HTTP layer: never imports drizzle or `db`
+  - widgets.service.ts       DB + business logic: never imports `t` (Elysia)
   - widgets.types.ts         Interfaces, shared between routes + service
   - widgets.schemas.ts       (optional) TypeBox request/response shapes
 </FileTree>
 
-This split is **enforced by ESLint**. A `*.routes.ts` file that imports `drizzle-orm` or `../../clients/postgres` will fail `bun run lint`. Try it — it's not advice, it's a wall.
+This split is **enforced by ESLint**. A `*.routes.ts` file that imports `drizzle-orm` or `../../clients/postgres` will fail `bun run lint`. Try it. That is not advice; it is a wall.
 
 ```ts
-// src/api/widgets/widgets.routes.ts — fine
+// src/api/widgets/widgets.routes.ts (passes lint)
 import { widgetsService } from "./widgets.service";
 
 const widgetsRoutes = createAuthMiddleware()
@@ -64,7 +64,7 @@ const widgetsRoutes = createAuthMiddleware()
 ```
 
 ```ts
-// src/api/widgets/widgets.routes.ts — FAILS lint
+// src/api/widgets/widgets.routes.ts (fails lint)
 import { eq } from "drizzle-orm";              // ← rule fires here
 import { db } from "../../clients/postgres";   // ← and here
 ```

@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <strong>📖 Full docs: <a href="https://boringstack.xyz">boringstack.xyz</a></strong>
+  <strong>Full docs: <a href="https://boringstack.xyz">boringstack.xyz</a></strong>
 </p>
 
 <p align="center">
@@ -19,34 +19,34 @@
 
 ## What you get
 
-Three **independent** template repos, cut from codebases that have been in production for **15 years**. Think auth, persistence, payments, email, logs, and how you actually boot the stack. The point is to stop rebuilding the same spine on every greenfield, whether a human or an agent is driving the editor.
+Three independent template repos, cut from codebases that have been in production for fifteen years. They cover auth, persistence, payments, email, logging, and how you actually boot the stack. The goal is to stop rebuilding that spine on every greenfield, whether a human or an agent is driving the editor.
 
-- **Typed API surface.** The API publishes OpenAPI; the UI codegen keeps paths and response shapes lined up with the server.
-- **Lint that backs up the folders.** A pile of custom ESLint rules on the API and UI sides so “where does this go?” and “did we just log a secret?” are mostly mechanical questions.
-- **SaaS-shaped defaults.** Sessions, OAuth, Stripe webhooks, queues, audit trail, structured logging, env checks. Not a toy login page.
-- **Runs on your machine.** [infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template) gives Postgres, Redis, and Traefik for local or single-VPS flows. A **separate** K3s-focused repo is planned so Compose and cluster manifests never share one mega-repo.
+- Typed API surface. The API publishes OpenAPI; the UI codegen keeps paths and response shapes aligned with the server.
+- Lint that backs up the folders. Custom ESLint rules on the API and UI sides turn “where does this go?” and “did we just log a secret?” into mostly mechanical checks.
+- SaaS-shaped defaults. Sessions, OAuth, Stripe webhooks, queues, audit trail, structured logging, env checks. More than a toy login page.
+- Runs on your machine. [infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template) gives Postgres, Redis, and Traefik for local or single-VPS flows. A separate K3s-focused repo is planned so Compose and cluster manifests never share one mega-repo.
 
 ## What we optimize for
 
 ### Minimal cost to run and maintain (COGS)
 
-The templates bias toward **open source** and **self-hosted** building blocks for the spine—database, cache, queue, reverse proxy, and how you boot the stack with [infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template) (and K8s paths later)—so recurring **vendor spend and surprise line items** stay low and as much of the **data plane** as possible runs on primitives you control.
+The templates bias toward open source, self-hosted building blocks for the spine: database, cache, queue, reverse proxy, plus the scripts that boot the stack with [infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template) (Kubernetes paths later). That keeps recurring vendor spend and surprise line items low and keeps as much of the data plane as possible on primitives you control.
 
 ### Maturity
 
-Core infra is **battle-tested for years**: **Postgres**, **Redis**, **Traefik**, standard Docker workflows—not experimental hosted-only databases or bespoke orchestration for your system of record.
+Core infra is old, boring stuff: Postgres, Redis, Traefik, standard Docker workflows. Not experimental hosted-only databases or bespoke orchestration for your system of record.
 
 ### Ownership
 
-**No vendor lock-in** on that core: you run the infra, you hold the data, and there are **no hidden platform fees** for those layers. **Stripe** (billing) and **optional observability** (e.g. **Sentry** in the UI template) are integrations you can swap or self-host later; defaults still favor boring, portable foundations where it matters most.
+You run the core infra and hold the data. There are no hidden platform fees for those layers. Stripe (billing) and optional observability (for example Sentry in the UI template) are integrations you can swap or self-host later; defaults still favor portable foundations where it matters most.
 
 ### Plain SPA, sharp boundaries
 
-The UI is a **Vite + React** SPA on purpose: **strong DX**, dev and bundling that stay **fast**, and **not** a hybrid stack that blurs server and client in ways that are awkward to own long term. **Separation of concerns** is strict—the UI owns rendering and client state; the **API delivers JSON** behind **OpenAPI**, not double duty as a document or template runtime. Each side does one job well, with less accidental coupling and less pressure on the API for presentation-shaped work.
+The UI is a Vite + React SPA on purpose: strong developer experience, fast dev and bundling, and no hybrid stack that blurs server and client in ways that are awkward to own long term. Separation of concerns is strict. The UI owns rendering and client state. The API delivers JSON behind OpenAPI, not double duty as a document or template runtime. Each side does one job well, with less accidental coupling and less pressure on the API for presentation-shaped work.
 
 ## Prototypes vs Production
 
-Lovable, Replit Agent, v0, Bolt, and similar tools are great for **seeing** whether an idea sticks. Pain shows up when that output gets treated like finished product: keys in the browser, SQL in handlers, unsigned webhooks, “auth” that falls over under basic review, logs full of customer data.
+Lovable, Replit Agent, v0, Bolt, and similar tools are great for seeing whether an idea sticks. Pain shows up when that output gets treated like finished product: keys in the browser, SQL in handlers, unsigned webhooks, “auth” that falls over under basic review, logs full of customer data.
 
 These repos start from the other assumption: you want defaults, a written contract for agents (`AGENT_CONTRACT.md` on the API), and a short security checklist, and you still want to move quickly.
 
@@ -62,7 +62,7 @@ Each repo is its own clone with its own CI and merge bar. No monolith, no accide
 
 ## How they fit together
 
-[infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template) brings up Postgres, Redis, Traefik, and **containerized** API/UI in dev (or production images when you use the prod profile). The API owns the domain and exports **OpenAPI** (Swagger while developing). The UI treats that file as truth: regenerate types when the server changes and let TypeScript argue with you before users do.
+[infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template) brings up Postgres, Redis, Traefik, and containerized API/UI in dev (or production images when you use the prod profile). The API owns the domain and exports OpenAPI (Swagger while developing). The UI treats that file as truth: regenerate types when the server changes and let TypeScript argue with you before users do.
 
 ```mermaid
 flowchart LR
@@ -86,9 +86,9 @@ Skim each `README.md`. The API repo is the heaviest read (plugins, agent contrac
 
 ## Why three repos (and fewer wasted tokens)
 
-Smaller context per task: editing a route shouldn’t drag in Compose overlays or cluster YAML; tuning Traefik shouldn’t load the Drizzle schema.
+Smaller context per task: editing a route should not drag in Compose overlays or cluster YAML; tuning Traefik should not load the Drizzle schema.
 
-Infra, API, and UI can move on different schedules. A Postgres bump doesn’t need to ship with a UI tweak.
+Infra, API, and UI can move on different schedules. A Postgres bump does not need to ship with a UI tweak.
 
 Most “new SaaS” code is the same wiring repeated. Put that wiring in templates once, then spend the budget on the parts that are actually yours.
 

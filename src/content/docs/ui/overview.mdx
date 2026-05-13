@@ -1,17 +1,17 @@
 ---
-title: UI template — overview
+title: "UI template: overview"
 description: Vite + React 19 + TanStack Query + shadcn/ui + Zustand. A typed OpenAPI client, architecture rules in the lint config, full e2e via Playwright.
 ---
 
 import { FileTree, Aside } from "@astrojs/starlight/components";
 
-The ui-template is a production-shaped SPA. The point of this template is not "look, a login page" — it's the **architecture rules around the login page** that make a team scale past three features without devolving into spaghetti.
+The ui-template is a production-shaped SPA. The valuable part is not a glossy login page; it is the architecture rules around auth and layout so a team can add features without the codebase turning into spaghetti.
 
 ## Directory layout
 
 <FileTree>
 - src/
-  - app/                          App shell — providers, routes, main entry
+  - app/                          App shell: providers, routes, main entry
     - main.tsx                    Sentry init, React mount
     - App.tsx                     Providers tree
     - router/                     `react-router-dom` config, `ProtectedRoute`
@@ -45,7 +45,7 @@ A page like `DashboardPage/` is **not** a single `.tsx` file. It's a folder with
   - DashboardPage.tsx              Pure JSX, no state, no queries
   - DashboardPage.hooks.ts         All `useState`, `useEffect`, `useCallback`
   - DashboardPage.types.ts         `IDashboardPageView` (the hook's return shape)
-  - DashboardPage.constants.ts     Literals only — no imports
+  - DashboardPage.constants.ts     Literals only, no imports
   - DashboardPage.utils.ts         Pure helpers
   - DashboardPage.test.tsx         Component test
   - DashboardPage.stories.tsx      Storybook
@@ -61,7 +61,7 @@ The lint config rejects `useState` inside a `.tsx`, rejects component files that
 | Kind | Lives in | Owner |
 |---|---|---|
 | **Server state** (anything fetched) | `*.queries.ts`, consumed via `useXxx()` hooks | TanStack Query |
-| **UI / client state** (modal open, current step) | `*.store.ts` (Zustand) — feature-scoped | Zustand |
+| **UI / client state** (modal open, current step) | `*.store.ts` (Zustand), feature-scoped | Zustand |
 | **Form state** | `*.hooks.ts` with React Hook Form + Zod | RHF |
 | **Render state** (purely computed) | `*.hooks.ts` returning `IXxxView` | none |
 
@@ -91,7 +91,7 @@ See [OpenAPI client](/ui/openapi-client/).
 | e2e | Playwright | Multi-page flows against the real stack |
 | Visual | Playwright snapshots | Per-platform baselines |
 
-The unit + component tests don't need a backend. Playwright e2e requires the dev stack running (`./dev.sh up -d` from infra). There's no MSW layer — we removed it deliberately; mocking a real backend is rarely worth the cost.
+The unit + component tests don't need a backend. Playwright e2e requires the dev stack running (`./dev.sh up -d` from infra). There is no MSW layer. We removed it on purpose; mocking a real backend is rarely worth the cost.
 
 <Aside type="tip" title="Scaffolding">
   `pnpm new:component MyThing` writes the eight-file anatomy.

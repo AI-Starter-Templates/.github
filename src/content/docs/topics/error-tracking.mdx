@@ -7,8 +7,8 @@ import { Aside } from "@astrojs/starlight/components";
 
 Both `api-template` and `ui-template` ship a Sentry SDK. Same wire protocol works against:
 
-- **Hosted [Sentry](https://sentry.io)** — fastest, paid past the free tier.
-- **Self-hosted [GlitchTip](https://glitchtip.com)** — Sentry-compatible, runs as an overlay in the infra stack (`WITH_GLITCHTIP=1`). Zero per-event cost.
+- **Hosted [Sentry](https://sentry.io)**: fastest, paid past the free tier.
+- **Self-hosted [GlitchTip](https://glitchtip.com)**: Sentry-compatible, runs as an overlay in the infra stack (`WITH_GLITCHTIP=1`). Zero per-event cost.
 
 You pick by changing **only the DSN**. The SDKs don't know or care which one they're talking to.
 
@@ -24,7 +24,7 @@ initializeSentry();
 const app = createApp().listen(env.PORT);
 ```
 
-`initializeSentry()` (in `src/config/sentry.ts`) reads `SENTRY_DSN` and `SENTRY_TRACES_SAMPLE_RATE` from env. If `SENTRY_DSN` is empty, the function is a no-op — dev stays clean.
+`initializeSentry()` (in `src/config/sentry.ts`) reads `SENTRY_DSN` and `SENTRY_TRACES_SAMPLE_RATE` from env. If `SENTRY_DSN` is empty, the function is a no-op, so dev stays clean.
 
 It also exports `captureError(error, context?)` which is wired into the unhandled-rejection and uncaught-exception handlers in `src/config/error-handlers.ts`. Anything that escapes the request loop reaches Sentry.
 

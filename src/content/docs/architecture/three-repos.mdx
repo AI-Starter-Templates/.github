@@ -1,6 +1,6 @@
 ---
 title: The three repos
-description: Why BoringStack ships as three independent repositories — and how they wire together.
+description: Why BoringStack ships as three independent repositories, and how they wire together.
 ---
 
 import { Aside, FileTree } from "@astrojs/starlight/components";
@@ -18,7 +18,7 @@ Each repo:
 
 - has its **own `package.json` / dependency tree** (or `bun.lock` for the API),
 - has its **own CI** that runs in isolation,
-- has its **own deploy story** — you could fork just one and use it on its own,
+- has its **own deploy story**: you could fork just one and use it on its own,
 - has its **own ESLint config** + custom plugins tailored to that layer.
 
 They wire together through the infra repo's `docker-compose.yml`, which references the API and UI via relative paths (`../../api-template`, `../../ui-template`).
@@ -65,7 +65,7 @@ boringstack/                 ← parent dir; can have any name
 
 The API exposes its OpenAPI document at `/swagger/json`. The UI ships a `pnpm generate:api` script that reads that document and rewrites `src/lib/api/schema.d.ts`. The UI's typed `apiClient` (built on `openapi-fetch`) refuses, at compile time, to call a path that isn't in the schema or to pass a body that doesn't match.
 
-So when the API gains, renames, or removes a route, the UI either fails to typecheck or generates the new contract on the next `pnpm generate:api`. There's no "I thought the field was `userName` not `username`" class of bug — TS catches it before runtime.
+So when the API gains, renames, or removes a route, the UI either fails to typecheck or generates the new contract on the next `pnpm generate:api`. There is no "I thought the field was `userName` not `username`" class of bug. TypeScript catches it before runtime.
 
 See [OpenAPI client](/ui/openapi-client/) for the full flow.
 
@@ -73,7 +73,7 @@ See [OpenAPI client](/ui/openapi-client/) for the full flow.
 
 The infra `docker-compose.yml` defines `api-dev` / `api` / `ui-dev` / `ui` services whose **build context** is the sibling app repo and whose **env vars** are documented in `compose/api.dev.env.example` and `compose/api.prod.env.example`.
 
-The api-template's `.env.example` and the infra's `api.*.env.example` overlap deliberately — same variable names, same shapes. If you move config between local-dev and the infra, the names don't change.
+The api-template's `.env.example` and the infra's `api.*.env.example` overlap deliberately: same variable names, same shapes. If you move config between local-dev and the infra, the names don't change.
 
 ## Why not a monorepo?
 

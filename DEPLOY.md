@@ -1,4 +1,4 @@
-# Deploy — boringstack.xyz on Cloudflare Pages
+# Deploy: boringstack.xyz on Cloudflare Pages
 
 The site in `.github/` is an [Astro Starlight](https://starlight.astro.build) docs site. It builds to static files, deploys to [Cloudflare Pages](https://pages.cloudflare.com), and is served at https://boringstack.xyz.
 

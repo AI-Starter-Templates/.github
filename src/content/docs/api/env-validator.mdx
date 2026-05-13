@@ -1,11 +1,11 @@
 ---
 title: Env validator
-description: TypeBox-based env validation with cross-field invariants — boot fails fast on misconfiguration.
+description: "TypeBox-based env validation with cross-field invariants; boot fails fast on misconfiguration."
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-The api-template validates every env var at boot via a TypeBox schema. Cross-field invariants (e.g. "if `EMAIL_PROVIDER=resend` then `RESEND_API_KEY` is required") are encoded as refinements. The process refuses to start if anything is missing or malformed — no silent fallbacks.
+The api-template validates every env var at boot via a TypeBox schema. Cross-field invariants (e.g. "if `EMAIL_PROVIDER=resend` then `RESEND_API_KEY` is required") are encoded as refinements. The process refuses to start if anything is missing or malformed. There are no silent fallbacks.
 
 <Aside type="note" title="Coming soon">
   Full reference will cover: the schema layout, how to add a new env

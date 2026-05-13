@@ -13,7 +13,7 @@ This walks you from nothing to a logged-in dashboard, locally, in about five min
 - **Git** with access to the [`AI-Starter-Templates`](https://github.com/AI-Starter-Templates) repos.
 - About 4 GB of free RAM for the dev stack.
 
-You don't need Node or Bun locally for the quickstart — the dev stack runs everything inside containers.
+You don't need Node or Bun locally for the quickstart; the dev stack runs everything inside containers.
 
 ## Clone the three repos as siblings
 
@@ -90,5 +90,5 @@ You should land on the dashboard with real counts of users + widgets pulled from
 
 | Task               | Command                           | Data preserved?                     |
 | ------------------ | --------------------------------- | ----------------------------------- |
-| Stop, keep data    | `./scripts/compose-down.sh`       | ✅                                  |
-| Stop and wipe data | `./scripts/compose-down-clean.sh` | ❌ (prompts; `CONFIRM=yes` to skip) |
+| Stop, keep data    | `./scripts/compose-down.sh`       | Yes                                 |
+| Stop and wipe data | `./scripts/compose-down-clean.sh` | No (prompts; `CONFIRM=yes` to skip) |

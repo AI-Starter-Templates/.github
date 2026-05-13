@@ -37,7 +37,7 @@ Authorization: Bearer {CLOUDFLARE_EMAIL_API_TOKEN}
 Content-Type: application/json
 ```
 
-with `{from, to, subject, html, text?}`. Retries + structured logging + the shared `retryWithBackoff` helper are reused — Cloudflare gets the same robustness wrap as Resend and SendGrid.
+with `{from, to, subject, html, text?}`. Retries, structured logging, and the shared `retryWithBackoff` helper are reused, so Cloudflare gets the same robustness wrap as Resend and SendGrid.
 
 ## Quickstart (dev)
 
@@ -54,7 +54,7 @@ CLOUDFLARE_EMAIL_API_TOKEN=<API token with "Email Sending: Edit">
 
 ## Operator setup (prod)
 
-The full walkthrough — enable Workers Paid, enable Email Service on your domain, capture the account ID, scope a token, smoke-test — lives in the [Cloudflare Email setup runbook](/runbooks/cloudflare-email-setup/).
+The full walkthrough (enable Workers Paid, enable Email Service on your domain, capture the account ID, scope a token, smoke-test) lives in the [Cloudflare Email setup runbook](/runbooks/cloudflare-email-setup/).
 
 ## Switching providers
 
