@@ -50,9 +50,10 @@ import { Card, CardGrid } from "@astrojs/starlight/components";
     control.
   </Card>
   <Card title="Lint that backs up the folders" icon="puzzle">
-    Custom ESLint plugins on both API and UI sides codify the architecture
-    so "where does this go?" is a mechanical question. The merge gate
-    fails on architecture drift, not just style.
+    Fifteen custom ESLint plugins codify the architecture so "where does
+    this go?" is a mechanical question. Agents skip `AGENTS.md`; lint
+    still enforces the rules.
+    <br /><a href="/architecture/lint-as-contract/">See the inventory →</a>
   </Card>
   <Card title="Boots on your machine" icon="bars">
     `./dev.sh up -d` brings up the whole stack: Postgres, Redis, Traefik,

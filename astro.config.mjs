@@ -11,7 +11,7 @@ export default defineConfig({
     starlight({
       title: "BoringStack",
       description:
-        "SaaS starters with the boring parts already thought through. Auth, billing, an API contract, and a deploy story you can run locally — not a slideshow.",
+        "SaaS starters with the boring parts already thought through. Auth, billing, an API contract, and a deploy story you can run locally, not a slideshow.",
       logo: {
         src: "./src/assets/logo.svg",
         replacesTitle: false,
@@ -41,6 +41,11 @@ export default defineConfig({
               link: "/architecture/why-not-monorepo/",
             },
             { label: "Stack at a glance", link: "/architecture/stack/" },
+            {
+              label: "Lint as the contract",
+              link: "/architecture/lint-as-contract/",
+              badge: { text: "agent-critical", variant: "tip" },
+            },
           ],
         },
         {

@@ -1,0 +1,73 @@
+---
+title: Lint as the contract
+description: Fifteen custom ESLint plugins encode the architecture. Agents skip AGENTS.md; lint still enforces it.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+Every BoringStack template ships an `AGENTS.md`, a `CLAUDE.md`, and an `AGENT_CONTRACT.md`. They explain the patterns: where routes go, when to use a service, how to write a Drizzle query, why `process.env` is forbidden outside the env validator.
+
+Agents skim them, skip them, then violate them on the next edit with full confidence.
+
+The **15 custom ESLint plugins** are how the architecture survives anyway. Every rule that matters is machine-checked. `pnpm validate` / `bun run validate` is the merge gate: if lint fails, the diff does not ship. The docs are the *why*; the lint is the *what's enforced*.
+
+<Aside type="tip" title="The hierarchy">
+  Prose docs (`AGENTS.md`) are *aspirational*. Lint rules are *load-bearing*.
+  When the two disagree, fix the lint rule or add a new one, then update
+  the prose.
+</Aside>
+
+## Shared across api-template + ui-template
+
+| Plugin | What it enforces |
+|---|---|
+| [`resource-architecture`](https://github.com/agjs/eslint-plugin-resource-architecture) | Per-feature route/service/types split. No business logic in routes; no HTTP in services. |
+| [`module-boundaries`](https://github.com/agjs/eslint-plugin-module-boundaries) | Single-semantic-module files. No mixed-concern dumps. |
+| [`structured-logging`](https://github.com/agjs/eslint-plugin-structured-logging) | Pino discipline. No `console.log`, no string-interpolated log lines, no logging secrets. |
+| [`env-access`](https://github.com/agjs/eslint-plugin-env-access) | `process.env` (or `import.meta.env`) is only readable inside the env validator. Everywhere else imports the validated config. |
+| [`test-conventions`](https://github.com/agjs/eslint-plugin-test-conventions) | `tests/` mirrors `src/`. Test files match their source by path. No orphan tests. |
+
+## api-template only
+
+| Plugin | What it enforces |
+|---|---|
+| [`elysia`](https://github.com/agjs/eslint-plugin-elysia) | Elysia idioms: TypeBox schemas on every route, no untyped handlers, plugin registration patterns. |
+| [`drizzle-conventions`](https://github.com/agjs/eslint-plugin-drizzle-conventions) | Schema and query patterns, including index naming and `with` usage. |
+| [`db-transactions`](https://github.com/agjs/eslint-plugin-db-transactions) | Multi-write paths must run inside a transaction. No partial-state foot-guns. |
+| [`jwt-cookies`](https://github.com/agjs/eslint-plugin-jwt-cookies) | Cookie attributes (`HttpOnly`, `Secure`, `SameSite`) and JWT verify call sites. |
+| [`oauth-security`](https://github.com/agjs/eslint-plugin-oauth-security) | OAuth state + PKCE invariants on the server-side flow. |
+| [`bullmq`](https://github.com/agjs/eslint-plugin-bullmq) | Queue + worker patterns: idempotency, dead-letter handling, name discipline. |
+| [`cache-keys`](https://github.com/agjs/eslint-plugin-cache-keys) | Redis key naming + TTL discipline. No unnamespaced keys, no TTL-free writes by accident. |
+| [`audit-log`](https://github.com/agjs/eslint-plugin-audit-log) | Audit-log writes on flagged mutations. Security-relevant events can't be silently skipped. |
+| [`stripe-webhooks`](https://github.com/agjs/eslint-plugin-stripe-webhooks) | Stripe handler safety: signature verification, idempotency, raw-body access. |
+
+## ui-template only
+
+| Plugin | What it enforces |
+|---|---|
+| [`react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture) | Component anatomy, hook placement, `className` discipline, file-naming, prop ordering (fifteen rules in one package). |
+
+## How they're wired
+
+Each repo's `eslint.config.ts` imports these plugins from `node_modules/` (they're installed as devDependencies, not vendored). The plugins ship their own `recommended` configs; we extend those and turn most rules to `error` rather than `warn` so the merge gate has real teeth.
+
+```bash
+# In each repo
+pnpm validate     # typecheck + lint + tests (merge bar)
+pnpm lint         # lint only
+pnpm lint:fix     # autofix what's autofixable
+```
+
+Husky runs `pnpm lint-staged` on every commit, so most violations get caught before they reach CI. CI re-runs the full `validate` to catch what the staged-only run missed.
+
+## Why this matters for agent-driven development
+
+A human reading `AGENTS.md` tends to absorb the patterns. An agent reading `AGENTS.md` often ships plausible code that ignores half of them: different file, different layer, same rule. Without machine enforcement, you spend review time on `process.env` leaks, untyped routes, and mis-namespaced cache keys instead of the actual logic.
+
+Push the rule into a linter and it becomes a closed loop: agent writes code → lint catches drift → agent gets a parseable error → agent fixes the right thing. The merge gate stays green only when the architecture stays intact.
+
+That's the whole bet: **docs explain, lint enforces.** Both matter, but if you had to keep only one, you'd keep the lint.
+
+## Contributing back
+
+The plugins are MIT-licensed and developed in the open. If you find a gap, file an issue or PR against the relevant plugin repo (linked in the tables above). Rules that prove themselves in production end up promoted to `recommended` configs.

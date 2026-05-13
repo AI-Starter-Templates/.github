@@ -1,20 +1,19 @@
 ---
 title: Architecture rules
-description: Custom ESLint plugins that enforce the route/service/types split and module boundaries.
+description: "The ui-template's custom ESLint plugins cover component anatomy, hook placement, and classNames discipline."
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-The ui-template (and api-template) ship custom ESLint plugins that make the architecture self-enforcing: `resource-architecture` keeps routes thin, `module-boundaries/single-semantic-module` prevents mixed-concern files, and a handful of smaller rules block common foot-guns.
+The ui-template enforces its architecture through ESLint, not vibes. The UI-specific plugin is [`eslint-plugin-react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture) (15 rules: component anatomy, hook placement, `className` discipline, file-naming, prop ordering). It composes with the five shared plugins (resource-architecture, module-boundaries, structured-logging, env-access, test-conventions) that both repos use.
+
+The full inventory across api-template and ui-template (including why machine-checked rules beat prose docs for agent-driven work) lives at [Lint as the contract](/architecture/lint-as-contract/).
 
 <Aside type="note" title="Coming soon">
-  Full reference will cover: every rule's purpose, what triggers it,
-  how to fix violations, and when to write a new rule vs. accept a
-  one-off exception.
+  This page will get a rule-by-rule walkthrough of
+  `react-component-architecture` specifically: what each of the 15 rules
+  catches, the autofix paths, and the rare valid suppression patterns.
 
-  Current source-of-truth: `eslint-plugin-resource-architecture/` and
-  `eslint-plugin-module-boundaries/` inside the [ui-template
-  repo](https://github.com/AI-Starter-Templates/ui-template) and
-  [api-template
-  repo](https://github.com/AI-Starter-Templates/api-template).
+  Current source-of-truth: the plugin's [README on
+  GitHub](https://github.com/agjs/eslint-plugin-react-component-architecture).
 </Aside>
