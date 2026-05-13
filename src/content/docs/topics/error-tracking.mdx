@@ -1,76 +1,74 @@
 ---
 title: Error tracking
-description: Sentry SDK on both API and UI sides; pointed at hosted Sentry or self-hosted GlitchTip.
+description: One Sentry-compatible wire protocol, two backends. Hosted Sentry or self-hosted GlitchTip; swap by changing the DSN.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-Both `api-template` and `ui-template` ship a Sentry SDK. Same wire protocol works against:
+Both `api-template` and `ui-template` ship a Sentry SDK. The same SDK talks to:
 
-- **Hosted [Sentry](https://sentry.io)**: fastest, paid past the free tier.
-- **Self-hosted [GlitchTip](https://glitchtip.com)**: Sentry-compatible, runs as an overlay in the infra stack (`WITH_GLITCHTIP=1`). Zero per-event cost.
+- **Hosted [Sentry](https://sentry.io)**; fastest setup, paid past the free tier.
+- **Self-hosted [GlitchTip](https://glitchtip.com)**; Sentry-API-compatible, runs as an overlay in the infra stack (`WITH_GLITCHTIP=1`). Zero per-event cost.
 
-You pick by changing **only the DSN**. The SDKs don't know or care which one they're talking to.
+The SDKs don't know which one they're talking to. Choosing is a one-env-var change.
 
-## API side (`@sentry/bun`)
+## Design choices
 
-Initialized once at the top of `src/index.ts`:
+| Decision | Reason |
+|---|---|
+| Sentry SDK on both sides (not a custom shim) | One vocabulary, one DX, one set of breadcrumbs |
+| GlitchTip as the self-host option | Wire-compatible with Sentry; runs on the same Postgres + Redis the app already uses |
+| Empty DSN → SDK is a no-op | Dev stays clean; tests don't ship error reports |
+| Replay-on-error on, full-session replays off | Captures the broken flow without storing healthy sessions |
+| Single env var per side: `SENTRY_DSN` (API), `VITE_SENTRY_DSN` (UI) | Same protocol regardless of backend; swap is one redeploy |
 
-```ts
-// src/index.ts
-import { initializeSentry } from "./config/sentry";
+## How it's wired
 
-initializeSentry();
-const app = createApp().listen(env.PORT);
+```mermaid
+flowchart LR
+  api["api-template<br/>@sentry/bun"] -- "events" --> backend{DSN points where?}
+  ui["ui-template<br/>@sentry/react"] -- "events + replays-on-error" --> backend
+  backend -- "https://...sentry.io/..." --> sentry["hosted Sentry"]
+  backend -- "https://...glitchtip.localhost/..." --> glitchtip["self-hosted GlitchTip"]
 ```
 
-`initializeSentry()` (in `src/config/sentry.ts`) reads `SENTRY_DSN` and `SENTRY_TRACES_SAMPLE_RATE` from env. If `SENTRY_DSN` is empty, the function is a no-op, so dev stays clean.
+On the **API side**, Sentry initialises once at boot. If `SENTRY_DSN` is empty, init is a no-op. The shared `captureError` helper is wired into unhandled-rejection and uncaught-exception handlers so anything that escapes the request loop reaches the backend.
 
-It also exports `captureError(error, context?)` which is wired into the unhandled-rejection and uncaught-exception handlers in `src/config/error-handlers.ts`. Anything that escapes the request loop reaches Sentry.
+On the **UI side**, Sentry initialises once at app mount when `VITE_SENTRY_DSN` is set. Replays-on-error capture the broken flow; full-session replays are off so you don't accidentally collect a video of every customer.
 
-```bash
-SENTRY_DSN=https://<key>@glitchtip.example.com/<project>
-SENTRY_TRACES_SAMPLE_RATE=0.1
-```
+## Self-hosting with GlitchTip
 
-## UI side (`@sentry/react`)
-
-Initialized once in `src/app/main.tsx`:
-
-```ts
-if (env.VITE_SENTRY_DSN !== "") {
-  Sentry.init({
-    dsn: env.VITE_SENTRY_DSN,
-    environment: env.MODE,
-    tracesSampleRate: env.PROD ? 0.1 : 1.0,
-    replaysSessionSampleRate: 0,
-    replaysOnErrorSampleRate: 1.0,
-  });
-}
-```
-
-```bash
-VITE_SENTRY_DSN=https://<key>@glitchtip.example.com/<project>
-```
-
-Replays-on-error are on by default; full session replays are off.
-
-## Self-hosted with GlitchTip
-
-GlitchTip is an Apache-licensed, Sentry-API-compatible error tracker. Run it as an overlay in the infra stack:
+GlitchTip is Apache-licensed and Sentry-API-compatible. The infra stack provides it as an overlay:
 
 ```bash
 WITH_GLITCHTIP=1 ./dev.sh up -d
 ```
 
-On first boot, the overlay's entrypoint creates a superuser (`admin@localhost` / `admin123456`, override via env), a default org (`Local`), and two projects (`API` and `Frontend`). Visit `http://glitchtip.localhost` and copy each project's DSN into the matching env var.
+First boot bootstraps a superuser, a default org, and two projects (`API` and `Frontend`). Visit `http://glitchtip.localhost`, grab each project's DSN, and drop them into the matching env vars.
 
-The overlay reuses the base stack's Postgres (separate `glitchtip` DB) and Redis (DB 1). So adding GlitchTip costs **two extra containers**, not a separate database server.
+The overlay reuses the base stack's Postgres (in a separate `glitchtip` database) and Redis (DB 1). Adding GlitchTip costs **two extra containers**, not a separate database server.
 
-See the [GlitchTip docs in the infra repo](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/docs/glitchtip.md) for prod hardening (Basic Auth, HTTPS, real SMTP).
+For production hardening (Basic Auth, HTTPS, real SMTP), see the [GlitchTip docs in the infra repo](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/docs/glitchtip.md).
+
+## Switching backends
+
+Change only the DSN:
+
+| Backend | API var | UI var |
+|---|---|---|
+| Sentry | `SENTRY_DSN=https://...@sentry.io/...` | `VITE_SENTRY_DSN=https://...@sentry.io/...` |
+| GlitchTip (self-hosted) | `SENTRY_DSN=https://...@glitchtip.example.com/...` | `VITE_SENTRY_DSN=https://...@glitchtip.example.com/...` |
+
+No SDK changes. The infrastructure is the variable, not the code.
 
 <Aside type="tip" title="When to use which">
-  **Hosted Sentry**: you'd rather pay $26/mo than run another container.
-  **GlitchTip**: you're already on the infra stack, and "another container"
-  is free. Same DX either way.
+  **Hosted Sentry:** you'd rather pay $26/mo than run another container.
+  **GlitchTip:** you're already on the infra stack and "another container" is free.
+  DX is identical either way.
 </Aside>
+
+## Source
+
+- API init: [`src/config/sentry.ts`](https://github.com/AI-Starter-Templates/api-template/blob/main/src/config/sentry.ts) + [`src/config/error-handlers.ts`](https://github.com/AI-Starter-Templates/api-template/blob/main/src/config/error-handlers.ts).
+- UI init: [`src/app/main.tsx`](https://github.com/AI-Starter-Templates/ui-template/blob/main/src/app/main.tsx).
+- GlitchTip overlay: [`compose/docker-compose.glitchtip.yml`](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/compose/docker-compose.glitchtip.yml).

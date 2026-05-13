@@ -1,19 +1,94 @@
 ---
 title: Profiles & overlays
-description: How `STACK=` and `WITH_*=1` flags compose docker-compose files.
+description: How `STACK=` and `WITH_*=1` flags compose docker-compose files. The base stack stays small; everything else is opt-in.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-The infra template uses docker-compose profiles + overlay files to keep the dev path small and let you opt into observability, error tracking, queue dashboards, and image-update detection independently.
+The infra stack is built so the **default** is small (Postgres + Redis + Traefik + your apps) and everything else; observability, error tracking, queue dashboard, image-update detection; is **opt-in via a flag**. The composition happens in `dev.sh`, which assembles the `docker-compose` invocation based on env vars.
 
-<Aside type="note" title="Coming soon">
-  Full reference will cover: every overlay's contents, what flags
-  combine cleanly, what each adds in terms of resource cost, and the
-  one-shot vs. always-on services.
+## How a stack is assembled
 
-  Current source-of-truth: `compose/docker-compose.*.yml` files and
-  `./dev.sh` in the [infra-docker-compose-template
-  repo](https://github.com/AI-Starter-Templates/infra-docker-compose-template/tree/main/compose).
-  See also the [Infra overview](/infra/overview/).
-</Aside>
+```mermaid
+flowchart LR
+  base["base stack<br/>postgres · redis<br/>traefik · api · ui"]
+  stack{"STACK= ?"}
+  dev["+ development-labels<br/>HTTP · host ports"]
+  prod["+ production-labels<br/>HTTPS · ACME"]
+  obs["+ observability"]
+  glitch["+ glitchtip"]
+  bullmq["+ bullmq (dev only)"]
+  wud["+ wud"]
+  base --> stack
+  stack -->|dev| dev
+  stack -->|prod| prod
+  base -.->|WITH_OBSERVABILITY=1| obs
+  base -.->|WITH_GLITCHTIP=1| glitch
+  base -.->|WITH_BULLMQ=1| bullmq
+  base -.->|WITH_WUD=1| wud
+```
+
+The result is a single `docker compose -f ... -f ... --profile ...` command. `dev.sh` is plain bash; you can read exactly what gets merged.
+
+## Design choices
+
+| Decision | Reason |
+|---|---|
+| Base stack always-on, everything else opt-in | First-time setup boots fast and uses minimal RAM |
+| Flags compose freely (`WITH_OBSERVABILITY=1 WITH_GLITCHTIP=1 ...`) | No combinatorial config files; each overlay is independent |
+| Separate `dev` / `prod` overlays for labels | HTTPS, ACME, and security headers live in prod-only files |
+| `WITH_BULLMQ` only valid in dev | Bull-board has no auth and no place in production |
+| Profiles + overlay files (not just one giant file) | `docker compose config` stays readable; overlays can be skipped cleanly |
+
+## The full opt-in matrix
+
+| Flag | Adds | Cost |
+|---|---|---|
+| `WITH_OBSERVABILITY=1` | Prometheus, Grafana, Loki, Promtail, Alertmanager + 3 exporters | ~6 containers; ~500MB RAM idle |
+| `WITH_GLITCHTIP=1` | GlitchTip web + worker + beat (Sentry-compatible error tracking) | 3 containers; reuses base Postgres + Redis |
+| `WITH_BULLMQ=1` | Bull-board UI at `bullmq.localhost` | 1 container; dev only |
+| `WITH_WUD=1` | What's-Up-Docker image-update detector | 1 container; Discord webhook optional |
+
+Combinations: `WITH_OBSERVABILITY=1 WITH_GLITCHTIP=1 ./scripts/compose-up.sh` is supported (and runs in CI).
+
+## STACK=dev vs STACK=prod
+
+| Aspect | `dev` | `prod` |
+|---|---|---|
+| API + UI | Bind-mounted source, hot reload | Built images from Dockerfile.prod |
+| Traefik | HTTP, no TLS, dashboard exposed | HTTPS via Let's Encrypt ACME, dashboard off |
+| Hosts | `app.localhost`, `api.localhost`, etc. | `PUBLIC_UI_HOST` / `PUBLIC_API_HOST` from env |
+| Data ports | Postgres on `:5432`, Redis on `:6379` published to host | Internal-only, not published |
+
+`STACK=prod` is mostly the same compose graph with different routing + builds. The data plane (Postgres, Redis) is identical.
+
+## Reading what's actually running
+
+```bash
+# What did dev.sh assemble?
+STACK=dev WITH_OBSERVABILITY=1 ./dev.sh config | less
+
+# Service status of the live stack
+./dev.sh ps
+```
+
+`./dev.sh` forwards every argument to `docker compose` with the merged file list; so any compose command works (`logs`, `exec`, `top`, etc.).
+
+## Adding an overlay
+
+1. Write a new `docker-compose.<name>.yml` with the additional services.
+2. Add a `WITH_<NAME>=1` clause in `dev.sh` mirroring the existing ones.
+3. Document the flag in `compose/.env.example`.
+4. Update the [Commands cheatsheet](/reference/commands/).
+
+Overlays are independent files, so you can ship one without touching the base.
+
+## Source
+
+[`compose/dev.sh`](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/compose/dev.sh); the orchestrator. [`compose/docker-compose.*.yml`](https://github.com/AI-Starter-Templates/infra-docker-compose-template/tree/main/compose); the base + overlays.
+
+## Related
+
+- [Infra overview](/infra/overview/); service inventory.
+- [Resource limits](/infra/resource-limits/); sizing per service.
+- [Commands cheatsheet](/reference/commands/); every flag in one table.

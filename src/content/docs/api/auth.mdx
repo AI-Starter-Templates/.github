@@ -1,18 +1,104 @@
 ---
 title: Authentication
-description: Session-cookie auth with optional Google OAuth, server-side flow with PKCE in Redis.
+description: Session-cookie auth with bcrypt-hashed passwords and a server-side OAuth flow. State + PKCE survive the redirect in Redis.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-The api-template ships email-and-password auth with bcrypt-hashed credentials, opaque session cookies, and an optional Google OAuth flow (server-side, Arctic + PKCE in Redis, so no SPA-side secret handling).
+Two flows share one session model:
 
-<Aside type="note" title="Coming soon">
-  Full reference will cover: session model, cookie attributes, CSRF
-  posture, OAuth callback flow, account linking, and how to add a second
-  provider.
+- **Password**; register / login / verify-email / forgot-password / reset-password.
+- **OAuth**; Google, GitHub, LinkedIn. Server-side: the SPA never holds a client secret.
 
-  Current source-of-truth: `src/api/auth/` and `src/lib/auth/` in the
-  [api-template
-  repo](https://github.com/AI-Starter-Templates/api-template/tree/main/src/api/auth).
+Both end the same way: an `HttpOnly` cookie carrying a short-lived JWT.
+
+## How a request gets authenticated
+
+```mermaid
+sequenceDiagram
+  participant B as Browser
+  participant API as API (Elysia)
+  participant DB as Postgres
+  B->>API: request with auth_token cookie
+  API->>API: verify JWT (signature + exp)
+  API->>DB: SELECT users WHERE id = <sub>
+  DB-->>API: user row (or none → 401)
+  API-->>B: response
+```
+
+`createAuthMiddleware` is the seam. Mount it on a route group and every handler in that group gets a typed `user` on its context. Token errors are categorized so the SPA can react cleanly (expired ≠ malformed ≠ missing).
+
+## Design choices
+
+| Decision | Reason |
+|---|---|
+| JWT in `HttpOnly` cookie (not localStorage) | XSS can't steal the token |
+| `SameSite=strict` in prod, `lax` in dev | CSRF protection without breaking same-origin dev |
+| Short JWT TTL (7 days), no server-side revocation list | Cheap and stateless; rotate `JWT_SECRET` to mass-invalidate |
+| Two tables: `users` ↔ `user_auth_providers` | One user can hold a password and N OAuth links; no `nullable` password column |
+| OAuth state in Redis, not in a cookie | State must survive the cross-origin redirect; cookies on the IdP's domain don't work |
+| Read-and-delete state consumption | Replay attacks fail by construction |
+
+## The OAuth round-trip
+
+```mermaid
+sequenceDiagram
+  participant SPA
+  participant API
+  participant Redis
+  participant IdP
+  SPA->>API: GET /auth/oauth/:provider
+  API->>Redis: SETEX oauth:state:<nonce> {codeVerifier} (10m TTL)
+  API-->>SPA: 302 → IdP authorize URL (state + PKCE challenge)
+  SPA->>IdP: user authenticates
+  IdP-->>API: 302 /auth/oauth/:provider/callback?code&state
+  API->>Redis: GETDEL oauth:state:<nonce>
+  Note over API,Redis: null → replay/expired/forged → 401
+  API->>IdP: exchange code + codeVerifier
+  IdP-->>API: profile
+  API->>API: find-or-create user, sign JWT, set cookie
+  API-->>SPA: 302 ${FRONTEND_URL}/oauth/success
+```
+
+The state record holds the PKCE code verifier. Reading it consumes it; a second callback with the same `state` finds nothing. The 10-minute TTL accommodates a slow IdP without leaving stale state lying around.
+
+## Using it
+
+A protected route looks like:
+
+```ts
+new Elysia()
+  .use(createAuthMiddleware())
+  .get("/me", ({ user }) => ({ user })); // user: IUser, type-safe
+```
+
+Unauthenticated callers get a categorized 401 (`tokenExpired`, `invalidToken`, `missingCookie`) so the SPA can refresh-and-retry or redirect to login.
+
+## Adding an OAuth provider
+
+1. Add it to `OAUTH_PROVIDERS` and the env-key map in [`oauth.manifest.ts`](https://github.com/AI-Starter-Templates/api-template/blob/main/src/lib/oauth/oauth.manifest.ts).
+2. Drop a provider module in `src/lib/oauth/providers/` using Arctic's class for that IdP.
+3. Add the client-id/secret pair to the env schema with a cross-field invariant ("required when provider enabled").
+
+The lint plugins refuse to merge a provider that skips the state-consume or PKCE wire-up.
+
+## Lint coverage
+
+- [`eslint-plugin-jwt-cookies`](https://github.com/agjs/eslint-plugin-jwt-cookies); cookie attributes and JWT verify call sites.
+- [`eslint-plugin-oauth-security`](https://github.com/agjs/eslint-plugin-oauth-security); state + PKCE invariants on the callback path.
+
+See [Lint as the contract](/architecture/lint-as-contract/) for why these matter.
+
+<Aside type="caution" title="Rotating JWT_SECRET">
+  Rotating `JWT_SECRET` invalidates every outstanding cookie. That's the
+  right behavior after a suspected leak; don't rotate casually.
 </Aside>
+
+## Source
+
+[`src/api/auth/`](https://github.com/AI-Starter-Templates/api-template/tree/main/src/api/auth) and [`src/lib/oauth/`](https://github.com/AI-Starter-Templates/api-template/tree/main/src/lib/oauth) on GitHub; the routes, the services, the OAuth state store, and the providers.
+
+## Related
+
+- [Env validator](/api/env-validator/); enforces the OAuth-credentials-when-enabled invariant.
+- [Audit log](/api/audit-log/); every auth event writes an audit row.

@@ -1,13 +1,13 @@
 ---
 title: Cloudflare Email Service
-description: Why we default to Cloudflare's transactional email API, and how it's wired into the stack.
+description: Why we default to Cloudflare's transactional email API. The cheapest deliverability path that exists at non-trivial volume.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-The api-template ships [Cloudflare Email Service](https://developers.cloudflare.com/email-service/) as the default outbound mail provider. Combined with Workers Paid ($5/mo, no documented per-message charge), it's the cheapest transactional email path that exists at non-trivial volume.
+The api-template ships [Cloudflare Email Service](https://developers.cloudflare.com/email-service/) as the default outbound mail provider. Combined with Workers Paid ($5/mo, no documented per-message charge), it's the cheapest transactional path at non-trivial volume.
 
-## Why
+## Why it's the default
 
 |                  | Cloudflare Email Service                              | Resend                 | SendGrid           |
 | ---------------- | ----------------------------------------------------- | ---------------------- | ------------------ |
@@ -16,49 +16,32 @@ The api-template ships [Cloudflare Email Service](https://developers.cloudflare.
 | Setup            | Cloudflare-managed DNS auto-provisions SPF/DKIM/DMARC | Manual DNS records     | Manual DNS records |
 | Vendor lock-in   | Cloudflare account required                           | None                   | None               |
 
-If you're already paying for Workers (or willing to), Cloudflare Email is **free transactional sending** at the margin. That maps directly to BoringStack's cost-of-goods bias.
+If you're already paying for Workers (or willing to), Cloudflare Email is **free transactional sending at the margin**. That maps directly to BoringStack's cost-of-goods bias.
 
-## How the api-template uses it
+## How it slots in
 
-The api-template has a pluggable email provider abstraction (`src/lib/email/`). Each provider implements the same `IEmailService` interface:
+The api-template's email layer is pluggable: one `IEmailService` interface, four concrete implementations (Cloudflare, Resend, SendGrid, noop). The Cloudflare provider POSTs to an account-scoped endpoint on `api.cloudflare.com` with a bearer token. Retries, structured logging, and the shared `retryWithBackoff` wrapper apply equally to all providers; Cloudflare gets the same robustness treatment as Resend.
 
-```ts
-export interface IEmailService {
-  send: (message: IEmailMessage) => Promise<IEmailResult>;
-  readonly providerName: EmailProviderName;
-}
-```
+See [Email](/api/email/) for the abstraction shape and how dispatch works.
 
-`buildEmailService()` reads `EMAIL_PROVIDER` from env and constructs the right concrete provider. When it's `cloudflare`, the implementation POSTs to:
+## Dev quickstart
 
-```
-POST https://api.cloudflare.com/client/v4/accounts/{CLOUDFLARE_ACCOUNT_ID}/email/sending/send
-Authorization: Bearer {CLOUDFLARE_EMAIL_API_TOKEN}
-Content-Type: application/json
-```
+Dev with no Cloudflare keys → the noop provider logs the rendered payload to stdout instead of sending. Zero friction.
 
-with `{from, to, subject, html, text?}`. Retries, structured logging, and the shared `retryWithBackoff` helper are reused, so Cloudflare gets the same robustness wrap as Resend and SendGrid.
-
-## Quickstart (dev)
-
-In dev with both Cloudflare env vars empty, a noop provider logs the rendered email payload to stdout instead of sending. No friction.
-
-To actually send in dev (rare), set:
+To actually send from dev:
 
 ```bash
-EMAIL_PROVIDER=cloudflare        # already the default
+EMAIL_PROVIDER=cloudflare           # already the default
 EMAIL_FROM=noreply@<your-cf-domain>
 CLOUDFLARE_ACCOUNT_ID=<from CF dashboard right sidebar>
 CLOUDFLARE_EMAIL_API_TOKEN=<API token with "Email Sending: Edit">
 ```
 
-## Operator setup (prod)
+## Production setup
 
-The full walkthrough (enable Workers Paid, enable Email Service on your domain, capture the account ID, scope a token, smoke-test) lives in the [Cloudflare Email setup runbook](/runbooks/cloudflare-email-setup/).
+The walkthrough; enable Workers Paid, enable Email Service on your domain, capture the account ID, scope a token, smoke-test; lives in the [Cloudflare Email setup runbook](/runbooks/cloudflare-email-setup/).
 
-## Switching providers
-
-Same env switch, different keys:
+## Switching to Resend or SendGrid
 
 ```bash
 EMAIL_PROVIDER=resend
@@ -70,10 +53,10 @@ EMAIL_PROVIDER=sendgrid
 SENDGRID_API_KEY=SG.xxx
 ```
 
-In production the env validator demands the matching key for the selected provider; the boot fails with a readable error if it's missing.
+The [env validator](/api/env-validator/) refuses to boot in production if the matching key is missing; switching providers is a one-redeploy operation, not a code change.
 
 ## Caveats
 
-- **Cloudflare Email Service is in beta** (as of writing). Pricing may evolve; daily limits are variable + account-scoped.
-- **DNS must be on Cloudflare.** The auto-provisioned SPF/DKIM/DMARC records are how deliverability works; you can't skip that step.
+- **Cloudflare Email Service is in beta** (as of writing). Pricing may evolve; daily limits are variable and account-scoped.
+- **DNS must be on Cloudflare.** Auto-provisioned SPF/DKIM/DMARC are how deliverability works; you can't skip the step.
 - **New accounts** can only send to verified addresses until upgraded. The runbook covers the unlock.

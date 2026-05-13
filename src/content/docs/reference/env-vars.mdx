@@ -1,19 +1,122 @@
 ---
-title: Env vars
-description: Consolidated index of every env var across api-template, ui-template, and the infra stack.
+title: Environment variables
+description: One place to look up "what does FOO_BAR do, and where does it live?" across api-template, ui-template, and the infra stack.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-A single place to look up "what does `FOO_BAR` do, and where does it live?" across the three repos.
+Each repo has its own `.env.example` that's the **source of truth** for vars it consumes. This page is an index; it tells you which repo owns a given var, why it exists, and which `.env.example` to read for the full reference (defaults, comments, prod-only flags).
 
-<Aside type="note" title="Coming soon">
-  Full reference will list every var with: which repo owns it, default
-  value, dev-vs-prod expectations, and the link to wherever it's
-  consumed.
+## Which file to edit
 
-  Current source-of-truth: the `.env.example` files in each repo:
-  [api-template](https://github.com/AI-Starter-Templates/api-template/blob/main/.env.example),
-  [ui-template](https://github.com/AI-Starter-Templates/ui-template/blob/main/.env.example),
-  [infra-docker-compose-template](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/compose/.env.example).
-</Aside>
+| Layer | File | Consumed by |
+|---|---|---|
+| **api-template** | `.env` in `api-template/` | The Bun process directly when running outside Docker |
+| **ui-template** | `.env.local` in `ui-template/` | Vite at build/dev time (`VITE_*` only) |
+| **infra (dev)** | `compose/.env` in `infra-docker-compose-template/` | Compose: injected into the api and ui dev containers |
+| **infra (prod)** | `compose/.env` + `compose/api.prod.env` | Compose: prod profile uses separate api env file |
+
+For Docker-Compose-driven setups (the default), **`compose/.env` is the single file you edit.** It overrides defaults baked into `docker-compose.yml` and gets injected into the right containers via `env_file:` references.
+
+## Categories
+
+### Process + observability
+
+| Var | Repo | Required? | Notes |
+|---|---|---|---|
+| `NODE_ENV` | api | yes | `development` / `production` / `test`; gates prod-only invariants |
+| `PORT` | api | no | Default 3000 |
+| `LOG_LEVEL` | api | no | `debug` / `info` / `warn` / `error` |
+| `SENTRY_DSN` | api | no | Empty → SDK is a no-op |
+| `SENTRY_TRACES_SAMPLE_RATE` | api | no | 0..1, default 0.1 |
+| `VITE_SENTRY_DSN` | ui | no | Same wire as Sentry/GlitchTip |
+
+### Database + cache
+
+| Var | Repo | Required? | Notes |
+|---|---|---|---|
+| `DATABASE_URL` | api | yes | Postgres connection string |
+| `REDIS_HOST` / `REDIS_PORT` | api | yes for queues/cache | Defaults `localhost` / 6379 |
+| `REDIS_PASSWORD` | api | required in prod when Redis-using features on | |
+| `REDIS_DB` | api | no | Default 0 |
+| `CACHE_ENABLED` / `CACHE_PROVIDER` | api | no | `false` → noop; `memory` / `redis` |
+| `QUEUES_ENABLED` | api | no | When `false`, dispatch falls back to inline |
+
+### Auth + session
+
+| Var | Repo | Required? | Notes |
+|---|---|---|---|
+| `JWT_SECRET` | api | yes (≥ 32 chars) | Signs auth cookie; rotation invalidates all sessions |
+| `FRONTEND_URL` | api | yes | OAuth success redirect target |
+| `ALLOWED_ORIGINS` | api | yes in prod | CSV; must be HTTPS, no wildcards in prod |
+| `GOOGLE_OAUTH_CLIENT_ID` / `_SECRET` | api | when Google enabled | |
+| `GITHUB_OAUTH_CLIENT_ID` / `_SECRET` | api | when GitHub enabled | |
+| `LINKEDIN_OAUTH_CLIENT_ID` / `_SECRET` | api | when LinkedIn enabled | |
+
+### Email
+
+| Var | Repo | Required? | Notes |
+|---|---|---|---|
+| `EMAIL_PROVIDER` | api | always | `cloudflare` (default) / `resend` / `sendgrid` |
+| `EMAIL_FROM` | api | always | Sender on a verified domain |
+| `CLOUDFLARE_ACCOUNT_ID` | api | when cloudflare | |
+| `CLOUDFLARE_EMAIL_API_TOKEN` | api | when cloudflare | Scoped `Email Sending: Edit` |
+| `RESEND_API_KEY` | api | when resend | |
+| `SENDGRID_API_KEY` | api | when sendgrid | |
+
+### Billing
+
+| Var | Repo | Required? | Notes |
+|---|---|---|---|
+| `BILLING_ENABLED` | api | no | When `true`, Stripe keys required |
+| `STRIPE_SECRET_KEY` | api | when billing on | |
+| `STRIPE_WEBHOOK_SECRET` | api | when billing on | |
+| `STRIPE_PRICE_ID_FREE` / `_PRO` | api | when billing on | |
+
+### AI
+
+| Var | Repo | Required? | Notes |
+|---|---|---|---|
+| `AI_ENABLED` | api | no | |
+| `AI_PROVIDER` | api | when AI on | `openai` / `anthropic` / `noop` |
+| `OPENAI_API_KEY` | api | when AI=openai | |
+| `OPENAI_BASE_URL` | api | no | Point at OpenAI-compatible (OpenRouter, Ollama, vLLM) |
+| `ANTHROPIC_API_KEY` | api | when AI=anthropic | |
+
+### UI build-time
+
+| Var | Repo | Required? | Notes |
+|---|---|---|---|
+| `VITE_API_URL` | ui | yes | API base URL |
+| `VITE_LOCALES` | ui | no | CSV of locale codes; first is fallback |
+| `VITE_GOOGLE_CLIENT_ID` | ui | no | Display gate for the Google button |
+
+### Infra (compose-only)
+
+| Var | Repo | Required? | Notes |
+|---|---|---|---|
+| `STACK` | infra | yes | `dev` / `prod` |
+| `POSTGRES_USER` / `_PASSWORD` / `_DB` | infra | yes | Postgres bootstrap credentials |
+| `PUBLIC_API_HOST` / `PUBLIC_UI_HOST` | infra | yes in prod | DNS names for Traefik routers |
+| `ACME_EMAIL` | infra | yes in prod | Let's Encrypt contact |
+| `GRAFANA_ADMIN_USER` / `_PASSWORD` | infra | when observability on | |
+| `*_LIMITS_CPUS` / `_MEMORY` | infra | no | Per-service resource caps; see [Resource limits](/infra/resource-limits/) |
+| `WITH_OBSERVABILITY` / `WITH_GLITCHTIP` / `WITH_BULLMQ` / `WITH_WUD` | infra | no | Overlay toggles |
+| `RCLONE_REMOTE_NAME` / `RCLONE_REMOTE_PATH` | infra | when backups configured | |
+| `BACKUP_RETENTION_DAYS` | infra | no | Default 30 |
+| `BACKUP_DRY_RUN` | infra | no | `1` → script logs but doesn't act |
+
+## Authoritative references
+
+The tables here are an **index**. For defaults, comments, and the per-var reasoning:
+
+| Repo | File |
+|---|---|
+| api-template | [`.env.example`](https://github.com/AI-Starter-Templates/api-template/blob/main/.env.example) |
+| ui-template | [`.env.example`](https://github.com/AI-Starter-Templates/ui-template/blob/main/.env.example) |
+| infra | [`compose/.env.example`](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/compose/.env.example) |
+
+## Related
+
+- [Env validator](/api/env-validator/); how the api-template enforces required + cross-field rules.
+- [Secrets](/infra/secrets/); handling the sensitive subset.

@@ -1,19 +1,89 @@
 ---
 title: Glossary
-description: 'Project-specific terms: what we mean by "overlay", "resource", "module boundary", and friends.'
+description: Project-specific terms that show up across the docs. The vocabulary BoringStack uses for its own moving parts.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-A small project-specific dictionary so newcomers can decode the BoringStack vocabulary quickly.
+The terms below show up repeatedly. They're defined consistently across the docs but worth a single reference point.
 
-<Aside type="note" title="Coming soon">
-  Will cover terms like: **overlay** (an opt-in docker-compose file),
-  **resource** (a route/service/types triple in the api-template),
-  **module boundary** (the ESLint rule preventing cross-feature
-  imports), **profile** (compose profile), **stack** (`dev` vs.
-  `prod`), and the OpenAPI **contract** between API and UI.
+## Architecture vocabulary
 
-  In the meantime, each term is explained at first use in the
-  Architecture and Template sections.
-</Aside>
+**The three repos**
+The three sibling repositories that compose BoringStack: `api-template`, `ui-template`, `infra-docker-compose-template`. They sit as siblings under one parent directory because the infra repo references the other two via relative paths in its compose builds.
+
+**Feature folder**
+A single directory per feature (`src/api/widgets/`, `src/features/dashboard/`). Holds the routes, services, types, and tests for that one feature. The unit of independent change. [Read more](/architecture/three-repos/).
+
+**Route / service / types split**
+The api-template's per-feature pattern. `widgets.routes.ts` does HTTP only, `widgets.service.ts` does business logic + DB, `widgets.types.ts` holds the shapes shared between them. Enforced by ESLint. [Read more](/api/overview/).
+
+**Component anatomy**
+The ui-template's per-component pattern. A page like `DashboardPage/` is a folder of ~8 files (`.tsx`, `.hooks.ts`, `.types.ts`, `.constants.ts`, `.utils.ts`, `.test.tsx`, `.stories.tsx`, `index.ts`). [Read more](/ui/overview/).
+
+**View object**
+The shape a hook returns to its component (`IDashboardPageView` returned by `useDashboardPage`). The component never reads queries, stores, or env directly; it only renders the view object. Decouples logic from JSX.
+
+**Module boundary**
+The lint-enforced rule that a file can have **one** semantic concern. No mixing routes + services + utils in one file. Enforced by [`eslint-plugin-module-boundaries`](https://github.com/agjs/eslint-plugin-module-boundaries).
+
+## Infra vocabulary
+
+**Stack**
+The deployment target: `STACK=dev` or `STACK=prod`. Picks which compose overlay (HTTP routes + host ports for dev, HTTPS + ACME for prod) gets merged on top of the base.
+
+**Overlay**
+An opt-in `docker-compose.<name>.yml` file that adds services to the base stack. Activated by a `WITH_<NAME>=1` env var. Overlays compose freely (e.g. `WITH_OBSERVABILITY=1 WITH_GLITCHTIP=1`). [Read more](/infra/profiles-and-overlays/).
+
+**Profile**
+A docker-compose feature for grouping services within a single file. The infra stack uses profiles (`--profile dev`, `--profile observability`) alongside overlays; profiles activate services within a file, overlays add files.
+
+**Base stack**
+The always-on services: Postgres + Redis + Traefik + api-migrate (one-shot) + the app containers. Everything else is an overlay.
+
+**Data plane**
+Postgres + Redis. The services that hold state. Deliberately not exposed to the `frontend` Docker network, so the only path from the world to the data plane is through the API.
+
+## Architecture rules vocabulary
+
+**The contract**
+Shorthand for "the rules the ESLint plugins enforce." When something is "in the contract," violating it fails `pnpm validate`. The phrase emphasizes that *the lint is load-bearing*, not the prose docs. [Read more](/architecture/lint-as-contract/).
+
+**Fire-and-forget**
+A call site that intentionally doesn't `await` a Promise. Used for audit-log writes and other telemetry where failure must never propagate to the caller. The `void` prefix marks the intent for both readers and the linter.
+
+**Pluggable provider**
+An interface with multiple concrete implementations, selected by env var. Used for email, AI, and cache. The interface is the contract; the implementations are interchangeable.
+
+## Data + persistence
+
+**Drizzle**
+The TypeScript-first ORM the api-template uses for Postgres. Schema-as-TS, migrations as generated SQL files, queries that look like SQL but are typed. Picked over Prisma because there's no shadow database and migrations are plain SQL.
+
+**Schema (Postgres)**
+A namespace within a database. The api-template uses two: `public` (app tables) and `audit` (the audit log). Keeping them separate lets you grant, archive, or migrate them independently.
+
+**Audit log**
+The append-only `audit.audit_log` table. Records security- and compliance-relevant events. Fire-and-forget; writes never block requests. [Read more](/api/audit-log/).
+
+## Background work
+
+**Queue**
+A named work buffer in Redis, owned by a directory under `src/queues/<name>/`. Producers enqueue; workers consume. Always five files (constants, types, queue, worker, setup).
+
+**QueueManager**
+The process-singleton that owns all queues + workers. Application code never imports BullMQ's `Queue` class directly; it calls `manager.enqueueX(...)`. [Read more](/api/queues/).
+
+**Idempotent**
+A job that produces the same result if run twice. BullMQ retries on failure, so workers **must** be idempotent. Patterns: natural keys, UNIQUE constraints with caught violations, check-then-do inside a transaction.
+
+## Other
+
+**`dev.sh`**
+The infra orchestrator. Forwards every argument to `docker compose` with the right overlay + profile flags based on `STACK=` and `WITH_*=` env vars. Plain bash; you can read what it does.
+
+**`pnpm validate` / `bun run validate`**
+The merge gate. Typecheck + lint + tests. A PR can't merge if `validate` fails. The phrase "the merge gate" anywhere in the docs means this command.
+
+**Stub page**
+A docs page with frontmatter and a "Coming soon" callout, linking to current source-of-truth. Used so the sidebar resolves cleanly and search has surface area even before a page is promoted to real content. Several pages on this site start as stubs and graduate.

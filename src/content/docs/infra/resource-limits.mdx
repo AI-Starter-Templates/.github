@@ -1,17 +1,82 @@
 ---
 title: Resource limits
-description: Per-service CPU and memory limits, env-driven, sized for a 4-vCPU / 8 GB host by default.
+description: Every service has CPU and memory caps driven by env vars. Defaults sized for a 4-vCPU / 8 GB host.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-Every service in the compose stack has `deploy.resources.limits` and `reservations` driven by env vars. Defaults target a 4-vCPU / 8 GB single-host VPS; bump the relevant `*_CPUS` / `*_MEMORY` knobs in `compose/.env` for bigger boxes.
+Every container in the stack has `deploy.resources.limits` and `deploy.resources.reservations` set from env vars. The defaults target a **4-vCPU / 8 GB VPS**; the cheapest tier on Hetzner / OVH / DigitalOcean that's actually usable in production. Bigger box? Bump the knobs.
 
-<Aside type="note" title="Coming soon">
-  Full reference will cover: the env knobs per service, sizing guidance
-  for common VPS shapes (Hetzner CX series, OVH VPS, DO droplets), and
-  how to diagnose an OOM-killed container.
+## Why limits matter
 
-  Current source-of-truth: `compose/.env.example` and the `deploy.resources`
-  blocks in [docker-compose.yml](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/compose/docker-compose.yml).
-</Aside>
+A misbehaving worker that consumes all memory shouldn't take Postgres down with it. Limits draw the boundaries; reservations guarantee a service can boot even when the host is busy. Without limits, one runaway process kills every other service on the host.
+
+## Design choices
+
+| Decision | Reason |
+|---|---|
+| Limits + reservations on **every** service | Failures stay isolated; the host stays responsive |
+| Knobs in `compose/.env`, not hardcoded | Right-sizing is a config change, not a code change |
+| Defaults target 4 vCPU / 8 GB | Cheapest production-viable VPS tier; everything else scales up from there |
+| Reservations < limits (~1:4 ratio) | Reserves the minimum to boot; allows bursts up to the limit |
+| `bun` and Node services share roughly the same shape | Avoids per-runtime tuning until measurements say otherwise |
+
+## The shape of a knob
+
+Each service has four env vars: limits CPU/memory, reservations CPU/memory. Example for Postgres:
+
+```bash
+POSTGRES_LIMITS_CPUS=1.0
+POSTGRES_LIMITS_MEMORY=512M
+POSTGRES_RESERVATIONS_CPUS=0.25
+POSTGRES_RESERVATIONS_MEMORY=128M
+```
+
+Same pattern for `REDIS_`, `TRAEFIK_`, `API_DEV_`, `UI_DEV_`, `API_`, `UI_`, and the optional overlays.
+
+## Default sizing (4 vCPU / 8 GB)
+
+| Service | Limit CPU | Limit RAM | Notes |
+|---|---|---|---|
+| Postgres | 1.0 | 512 MB | Heaviest of the data plane; bump first |
+| Redis | 0.5 | 256 MB | Plenty for cache + queues at small scale |
+| Traefik | 0.5 | 256 MB | Steady-state usage is low |
+| API (dev/prod) | 1.5 | 1 GB | Generous for Bun + Drizzle; covers burst on cold caches |
+| UI (dev) | 1.5 | 1 GB | Vite dev server eats memory during HMR |
+| UI (prod, nginx) | 0.25 | 128 MB | Static file serving is cheap |
+
+Sum of limits exceeds host capacity on purpose: containers don't all peak simultaneously. Reservations are sized so nothing can starve.
+
+## Sizing for bigger hosts
+
+Rough scaling guide:
+
+| Host | Postgres bump | Workers / API replicas |
+|---|---|---|
+| 4 vCPU / 8 GB | Default | One of each |
+| 8 vCPU / 16 GB | `POSTGRES_LIMITS_MEMORY=2G`, `POSTGRES_LIMITS_CPUS=2.0` | Consider horizontal API replication |
+| 16+ vCPU / 32+ GB | Postgres deserves its own host | Multiple API + worker replicas; revisit Redis Cluster |
+
+Above the 16 vCPU mark, the single-host model itself becomes the bottleneck; that's the right time to look at the planned Kubernetes path.
+
+## Diagnosing an OOM kill
+
+When a container disappears with a non-zero exit:
+
+```bash
+docker inspect <container> --format '{{.State.OOMKilled}}'    # true means OOM
+docker inspect <container> --format '{{.State.ExitCode}}'     # 137 = SIGKILL by OOM
+```
+
+If `OOMKilled=true`, bump the matching `*_LIMITS_MEMORY` knob in `.env` and redeploy. If it keeps happening, the underlying code is leaking; fix the leak, don't keep raising the ceiling.
+
+`docker stats` shows live usage so you can see how close services run to their limits in steady state. Anything pegged > 80% of its memory limit is a candidate for a bump.
+
+## Source
+
+[`compose/.env.example`](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/compose/.env.example); every knob, commented. [`compose/docker-compose.yml`](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/compose/docker-compose.yml); where they're wired into `deploy.resources`. [`docs/resource-limits.md`](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/docs/resource-limits.md); extended sizing guide.
+
+## Related
+
+- [Profiles & overlays](/infra/profiles-and-overlays/); overlays add their own services with their own limits.
+- [Observability](/topics/observability/); Grafana dashboards show resource pressure over time.

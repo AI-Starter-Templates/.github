@@ -1,18 +1,112 @@
 ---
 title: Backups
-description: Postgres → rclone backups with retention, driven by a wrapper script and a host cron.
+description: Postgres → rclone off-site, with retention. Runs from cron; restore drills are mandatory.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-The infra template ships `scripts/backup-wrapper.example.sh`: `pg_dump` → gzip → rclone to your chosen remote (S3, B2, Storj, anywhere rclone speaks). Retention policy is configurable; dry-run mode prints the plan without uploading.
+The infra template ships `scripts/backup-wrapper.example.sh`: `pg_dump` → gzip → `rclone copy` to a remote of your choice, with retention. Designed to be safe to run from cron; idempotent, logs to stdout, exits non-zero on failure.
 
-<Aside type="note" title="Coming soon">
-  Full runbook will cover: setting up the rclone remote, the cron
-  installation, retention math (daily/weekly/monthly), a restore drill,
-  and how to verify backups are actually readable.
+## What the script does
 
-  Current source-of-truth:
-  [`scripts/backup-wrapper.example.sh`](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/scripts/backup-wrapper.example.sh)
-  in the infra-docker-compose-template repo.
-</Aside>
+```mermaid
+flowchart LR
+  pg["pg_dump --no-owner<br/>against running container"]
+  gz["gzip<br/>local temp file"]
+  rclone["rclone copy<br/>to remote"]
+  retention["delete remote dumps<br/>> RETENTION_DAYS"]
+  cleanup["remove local temp"]
+  pg --> gz --> rclone --> retention --> cleanup
+```
+
+Plain bash. ~80 lines. Read it before pointing at production.
+
+## Design choices
+
+| Decision | Reason |
+|---|---|
+| rclone, not vendor-specific tools | One config talks to S3, B2, Storj, Wasabi, even your own host via SFTP |
+| Gzip locally before upload | Saves bandwidth and storage; pg_dump compresses well |
+| `pg_dump`, not file-level snapshots | Logical dumps survive Postgres version upgrades; file-level doesn't |
+| Retention enforced remotely | The remote is the source of truth for what exists |
+| `BACKUP_DRY_RUN=1` mode | First run prints the plan; promotes to real once you trust it |
+| Exits non-zero on any failure | Cron mail capture surfaces failures automatically |
+
+## What to configure
+
+In `compose/.env` (the script sources it):
+
+| Var | Purpose |
+|---|---|
+| `POSTGRES_USER`, `POSTGRES_DB` | What to dump |
+| `RCLONE_REMOTE_NAME` | The rclone remote alias (configured separately via `rclone config`) |
+| `RCLONE_REMOTE_PATH` | Path within the remote |
+| `BACKUP_RETENTION_DAYS` | Default 30 |
+| `BACKUP_DRY_RUN=1` | Print what would happen; skip side effects |
+
+## Setting it up
+
+1. **Configure rclone once.** `rclone config` on the host. Pick a remote (S3, B2, etc.), name it `backup` (or whatever; match `RCLONE_REMOTE_NAME`).
+2. **Copy the wrapper.** `cp scripts/backup-wrapper.example.sh scripts/backup-wrapper.sh && chmod +x scripts/backup-wrapper.sh`.
+3. **Dry-run it.** `BACKUP_DRY_RUN=1 ./scripts/backup-wrapper.sh`. Verify the plan reads correctly.
+4. **Real run.** Drop the flag, run it once manually, confirm a file lands in the remote.
+5. **Schedule it.** Drop a cron entry:
+   ```bash
+   # /etc/cron.d/backups; daily at 03:15
+   15 3 * * * root /path/to/infra-docker-compose-template/scripts/backup-wrapper.sh
+   ```
+
+## Retention math
+
+| Cadence | Default retention | What survives |
+|---|---|---|
+| Daily, 30 days | 30 backups | A month of point-in-time recovery |
+| Daily, with monthly retention | Custom; see below | Years of monthly snapshots, days of recent |
+
+For longer retention (compliance, year-over-year audits), run **two** crons with different `RCLONE_REMOTE_PATH` values:
+
+```bash
+# Daily, 30 days
+15 3 * * * ... RCLONE_REMOTE_PATH=daily BACKUP_RETENTION_DAYS=30 ...
+
+# Monthly, kept forever (no retention)
+15 4 1 * * ... RCLONE_REMOTE_PATH=monthly BACKUP_RETENTION_DAYS=99999 ...
+```
+
+## Restore drill
+
+A backup you can't restore is not a backup. **Run the drill quarterly.**
+
+1. Pick a recent backup. `rclone ls backup:db/`.
+2. Download to a workstation. `rclone copy backup:db/<file>.sql.gz ./`.
+3. `gunzip` it.
+4. Spin up a throwaway Postgres locally. `docker run --rm -d --name pg-restore -e POSTGRES_PASSWORD=test postgres:17`.
+5. Restore. `cat <file>.sql | docker exec -i pg-restore psql -U postgres`.
+6. Sanity-query. Row counts in the main tables; `users`, `audit_log`, whatever's important.
+
+If any step fails, the runbook is broken. **Fix it before you need it.**
+
+## Encryption
+
+The script uploads gzip'd SQL; readable to anyone with access to the remote. Two patterns to encrypt:
+
+- **Server-side at the remote.** S3, B2, etc. all support encryption-at-rest. Easiest; you trust the provider.
+- **Client-side via rclone crypt.** `rclone config` a crypt-wrapped remote on top of the bucket. Encrypted before leaving the host.
+
+For sensitive data, client-side is the right answer. Document the password in your secret store; without it, the backups are useless.
+
+## What's NOT backed up
+
+- **Redis.** It's cache + queues; not authoritative. If you can't rebuild it, you have an architecture problem, not a backup problem.
+- **Audit log table.** It *is* backed up because it's part of Postgres. Just noting it explicitly because some templates treat audit separately.
+- **`compose/.env`.** Back up separately; it's small enough to live in a private secrets repo or password manager.
+- **Container images.** Pull from registry on restore; not part of the backup loop.
+
+## Source
+
+[`scripts/backup-wrapper.example.sh`](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/scripts/backup-wrapper.example.sh) · [`docs/backup-offsite.md`](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/docs/backup-offsite.md) in the infra repo.
+
+## Related
+
+- [Secrets](/infra/secrets/); back up `compose/.env` separately.
+- [Deployment](/topics/deployment/); where this script lives in the broader operational picture.

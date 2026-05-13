@@ -1,84 +1,90 @@
 ---
 title: "UI template: overview"
-description: Vite + React 19 + TanStack Query + shadcn/ui + Zustand. A typed OpenAPI client, architecture rules in the lint config, full e2e via Playwright.
+description: Vite + React 19 + TanStack Query + shadcn/ui + Zustand. A typed OpenAPI client and an ESLint-enforced component anatomy.
 ---
 
-import { FileTree, Aside } from "@astrojs/starlight/components";
+import { Aside, FileTree } from "@astrojs/starlight/components";
 
-The ui-template is a production-shaped SPA. The valuable part is not a glossy login page; it is the architecture rules around auth and layout so a team can add features without the codebase turning into spaghetti.
+The ui-template is a production-shaped SPA. **Architecture rules** (component anatomy, queries vs stores, OpenAPI client) keep features from turning into 600-line `.tsx` blobs as the team and codebase grow.
 
-## Directory layout
+## How a feature is shaped
+
+```mermaid
+flowchart LR
+  page["MyPage.tsx<br/>pure JSX, no state"]
+  hook["MyPage.hooks.ts<br/>useState · useEffect · useCallback"]
+  types["MyPage.types.ts<br/>IMyPageView (hook's return shape)"]
+  query["my-feature.queries.ts<br/>TanStack Query"]
+  store["my-feature.store.ts<br/>Zustand (UI state)"]
+  page --> hook
+  hook --> query
+  hook --> store
+  hook -.->|returns| types
+  page -.->|reads| types
+```
+
+Components only ever see the **view object** from their hook. They never read TanStack Query directly, never read Zustand directly, never read `import.meta.env` directly. That's what makes any component trivially testable.
+
+## Design choices
+
+| Decision | Reason |
+|---|---|
+| Component as folder of ~8 files, not one big `.tsx` | Each file has one job; `useState` in `.tsx` is a lint error |
+| Server state in TanStack Query, client state in Zustand, never mixed | "Is this fetched or local?" stops being a judgment call |
+| Typed client generated from the API's OpenAPI schema | A 404 path or wrong body shape becomes a compile error |
+| shadcn/ui + Tailwind 4 `@theme` tokens | Primitives you own (`components/ui/`); design tokens at the CSS layer |
+| No MSW | Mocking a real backend is rarely worth the cost; e2e runs against the actual stack |
+
+## File layout
 
 <FileTree>
 - src/
-  - app/                          App shell: providers, routes, main entry
-    - main.tsx                    Sentry init, React mount
-    - App.tsx                     Providers tree
-    - router/                     `react-router-dom` config, `ProtectedRoute`
-    - providers/                  Query/Toast/I18n/ErrorBoundary
-  - features/                     Vertical feature folders
-    - auth/                       Login, OAuth, queries, schemas
-    - dashboard/                  Real-data dashboard, hooks, queries
-    - onboarding/                 Multi-step form with sub-steps as files
+  - app/                  App shell: providers, router, main entry
+  - features/             Vertical feature folders (auth, dashboard, onboarding, ...)
   - components/
-    - ui/                         shadcn/ui primitives (owned by shadcn conventions)
-    - core/                       Composed components
-    - global/                     App-shell wrappers (NotFoundPage, etc.)
+    - ui/                 shadcn/ui primitives
+    - core/               Composed components
+    - global/             App-shell wrappers
   - lib/
-    - api/                        openapi-fetch client + generated schema
-    - env/                        Zod-validated env + `import.meta.env`
-    - auth/                       OAuth start helper (server-side flow)
-    - logger/                     Structured client logs
-    - storage/                    Namespaced localStorage
-    - i18n/                       react-i18next setup + locales
-  - hooks/                        Cross-feature hooks
-  - store/                        App-level Zustand stores
-  - assets/                       Tailwind entry + static assets
+    - api/                openapi-fetch client + generated schema
+    - env/                Zod-validated `import.meta.env`
+    - auth/               OAuth start helper (server-side flow)
+    - logger/             Structured client logs
+    - i18n/               react-i18next setup + locales
+  - hooks/                Cross-feature hooks
+  - store/                App-level Zustand stores
 </FileTree>
 
-## The component anatomy
-
-A page like `DashboardPage/` is **not** a single `.tsx` file. It's a folder with one job per file, all enforced by ESLint:
+A page or component folder always looks like:
 
 <FileTree>
-- src/features/dashboard/components/DashboardPage/
-  - DashboardPage.tsx              Pure JSX, no state, no queries
-  - DashboardPage.hooks.ts         All `useState`, `useEffect`, `useCallback`
-  - DashboardPage.types.ts         `IDashboardPageView` (the hook's return shape)
-  - DashboardPage.constants.ts     Literals only, no imports
-  - DashboardPage.utils.ts         Pure helpers
-  - DashboardPage.test.tsx         Component test
-  - DashboardPage.stories.tsx      Storybook
-  - StatsSection.tsx               Sub-component (if needed)
-  - StatsSection.types.ts          Its props
-  - index.ts                       Re-export
+- features/dashboard/components/DashboardPage/
+  - DashboardPage.tsx        Pure JSX
+  - DashboardPage.hooks.ts   All React hooks
+  - DashboardPage.types.ts   `IDashboardPageView`
+  - DashboardPage.constants.ts
+  - DashboardPage.utils.ts
+  - DashboardPage.test.tsx
+  - DashboardPage.stories.tsx
+  - index.ts                 Re-export
 </FileTree>
 
-The lint config rejects `useState` inside a `.tsx`, rejects component files that import `*.queries.ts` directly, rejects multi-kind modules, etc. See [Architecture rules](/ui/architecture-rules/).
+`pnpm new:component <Name>` writes this anatomy. `pnpm new:feature <name>` writes a feature scaffold.
 
-## State vs. server-state
+## State, in one decision
 
-| Kind | Lives in | Owner |
+| Kind | Where | Tool |
 |---|---|---|
-| **Server state** (anything fetched) | `*.queries.ts`, consumed via `useXxx()` hooks | TanStack Query |
-| **UI / client state** (modal open, current step) | `*.store.ts` (Zustand), feature-scoped | Zustand |
-| **Form state** | `*.hooks.ts` with React Hook Form + Zod | RHF |
-| **Render state** (purely computed) | `*.hooks.ts` returning `IXxxView` | none |
+| Server (fetched) | `*.queries.ts` | TanStack Query |
+| UI / client (modal open, step index) | `*.store.ts` | Zustand |
+| Form | `*.hooks.ts` | React Hook Form + Zod |
+| Render-derived | `*.hooks.ts` returning `IXxxView` | none |
 
-Components only see the **view object** from their hook. They never read TanStack Query directly, never read Zustand directly, never read `import.meta.env` directly.
+If you can't tell which bucket something belongs to, that's almost always a sign the boundary is wrong; not a need for a fifth bucket.
 
 ## The typed OpenAPI client
 
-The API exposes `/swagger/json`. The UI runs `pnpm generate:api` (against either the live api-dev or a saved spec) to regenerate `src/lib/api/schema.d.ts`. Then:
-
-```ts
-import { apiClient } from "@/lib/api/client";
-
-const { data } = await apiClient.GET("/api/v1/users/me");
-//      ^? typed exactly as the API's response shape
-```
-
-A call to a path that doesn't exist in the schema is a compile error. A body that doesn't match the OpenAPI shape is a compile error. The middleware in `src/lib/api/openapi.ts` handles 401 → silent refresh, then re-throws as `ApiError` for TanStack Query.
+The API publishes `/swagger/json`. `pnpm generate:api` reads it and emits the typed client. From there `apiClient.GET("/api/v1/users/me")` autocompletes the path and types the response. Drift between server and client becomes a compile error, not a runtime 500.
 
 See [OpenAPI client](/ui/openapi-client/).
 
@@ -91,10 +97,12 @@ See [OpenAPI client](/ui/openapi-client/).
 | e2e | Playwright | Multi-page flows against the real stack |
 | Visual | Playwright snapshots | Per-platform baselines |
 
-The unit + component tests don't need a backend. Playwright e2e requires the dev stack running (`./dev.sh up -d` from infra). There is no MSW layer. We removed it on purpose; mocking a real backend is rarely worth the cost.
+See [Testing](/ui/testing/).
 
-<Aside type="tip" title="Scaffolding">
-  `pnpm new:component MyThing` writes the eight-file anatomy.
-  `pnpm new:feature reports` writes a full feature folder. Both validate
-  against the lint config.
-</Aside>
+## Lint as the contract
+
+The component anatomy is held in place by [`eslint-plugin-react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture) plus the shared family. See [Lint as the contract](/architecture/lint-as-contract/) for the full inventory.
+
+## Source
+
+[`ui-template`](https://github.com/AI-Starter-Templates/ui-template) on GitHub. Start in `src/features/` for the feature shape; `src/lib/api/` for the typed client.

@@ -1,18 +1,114 @@
 ---
 title: Audit log
-description: Append-only audit trail for security- and compliance-relevant events.
+description: Append-only, fire-and-forget log of security- and compliance-relevant events. Lives in its own Postgres schema.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-The api-template writes high-signal events (logins, permission changes, OAuth link/unlink, resource mutations on flagged tables) to an append-only `audit_log` table. The dashboard's "Recent activity" feed reads from it directly.
+The audit log is the answer to "who did what, when?" Auth events, OAuth link/unlink, billing actions, mutations on flagged resources; they all land in `audit.audit_log`.
 
-<Aside type="note" title="Coming soon">
-  Full reference will cover: the schema, what's logged vs. what's
-  intentionally not, how to add a new audit event, retention strategy,
-  and the trade-off between audit-log writes and request latency.
+The shape is deliberately boring: append-only table, structured `metadata` blob, time-ordered. The point is the **discipline of writing to it**, not the schema.
 
-  Current source-of-truth: `src/lib/audit/` and the `audit_log` table in
-  `src/db/schema.ts` in the [api-template
-  repo](https://github.com/AI-Starter-Templates/api-template).
-</Aside>
+## How a write happens
+
+```mermaid
+flowchart LR
+  caller["call site<br/>after action succeeds"] -->|record| service["AuditLogService"]
+  service -->|INSERT| db[(audit.audit_log)]
+  service -.->|on failure| log["structured log<br/>swallowed, never thrown"]
+```
+
+The `void` prefix at call sites is load-bearing: it tells the reader (and the linter) the caller is **deliberately** not awaiting. Audit can't be allowed to fail a real request.
+
+## Design choices
+
+| Decision | Reason |
+|---|---|
+| Separate Postgres schema (`audit`, not `public`) | Independent grants, retention, and archival; app migrations on `public` can't touch audit rows |
+| Fire-and-forget writes (errors logged + swallowed) | A flaky audit table can never break a customer action |
+| Nullable `userId` + `ON DELETE SET NULL` | System events have no actor; "this account did X" history survives the user being scrubbed |
+| `jsonb` `metadata` | Add new fields without a migration; cost is no per-field index |
+| Centralized `AUDIT_ACTIONS` constant | Magic strings drift; admin queries depend on a stable vocabulary |
+
+## The action vocabulary
+
+Convention: `<area>.<verb>`. Examples:
+
+- `auth.login_success`, `auth.password_reset_completed`
+- `billing.checkout_session_created`
+- `widget.created`
+
+A `<area>.<verb>` shape means admin queries can group cleanly:
+
+```sql
+SELECT action, count(*) FROM audit.audit_log
+WHERE created_at > now() - interval '24 hours'
+GROUP BY 1 ORDER BY 2 DESC;
+```
+
+New event types add a constant **before** the first call site. Both code review and the lint plugin treat magic-string actions as a smell.
+
+## Using it
+
+```ts
+void auditLogService.record({
+  userId: actor.id,                          // null for system events
+  action: AUDIT_ACTIONS.WIDGET_CREATED,
+  resource: `widget:${widget.id}`,           // optional
+  metadata: { source: "import_csv" },        // optional, PII-free
+});
+```
+
+For the rare flow that must observe the write (e.g. a security event that has to be persisted before responding), drop `void` and check `success`.
+
+## What `metadata` is for
+
+**Structured context the action name doesn't capture.** Keep it small and PII-free.
+
+- Good: `{ planId: "pro_monthly", previousPlanId: "free" }`
+- Bad: `{ email: "...", lastFourCardDigits: "..." }`
+
+The lint plugin flags common leak patterns (keys named `password`, `token`, raw `email`).
+
+## What `userId` should be
+
+| Context | Value |
+|---|---|
+| Authenticated user action | Actor's id |
+| System action (cron, webhook with no user context) | `null` |
+| Admin impersonating a user | Acting admin's id, with `metadata.actingAs = <target>` |
+
+Never quietly attribute an admin's actions to the impersonated user.
+
+## Adding a new event
+
+1. Add a constant to `AUDIT_ACTIONS`.
+2. After the action succeeds, `void auditLogService.record({...})`.
+3. That's it. `/admin/audit-log` and the dashboard activity feed pick it up automatically because they query by action and recency.
+
+## Retention
+
+The template ships **no** retention policy on purpose. Reasonable shapes:
+
+- **Cold storage.** Periodic `COPY ... TO` then `DELETE WHERE created_at < ...`.
+- **Partitioning.** `pg_partman` by month; drop old partitions.
+- **None.** For most B2B SaaS, an unbounded table is fine for years.
+
+Pick consciously. Don't let the table grow to 100M rows and *then* think about it.
+
+## Lint coverage
+
+[`eslint-plugin-audit-log`](https://github.com/agjs/eslint-plugin-audit-log) flags:
+
+- Mutations on flagged tables that skip the audit write.
+- Magic-string `action` values that bypass `AUDIT_ACTIONS`.
+- Metadata payloads that look like a PII leak.
+
+## Source
+
+[`src/lib/audit-log/`](https://github.com/AI-Starter-Templates/api-template/tree/main/src/lib/audit-log); service, types, constants. [`src/clients/postgres/schema/audit.schema.ts`](https://github.com/AI-Starter-Templates/api-template/blob/main/src/clients/postgres/schema/audit.schema.ts); the table.
+
+## Related
+
+- [Authentication](/api/auth/); every auth event writes here.
+- [Lint as the contract](/architecture/lint-as-contract/); why the lint plugin matters.

@@ -1,19 +1,118 @@
 ---
 title: Image updates
-description: "WUD (What's-Up-Docker) overlay: Discord ping when a base image has a newer tag."
+description: WUD (What's-Up-Docker) overlay; get a Discord ping when a base image has a newer tag. Notify-only by design; humans review and bump.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-`WITH_WUD=1` brings up the What's-Up-Docker overlay: it watches every running container's image and pings a Discord webhook when a newer tag is available. Manual `docker compose pull` is still the apply step, so there are no surprise restarts.
+`WITH_WUD=1` brings up [WUD](https://getwud.github.io/wud/): it watches every running container's image and pings a Discord webhook when a newer tag is available. **Manual `docker compose pull` + recreate is still the apply step**; no surprise restarts.
 
-<Aside type="note" title="Coming soon">
-  Full runbook will cover: configuring the Discord webhook, scoping
-  which images to track, scheduling the check, and the upgrade
-  procedure (pull → recreate → verify) with rollback notes.
+## Why notify-only
 
-  Current source-of-truth: `compose/docker-compose.wud.yml` in the
-  [infra-docker-compose-template
-  repo](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/compose/docker-compose.wud.yml)
-  and the [WUD docs](https://getwud.github.io/wud/).
-</Aside>
+Auto-pull-and-restart sounds appealing until the first time a bad image breaks production at 2 AM. The template's stance:
+
+- **Detection automated.** You always know when a base image moves.
+- **Application manual.** A human reviews the changelog before bumping.
+
+This is one philosophical step less aggressive than Watchtower. Pick Watchtower if you want hands-off; pick this if you want a human in the loop.
+
+## How it works
+
+```mermaid
+flowchart LR
+  wud["WUD container<br/>watches running images"]
+  registry["Docker Hub / GHCR / ECR"]
+  dash["WUD dashboard<br/>:3033"]
+  discord["Discord webhook<br/>(optional)"]
+  human["you<br/>review + decide"]
+  apply["docker compose pull && up -d"]
+  wud <--> registry
+  wud --> dash
+  wud --> discord
+  dash --> human
+  discord --> human
+  human --> apply
+```
+
+WUD does **not** mount `docker-compose.yml` read-write, deliberately. It can't modify your stack; only inform.
+
+## Design choices
+
+| Decision | Reason |
+|---|---|
+| Notify-only, not auto-pull | Surprise restarts > missed CVE notifications |
+| Discord webhook over email | Lower-friction; survives email filters; team-visible |
+| WUD dashboard at `:3033` as fallback | Works even when Discord is unreachable / not configured |
+| Doesn't auto-edit `docker-compose.yml` | Pinning tags in git is the source of truth |
+
+## Setup
+
+In `compose/.env`:
+
+```bash
+# Optional: Discord webhook for notifications.
+# Without it, WUD still runs and exposes results at http://localhost:3033/
+WUD_TRIGGER_DISCORD_WEBHOOK=https://discord.com/api/webhooks/...
+```
+
+Bring up the overlay:
+
+```bash
+WITH_WUD=1 ./scripts/compose-up.sh
+```
+
+WUD scans the running containers, queries the registry for each image, and posts when a newer tag is found.
+
+## What gets watched
+
+By default, every container in the running stack. WUD reads each container's image reference and checks the registry's tags. Configure inclusions/exclusions via container labels in `docker-compose.yml`:
+
+```yaml
+services:
+  myservice:
+    image: myimage:1.0
+    labels:
+      wud.watch: "true"          # opt in (default)
+      wud.tag.include: "^1\\.\\d+$"  # only watch 1.x tags
+```
+
+## The apply step
+
+When WUD pings you about, say, a new `postgres:17.1`:
+
+1. Read the [Postgres release notes](https://www.postgresql.org/docs/release/). Look for breaking changes.
+2. Pin the new tag in `compose/docker-compose.yml`: `image: postgres:17.1-alpine`.
+3. Take a Postgres backup ([Backups](/runbooks/backups/)).
+4. Pull and restart:
+   ```bash
+   docker compose pull postgres
+   docker compose up -d postgres
+   ```
+5. Verify: `./dev.sh logs -f postgres`, then a few sanity SQL queries.
+6. Commit the bumped `docker-compose.yml`.
+
+For the app images (`api`, `ui`), bumping the base layers requires a rebuild:
+
+```bash
+git -C ../api-template pull        # if base bump came from upstream
+STACK=prod ./scripts/compose-up.sh --build
+```
+
+## Rollback
+
+Pin the old tag in `docker-compose.yml`, redeploy. Image tags are immutable (good registries enforce this), so the previous image is still pullable. For Postgres specifically, in-place downgrade between major versions isn't supported; you'd restore from backup. Minor versions downgrade cleanly.
+
+## When to skip WUD
+
+- **You use [Renovate](https://github.com/renovatebot/renovate) on this repo.** Renovate opens PRs for image bumps; same intent, integrated into your PR review flow. Don't run both.
+- **You're on a managed runtime** (ECS, GKE, etc.) where the platform handles image rollouts.
+- **You don't ship to production.** Dev-only stacks don't need this.
+
+## Source
+
+[`compose/docker-compose.wud.yml`](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/compose/docker-compose.wud.yml) · [`docs/image-update-detection.md`](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/docs/image-update-detection.md) · [WUD docs](https://getwud.github.io/wud/).
+
+## Related
+
+- [Deployment](/topics/deployment/); where image management fits in the broader picture.
+- [Profiles & overlays](/infra/profiles-and-overlays/); how `WITH_WUD=1` composes into the stack.

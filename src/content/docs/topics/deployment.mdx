@@ -1,18 +1,100 @@
 ---
 title: Deployment
-description: How to take a single-host VPS from blank Ubuntu to running BoringStack with HTTPS.
+description: Boring deployment story; single-host VPS, Docker, three repos cloned, one prod profile. HTTPS via ACME, perimeter locked by UFW + Cloudflare.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-The deployment story is intentionally boring: SSH into a VPS, install Docker, clone the three repos, fill in `compose/.env`, `STACK=prod ./scripts/compose-up.sh`. Traefik handles HTTPS via ACME; UFW + Cloudflare IP allowlist locks down the perimeter.
+The deployment story is intentionally boring. There's no Kubernetes, no platform, no app-specific CI runner. There's a VPS, three repos cloned next to each other, one env file, one command. HTTPS is automatic; the perimeter is locked down by UFW.
 
-<Aside type="note" title="Coming soon">
-  Full reference will cover: VPS provider notes (Hetzner / OVH / DO),
-  the initial user + SSH hardening checklist, DNS setup on Cloudflare,
-  the production env walkthrough, deploy strategies (manual pull vs.
-  Watchtower vs. WUD), and rollback.
+That's the **point**. Every layer that isn't there is a layer you don't have to operate.
 
-  See also: [Firewall & TLS](/runbooks/firewall-and-tls/) and the
-  [Infra overview](/infra/overview/).
-</Aside>
+## The mental model
+
+A Ubuntu VPS with Docker, three repos cloned as siblings, one `compose/.env` filled in, one `STACK=prod ./scripts/compose-up.sh`. Traefik provisions HTTPS via Let's Encrypt automatically; UFW restricts 80/443 to Cloudflare's IP ranges. That's the entire deploy.
+
+## Design choices
+
+| Decision | Reason |
+|---|---|
+| Single-host first | One VPS handles real traffic for years; horizontal scaling is a *later* problem |
+| Three repos cloned as siblings | The same layout that works on your laptop works on the VPS |
+| Pull-based deploys (`git pull && compose up -d --build`) | One mental model; no CI runner state to debug |
+| Traefik + ACME, not a cloud LB | TLS is automatic and free; the LB isn't a bill line item |
+| UFW + Cloudflare IP allowlist | Random scans bounce off the firewall; only Cloudflare can hit your origin |
+| `Dockerfile.prod` is multi-stage non-root | Smallest possible runtime; no shell in the prod image |
+
+## What you actually do
+
+The first time:
+
+1. Provision a VPS (Hetzner, OVH, DigitalOcean; anything with Ubuntu + a static IP).
+2. Harden SSH (key-only, non-standard port, disabled root).
+3. Install Docker + the compose plugin.
+4. `git clone` the three repos as siblings.
+5. `cp compose/.env.example compose/.env`, fill in the prod values.
+6. `STACK=prod ./scripts/compose-up.sh`.
+7. Run the [Firewall & TLS](/runbooks/firewall-and-tls/) runbook to lock the perimeter.
+
+After that, deploys are:
+
+```bash
+ssh <vps>
+cd ai-starter-templates/infra-docker-compose-template
+git -C ../api-template pull
+git -C ../ui-template pull
+git pull
+STACK=prod ./scripts/compose-up.sh --build
+```
+
+Five lines. No platform.
+
+## Image update strategy
+
+| Strategy | When | How |
+|---|---|---|
+| **Manual pull + rebuild** | Default | The script above; full control |
+| **WUD notify-only** | You want to know when base images drift | `WITH_WUD=1` → Discord ping; still manual `pull` |
+| **Watchtower (auto-pull)** | Hands-off, lower-stakes envs | Not in the template; opt-in by you |
+
+The template ships manual + WUD notify because surprise restarts are a worse failure mode than a missed CVE notification. See [Image updates](/runbooks/image-updates/).
+
+## Rollback
+
+There isn't a special "rollback" command. There's `git` and `compose up -d --build`:
+
+```bash
+git -C ../api-template checkout <previous-sha>
+STACK=prod ./scripts/compose-up.sh --build
+```
+
+Postgres schema is the only thing this doesn't roll back automatically; destructive migrations are forward-only. The api-template's migration discipline is "additive changes are normal, destructive changes are deliberate" so most rollbacks just work.
+
+For high-stakes deploys, take a Postgres backup *before* applying a destructive migration. See [Backups](/runbooks/backups/).
+
+## Where to scale up
+
+When single-host stops being enough; usually past 10k DAU; the bottleneck is Postgres. In rough order:
+
+1. **Vertical first.** Move to a bigger VPS, bump `POSTGRES_LIMITS_*`.
+2. **Move Postgres to a managed service.** Neon, Supabase, Crunchy, AWS RDS; depending on your cloud bias. App stays on the VPS.
+3. **Replicate the API horizontally.** Multiple boxes behind a real load balancer.
+4. **Kubernetes.** A separate template is planned; not in this repo because mixing Compose + cluster YAML is exactly the confusion BoringStack tries to avoid.
+
+## Provider notes
+
+| Provider | Pros | Watch out for |
+|---|---|---|
+| **Hetzner Cloud** | Cheap, EU-friendly, fast network | New accounts get fraud-checked; allow 1-2 days |
+| **OVH** | Cheap, ipv4 included | Web console is rough; use the API |
+| **DigitalOcean** | Polished UX, good docs | Cheaper alternatives for the same specs |
+| **Your own metal** | Cheapest at scale | You're now the datacenter operator |
+
+Cloudflare in front is standard regardless of provider; that's what makes the UFW + IP allowlist work.
+
+## Related runbooks
+
+- [Firewall & TLS](/runbooks/firewall-and-tls/); UFW + Cloudflare allowlist; HTTPS via Traefik.
+- [Backups](/runbooks/backups/); Postgres → rclone.
+- [Image updates](/runbooks/image-updates/); WUD notify-only.
+- [Cloudflare Email setup](/runbooks/cloudflare-email-setup/); outbound mail.

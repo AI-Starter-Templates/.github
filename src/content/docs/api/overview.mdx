@@ -1,106 +1,76 @@
 ---
 title: "API template: overview"
-description: Bun + Elysia + Drizzle + Postgres + Redis + BullMQ. What's wired and where it lives.
+description: Bun + Elysia + Drizzle + Postgres + Redis + BullMQ. The architectural shape and where each concern lives.
 ---
 
 import { Aside, FileTree } from "@astrojs/starlight/components";
 
-The api-template is a production-shaped HTTP API. It has the bits every SaaS rebuilds: auth, sessions, OAuth, email, queues, audit log, structured logs, an env validator that refuses to boot if anything's missing.
+The api-template is a production-shaped HTTP API: auth, sessions, OAuth, email, queues, audit log, Stripe billing, structured logging, an env validator that refuses to boot if anything is missing. **Architectural rules** (routes vs services vs types, env access, queues) are what keep adding features cheap as the codebase grows.
 
-## Directory layout
+## How the layers split
+
+```mermaid
+flowchart LR
+  routes["routes.ts<br/>HTTP · TypeBox · no DB"]
+  service["service.ts<br/>logic + Drizzle<br/>no Elysia"]
+  types["types.ts<br/>shared interfaces"]
+  routes --> service
+  routes -.-> types
+  service -.-> types
+```
+
+A feature is **three files with three jobs**. The lint plugins forbid them from leaking into each other: a `*.routes.ts` that imports `drizzle-orm` fails the build, and a `*.service.ts` that imports Elysia's `t` does too.
+
+## Design choices
+
+| Decision | Reason |
+|---|---|
+| Per-feature folders, not horizontal layers | Adding a feature is one folder, not edits across `routes/`, `services/`, `models/` |
+| Routes/services/types separation enforced by lint | The rule survives refactors and new authors |
+| Frozen `env` object, no `process.env` outside the validator | Misconfigured boots fail fast; runtime can't introduce new env dependencies |
+| Pluggable infra (email provider, AI provider, cache, queues) | Each can be swapped with a one-env-var change; dev runs without keys |
+| Drizzle, not Prisma | Real SQL shape; no shadow database; migrations are plain SQL files |
+
+## File layout
 
 <FileTree>
 - src/
-  - index.ts                      Entrypoint; listens on `PORT`
-  - config/
-    - app.ts                      Elysia app composition + middleware
-    - routes.ts                   Route group imports
-    - env/                        Env schema + validator
-    - logger.ts                   Pino setup
-    - sentry.ts                   Sentry init (Sentry-compatible, points at GlitchTip or sentry.io)
-    - error-handlers.ts           Global handlers + Sentry capture
-    - setup-queues.ts             BullMQ bootstrap
-  - api/                          Feature folders
-    - auth/                       Register/login/logout, OAuth, password reset
-    - users/                      `/me`, profile updates
-    - widgets/                    Example resource (the pattern you copy)
-    - dashboard/                  Counts + recent activity
-    - billing/                    Stripe subscription
-    - admin/                      Role-gated ops
-    - health/                     `/`, `/health`, `/ready`
-  - clients/postgres/             Drizzle client + schemas
-  - lib/                          Shared utilities
-    - auth/                       Cookie helpers, JWT
-    - email/                      Provider switch + templates
-    - audit-log/                  Append-only event log
-    - ai/                         Pluggable AI provider
-    - cache/                      Memory or Redis
-    - errors/                     `ApiErrors.unauthorized()` etc.
-  - middleware/                   Per-route Elysia plugins
-  - queues/                       BullMQ job definitions
-  - templates/email/              Handlebars sources → compiled JSON
+  - index.ts            Entrypoint: env, Sentry, queues, listen
+  - config/             App composition, env, logger, queue bootstrap
+  - api/                Feature folders (auth, users, widgets, dashboard, billing, admin, health)
+  - clients/postgres/   Drizzle client + per-domain schema modules
+  - lib/                Shared utilities (auth, email, audit-log, ai, cache, errors)
+  - middleware/         Per-route Elysia plugins
+  - queues/             BullMQ queue/worker pairs
+  - templates/email/    Handlebars sources, compiled to JSON at build
 </FileTree>
 
-## The route/service/types pattern
-
-A feature folder has three responsibilities and three matching files:
+A feature folder always looks like:
 
 <FileTree>
 - src/api/widgets/
-  - widgets.routes.ts        HTTP layer: never imports drizzle or `db`
-  - widgets.service.ts       DB + business logic: never imports `t` (Elysia)
-  - widgets.types.ts         Interfaces, shared between routes + service
-  - widgets.schemas.ts       (optional) TypeBox request/response shapes
+  - widgets.routes.ts        HTTP surface
+  - widgets.service.ts       Business logic + DB
+  - widgets.types.ts         Shapes shared between routes and service
+  - widgets.schemas.ts       (optional) TypeBox request/response
 </FileTree>
 
-This split is **enforced by ESLint**. A `*.routes.ts` file that imports `drizzle-orm` or `../../clients/postgres` will fail `bun run lint`. Try it. That is not advice; it is a wall.
+The reference implementation is `widgets`; copy-target for new resources. `bun run new:resource <name>` scaffolds the triple and wires it into `config/routes.ts` so you can't forget a step.
 
-```ts
-// src/api/widgets/widgets.routes.ts (passes lint)
-import { widgetsService } from "./widgets.service";
+## Cross-cutting concerns
 
-const widgetsRoutes = createAuthMiddleware()
-  .get("/", async ({ user }) => widgetsService.listForUser(user.id), { ... });
-```
+Each lives in `src/lib/` or `src/config/` and has its own page:
 
-```ts
-// src/api/widgets/widgets.routes.ts (fails lint)
-import { eq } from "drizzle-orm";              // ← rule fires here
-import { db } from "../../clients/postgres";   // ← and here
-```
+- **[Authentication](/api/auth/)**; cookie sessions + server-side OAuth.
+- **[Email](/api/email/)**; pluggable provider, precompiled templates, queue-aware dispatch.
+- **[Queues](/api/queues/)**; BullMQ with a `QueueManager`, inline fallback when disabled.
+- **[Audit log](/api/audit-log/)**; fire-and-forget append-only event log.
+- **[Env validator](/api/env-validator/)**; TypeBox shape + hand-written invariants.
 
-## The env validator
+## Lint as the contract
 
-Every process.env read goes through `src/config/env/`. The validator:
+The architecture is held in place by [15 custom ESLint plugins](/architecture/lint-as-contract/). Agents skip `AGENTS.md`; lint still enforces the rules. `bun run validate` is the merge gate.
 
-- declares every var in `schema.ts` (TypeBox)
-- coerces `process.env` into the schema shape in `validate.ts`
-- runs **cross-field invariants** for prod (e.g. "if `EMAIL_PROVIDER=cloudflare`, both `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_EMAIL_API_TOKEN` must be set")
-- freezes the result and exports as `env`
+## Source
 
-If anything's missing or malformed, the boot dies with a single, readable error listing every problem at once. Not the kind of bug that ships to prod.
-
-See [Env validator](/api/env-validator/) for the full breakdown.
-
-## Authentication
-
-Cookie-based sessions: register → password hash via bcryptjs → JWT signed with `JWT_SECRET` → stored in an HttpOnly cookie. OAuth is server-side (Arctic), state/verifier in Redis. See [Authentication](/api/auth/).
-
-## Email
-
-Pluggable provider. `EMAIL_PROVIDER=cloudflare` (default) sends through [Cloudflare Email Service](/topics/cloudflare-email/). `resend` and `sendgrid` are also wired. In dev with all keys empty, a noop provider logs payloads instead of sending. See [Email](/api/email/).
-
-## Queues
-
-`QUEUES_ENABLED=true` flips email send + arbitrary jobs from inline to BullMQ. The dashboard at `bullmq.localhost` (when `WITH_BULLMQ=1`) shows running/completed/failed jobs. See [Queues](/api/queues/).
-
-## Audit log
-
-Every state-changing action calls `auditLogService.record({ action, userId, metadata })` fire-and-forget. The table is append-only. The dashboard's "recent activity" surface reads from here. See [Audit log](/api/audit-log/).
-
-<Aside type="tip" title="Adding a new resource">
-  The api-template ships a scaffolder: `bun run new:resource widgets`
-  generates the route/service/types triple, wires it into
-  `src/config/routes.ts`, and adds a Drizzle migration stub. The pattern
-  is the same as `widgets.*` everywhere.
-</Aside>
+[`api-template`](https://github.com/AI-Starter-Templates/api-template) on GitHub. Start in `src/api/` for the feature shape; `src/config/` for the boot wiring.

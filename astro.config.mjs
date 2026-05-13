@@ -1,5 +1,6 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import mermaid from "astro-mermaid";
 
 import cloudflare from "@astrojs/cloudflare";
 
@@ -8,6 +9,10 @@ export default defineConfig({
   site: "https://boringstack.xyz",
 
   integrations: [
+    mermaid({
+      theme: "default",
+      autoTheme: true,
+    }),
     starlight({
       title: "BoringStack",
       description:
@@ -17,6 +22,75 @@ export default defineConfig({
         replacesTitle: false,
       },
       favicon: "/favicon.svg",
+      customCss: ["./src/styles/custom.css"],
+      head: [
+        {
+          tag: "script",
+          content: `
+(function () {
+  function openZoom(svg) {
+    var dialog = document.createElement("dialog");
+    dialog.className = "mermaid-zoom-dialog";
+
+    var close = document.createElement("button");
+    close.className = "mermaid-zoom-close";
+    close.setAttribute("aria-label", "Close");
+    close.textContent = "\\u00d7";
+    close.addEventListener("click", function (e) {
+      e.stopPropagation();
+      dialog.close();
+    });
+    dialog.appendChild(close);
+
+    var clone = svg.cloneNode(true);
+    clone.removeAttribute("style");
+    clone.removeAttribute("width");
+    clone.removeAttribute("height");
+    dialog.appendChild(clone);
+
+    dialog.addEventListener("click", function (e) {
+      if (e.target === dialog) dialog.close();
+    });
+    dialog.addEventListener("close", function () {
+      dialog.remove();
+    });
+
+    document.body.appendChild(dialog);
+    dialog.showModal();
+  }
+
+  function wireZoom() {
+    var diagrams = document.querySelectorAll(".mermaid");
+    for (var i = 0; i < diagrams.length; i++) {
+      var el = diagrams[i];
+      if (el.dataset.zoomBound === "1") continue;
+      var svg = el.querySelector("svg");
+      if (!svg) continue;
+      el.dataset.zoomBound = "1";
+      (function (target, sourceSvg) {
+        target.addEventListener("click", function () {
+          openZoom(sourceSvg);
+        });
+      })(el, svg);
+    }
+  }
+
+  function start() {
+    wireZoom();
+    // SVG can inject async after page-load; retry a few times
+    [50, 200, 500, 1200, 2500].forEach(function (d) { setTimeout(wireZoom, d); });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
+  }
+  document.addEventListener("astro:page-load", start);
+})();
+          `.trim(),
+        },
+      ],
       social: [
         {
           icon: "github",

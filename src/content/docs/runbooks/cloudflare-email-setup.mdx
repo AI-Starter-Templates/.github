@@ -1,22 +1,131 @@
 ---
 title: Cloudflare Email setup
-description: "End-to-end walkthrough: enable Workers Paid, enable Email Service, scope a token, smoke-test."
+description: End-to-end; enable Workers Paid, enable Email Service on your domain, capture the account ID, scope a token, smoke-test.
 ---
 
-import { Aside } from "@astrojs/starlight/components";
+import { Aside, Steps } from "@astrojs/starlight/components";
 
-The full setup runbook for Cloudflare Email Service: enable Workers Paid on your account, enable Email Service on your domain, capture the account ID, scope an API token with `Email Sending: Edit`, and run a smoke-test send from the api-template.
+This runbook takes a fresh Cloudflare account from "nothing" to "the api-template is sending mail via Cloudflare Email Service." It's a single one-time setup; rotations later are just step 4.
 
-<Aside type="note" title="Coming soon">
-  Full runbook will cover: account-level setup, domain enablement, DNS
-  auto-provisioning details (SPF / DKIM / DMARC), the verified-sender
-  unlock path for new accounts, token rotation, and the smoke-test
-  curl + the api-template's noop-provider verification.
+For *why* Cloudflare is the default, see [Cloudflare Email Service](/topics/cloudflare-email/).
 
-  Background on why Cloudflare Email is the default lives on the
-  [Cloudflare Email Service](/topics/cloudflare-email/) page.
+## Prerequisites
 
-  Current source-of-truth: the [Cloudflare Email Service
-  docs](https://developers.cloudflare.com/email-service/) and the
-  api-template's `src/lib/email/cloudflare/` source.
-</Aside>
+- A Cloudflare account that owns (or proxies) the domain you'll send from.
+- Admin access to that account.
+- A real email address for the API token's audit trail.
+
+## How the pieces fit
+
+```mermaid
+flowchart LR
+  paid["Workers Paid<br/>$5/mo"]
+  domain["Email Service enabled<br/>on your domain"]
+  dns["SPF / DKIM / DMARC<br/>auto-provisioned"]
+  acct["Account ID<br/>scope for the endpoint"]
+  token["API Token<br/>Email Sending: Edit"]
+  api["api-template<br/>EMAIL_PROVIDER=cloudflare"]
+  paid --> domain --> dns
+  domain --> acct --> api
+  domain --> token --> api
+```
+
+You need both the **account ID** (in the endpoint URL) and the **API token** (in the bearer header). Lose either and sends fail.
+
+## Setup
+
+<Steps>
+
+1. **Enable Workers Paid.**
+   Cloudflare dashboard → Workers & Pages → Plans → upgrade to Workers Paid ($5/mo). Email Service is bundled into this plan; there's no separate billing line.
+
+2. **Enable Email Service on your domain.**
+   Dashboard → Email → Email Routing or Email Sending → enable for the domain. Cloudflare auto-provisions the required DNS records (SPF, DKIM, DMARC) because the zone is on Cloudflare. That removes the usual hand-edited DNS step, which is where most transactional-email setups go wrong.
+
+   Wait for the dashboard to show all three records as **Active** (usually < 1 min).
+
+3. **Capture the Account ID.**
+   Dashboard → any domain → right sidebar → "Account ID". 32 hex characters. Drop it into `compose/.env`:
+   ```bash
+   CLOUDFLARE_ACCOUNT_ID=<your-account-id>
+   ```
+
+4. **Scope an API token.**
+   Dashboard → My Profile → API Tokens → Create Token → Custom Token with:
+   - **Permissions:** `Email Sending: Edit` (only this; principle of least privilege).
+   - **Account resources:** include the specific account.
+   - **TTL:** indefinite for now; rotate quarterly or after any staff change.
+
+   Copy the token (you can't view it again). Drop it into `compose/.env`:
+   ```bash
+   CLOUDFLARE_EMAIL_API_TOKEN=<your-token>
+   ```
+
+5. **Set the sender + provider.**
+   ```bash
+   EMAIL_PROVIDER=cloudflare        # already the default
+   EMAIL_FROM=noreply@<your-domain>
+   ```
+
+   `EMAIL_FROM` must be on a domain you've enabled Email Service for. Sending from a domain that isn't enabled returns a 403.
+
+6. **Smoke-test.**
+   ```bash
+   # Restart the API to pick up the new env
+   ./dev.sh restart api
+
+   # Trigger a send; register a test user, or hit an admin endpoint
+   # that triggers a transactional email.
+
+   # Tail the API log to see the send result
+   ./dev.sh logs -f api | grep email
+   ```
+
+   Success looks like `event="email_sent" provider="cloudflare"`. Failure logs the response body; usually an unverified-domain error or a permission-scope mistake.
+
+</Steps>
+
+## New-account verified-senders gotcha
+
+Brand-new Cloudflare accounts have a sender-verification lock: you can only send to addresses you've verified, until the account is approved for unrestricted sending. The check is usually automatic within a few days for legitimate use. If you need to ship before then:
+
+- Verify the few addresses you need for testing (dashboard → Email → verify recipient).
+- Or contact Cloudflare support with your use case to fast-track the unlock.
+
+## Validating SPF / DKIM / DMARC
+
+Once the dashboard shows the records active:
+
+```bash
+dig +short TXT <your-domain> | grep "v=spf1"
+dig +short TXT cf-<...>._domainkey.<your-domain>
+dig +short TXT _dmarc.<your-domain>
+```
+
+All three should return a value. If any are empty, the Cloudflare auto-provision didn't complete; re-toggle Email Service in the dashboard.
+
+## Rotation
+
+Every quarter, or after any staff change:
+
+1. Create a new API token with the same scope.
+2. Update `CLOUDFLARE_EMAIL_API_TOKEN` in `compose/.env`.
+3. `./dev.sh restart api`.
+4. Confirm a send works with the new token.
+5. Revoke the old token in the dashboard.
+
+## Switching to Resend / SendGrid
+
+The api-template is provider-agnostic. Swapping is one env var:
+
+```bash
+EMAIL_PROVIDER=resend
+RESEND_API_KEY=re_xxx
+```
+
+The env validator refuses to boot in production if the matching key is missing. See [Email](/api/email/) and [Cloudflare Email Service](/topics/cloudflare-email/) for the abstraction.
+
+## Source
+
+- Provider implementation: [`src/lib/email/providers/cloudflare.ts`](https://github.com/AI-Starter-Templates/api-template/blob/main/src/lib/email/providers/cloudflare.ts) in the api-template.
+- Cloudflare's own docs: [developers.cloudflare.com/email-service](https://developers.cloudflare.com/email-service/).
