@@ -42,12 +42,12 @@ The result is a single `docker compose -f ... -f ... --profile ...` command. `de
 
 ## The full opt-in matrix
 
-| Flag | Adds | Cost |
-|---|---|---|
-| `WITH_OBSERVABILITY=1` | Prometheus, Grafana, Loki, Promtail, Alertmanager + 3 exporters | ~6 containers; ~500MB RAM idle |
-| `WITH_GLITCHTIP=1` | GlitchTip web + worker + beat (Sentry-compatible error tracking) | 3 containers; reuses base Postgres + Redis |
-| `WITH_BULLMQ=1` | Bull-board UI at `bullmq.localhost` | 1 container; dev only |
-| `WITH_WUD=1` | What's-Up-Docker image-update detector | 1 container; Discord webhook optional |
+| Flag | Adds |
+|---|---|
+| `WITH_OBSERVABILITY=1` | Prometheus, Grafana, Loki, Promtail, Alertmanager + exporters |
+| `WITH_GLITCHTIP=1` | GlitchTip (Sentry-compatible error tracking); reuses base Postgres + Redis |
+| `WITH_BULLMQ=1` | Bull-board UI at `bullmq.localhost`; dev only |
+| `WITH_WUD=1` | What's-Up-Docker image-update detector; Discord webhook optional |
 
 Combinations: `WITH_OBSERVABILITY=1 WITH_GLITCHTIP=1 ./scripts/compose-up.sh` is supported (and runs in CI).
 

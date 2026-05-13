@@ -69,7 +69,7 @@ The append-only `audit.audit_log` table. Records security- and compliance-releva
 ## Background work
 
 **Queue**
-A named work buffer in Redis, owned by a directory under `src/queues/<name>/`. Producers enqueue; workers consume. Always five files (constants, types, queue, worker, setup).
+A named work buffer in Redis, owned by a directory under `src/queues/<name>/`. Producers enqueue; workers consume. The directory follows a fixed pattern (constants, types, queue, worker, setup) so producer + consumer can't drift on names.
 
 **QueueManager**
 The process-singleton that owns all queues + workers. Application code never imports BullMQ's `Queue` class directly; it calls `manager.enqueueX(...)`. [Read more](/api/queues/).

@@ -19,7 +19,7 @@ For *why* Cloudflare is the default, see [Cloudflare Email Service](/topics/clou
 
 ```mermaid
 flowchart LR
-  paid["Workers Paid<br/>$5/mo"]
+  paid["Workers Paid plan"]
   domain["Email Service enabled<br/>on your domain"]
   dns["SPF / DKIM / DMARC<br/>auto-provisioned"]
   acct["Account ID<br/>scope for the endpoint"]
@@ -37,7 +37,7 @@ You need both the **account ID** (in the endpoint URL) and the **API token** (in
 <Steps>
 
 1. **Enable Workers Paid.**
-   Cloudflare dashboard → Workers & Pages → Plans → upgrade to Workers Paid ($5/mo). Email Service is bundled into this plan; there's no separate billing line.
+   Cloudflare dashboard → Workers & Pages → Plans → upgrade to Workers Paid. Email Service is bundled into this plan; there's no separate billing line. ([Current pricing](https://www.cloudflare.com/plans/developer-platform/).)
 
 2. **Enable Email Service on your domain.**
    Dashboard → Email → Email Routing or Email Sending → enable for the domain. Cloudflare auto-provisions the required DNS records (SPF, DKIM, DMARC) because the zone is on Cloudflare. That removes the usual hand-edited DNS step, which is where most transactional-email setups go wrong.

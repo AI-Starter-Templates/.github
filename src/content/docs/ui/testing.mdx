@@ -21,7 +21,7 @@ flowchart LR
 | Decision | Reason |
 |---|---|
 | Three layers, not one | Unit tests can't catch routing bugs; e2e can't catch every hook edge case |
-| **No MSW** | Mocking a real backend drifts from the real backend; we removed it on purpose |
+| **No MSW** | Hand-written mocks drift from the real backend; HTTP-shaped tests run e2e instead |
 | e2e runs against the real stack (`./dev.sh up -d`) | Catches API-shape drift and integration regressions for free |
 | Playwright with Chromium + WebKit | Safari behavior bugs surface in CI, not from a user report |
 | Visual snapshots per-platform | macOS vs Linux font rendering differs; baselines committed per OS |
@@ -36,15 +36,13 @@ flowchart LR
 | Visual baselines | `e2e/visual.spec.ts-snapshots/` | `pnpm e2e:visual:update` to refresh |
 | Coverage | n/a | `pnpm test:ci` |
 
-## The "no MSW" decision
+## Why no mock layer
 
-Earlier iterations of the template shipped MSW for unit tests and offline development. Three problems:
+Unit and component tests focus on pure logic; anything HTTP-shaped is e2e against the real backend. Three reasons:
 
-1. **Drift.** Hand-written handlers fall behind the real API shape, and unit tests pass while the real backend drifts.
-2. **Mental tax.** Every contributor learns MSW *and* the real API.
-3. **False signal.** "MSW tests are green" is not "the feature works."
-
-We pulled it. Unit and component tests focus on pure logic; anything HTTP-shaped is e2e against the real backend. That's the only test that actually proves the feature.
+- **Drift.** Hand-written mocks fall behind the real API shape — tests pass while the real backend doesn't.
+- **Mental tax.** Contributors would have to learn the mocking framework *and* the real API.
+- **False signal.** "Mock tests are green" is not "the feature works." Only the e2e tier proves the feature.
 
 ## Patterns
 

@@ -5,16 +5,17 @@ description: Why we default to Cloudflare's transactional email API. The cheapes
 
 import { Aside } from "@astrojs/starlight/components";
 
-The api-template ships [Cloudflare Email Service](https://developers.cloudflare.com/email-service/) as the default outbound mail provider. Combined with Workers Paid ($5/mo, no documented per-message charge), it's the cheapest transactional path at non-trivial volume.
+The api-template ships [Cloudflare Email Service](https://developers.cloudflare.com/email-service/) as the default outbound mail provider. Bundled into Workers Paid with no documented per-message charge, it's the cheapest transactional path at non-trivial volume — at the time of writing, anyway. Check current pricing at each vendor before committing.
 
 ## Why it's the default
 
 |                  | Cloudflare Email Service                              | Resend                 | SendGrid           |
 | ---------------- | ----------------------------------------------------- | ---------------------- | ------------------ |
-| Free tier        | Bundled into Workers Paid ($5/mo)                     | 3,000/mo, 100/day      | 100/day forever    |
-| Per-message cost | Effectively zero (beta)                               | $20 / 50k emails (Pro) | $20 / 50k emails   |
+| Cost shape       | Flat fee for Workers Paid; no per-message charge      | Free tier, then per-message | Free tier, then per-message |
 | Setup            | Cloudflare-managed DNS auto-provisions SPF/DKIM/DMARC | Manual DNS records     | Manual DNS records |
 | Vendor lock-in   | Cloudflare account required                           | None                   | None               |
+
+Pricing tiers, free-tier limits, and per-message rates all evolve. See [Cloudflare](https://developers.cloudflare.com/email-service/) · [Resend](https://resend.com/pricing) · [SendGrid](https://sendgrid.com/en-us/pricing) for current numbers.
 
 If you're already paying for Workers (or willing to), Cloudflare Email is **free transactional sending at the margin**. That maps directly to BoringStack's cost-of-goods bias.
 

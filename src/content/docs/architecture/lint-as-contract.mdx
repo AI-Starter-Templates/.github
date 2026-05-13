@@ -1,6 +1,6 @@
 ---
 title: Lint as the contract
-description: Fifteen custom ESLint plugins encode the architecture. Agents skip AGENTS.md; lint still enforces it.
+description: A family of custom ESLint plugins encodes the architecture. Agents skip AGENTS.md; lint still enforces it.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
@@ -9,7 +9,7 @@ Every BoringStack template ships an `AGENTS.md`, a `CLAUDE.md`, and an `AGENT_CO
 
 Agents skim them, skip them, then violate them on the next edit with full confidence.
 
-The **15 custom ESLint plugins** are how the architecture survives anyway. Every rule that matters is machine-checked. `pnpm validate` / `bun run validate` is the merge gate: if lint fails, the diff does not ship. The docs are the *why*; the lint is the *what's enforced*.
+The **custom ESLint plugins** are how the architecture survives anyway. Every rule that matters is machine-checked. `pnpm validate` / `bun run validate` is the merge gate: if lint fails, the diff does not ship. The docs are the *why*; the lint is the *what's enforced*.
 
 <Aside type="tip" title="The hierarchy">
   Prose docs (`AGENTS.md`) are *aspirational*. Lint rules are *load-bearing*.
@@ -45,7 +45,7 @@ The **15 custom ESLint plugins** are how the architecture survives anyway. Every
 
 | Plugin | What it enforces |
 |---|---|
-| [`react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture) | Component anatomy, hook placement, `className` discipline, file-naming, prop ordering (fifteen rules in one package). |
+| [`react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture) | Component anatomy, hook placement, `className` discipline, file-naming, prop ordering — a multi-rule package covering the whole component contract. |
 
 ## How they're wired
 

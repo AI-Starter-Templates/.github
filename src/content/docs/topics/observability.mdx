@@ -49,8 +49,8 @@ flowchart LR
 | Component | Where | Default |
 |---|---|---|
 | Grafana | `:3010` (host) | admin / change-me (override via env) |
-| Prometheus | internal | 15-day retention |
-| Loki | internal | Per-container labels, 7-day retention |
+| Prometheus | internal | Configurable retention (see `compose/prometheus/prometheus.yml`) |
+| Loki | internal | Per-container labels; configurable retention |
 | Promtail | sidecar | Scrapes `/var/lib/docker/containers/*.log` |
 | node-exporter | host metrics | CPU, memory, disk, network |
 | postgres-exporter | Postgres metrics | Connections, transactions, table sizes |
@@ -102,7 +102,7 @@ The api-template's `/metrics` endpoint uses the standard Prometheus client libra
 
 ## Cost
 
-The whole overlay runs in ~500MB of memory on the default sizing. Disk grows with retention windows: 15 days of metrics + 7 days of logs is usually under 5 GB for small-to-medium traffic. Adjust retention in `compose/prometheus/prometheus.yml` and `compose/docker-compose.observability.yml`.
+The overlay is light on memory at the default sizing — see [Resource limits](/infra/resource-limits/) for the per-service knobs. Disk grows with retention windows; tune them in `compose/prometheus/prometheus.yml` and `compose/docker-compose.observability.yml` if storage matters.
 
 ## Source
 

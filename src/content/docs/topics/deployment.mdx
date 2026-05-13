@@ -74,7 +74,7 @@ For high-stakes deploys, take a Postgres backup *before* applying a destructive 
 
 ## Where to scale up
 
-When single-host stops being enough; usually past 10k DAU; the bottleneck is Postgres. In rough order:
+When single-host stops being enough, the bottleneck is almost always Postgres. In rough order:
 
 1. **Vertical first.** Move to a bigger VPS, bump `POSTGRES_LIMITS_*`.
 2. **Move Postgres to a managed service.** Neon, Supabase, Crunchy, AWS RDS; depending on your cloud bias. App stays on the VPS.
