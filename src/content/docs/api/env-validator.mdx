@@ -65,7 +65,7 @@ Predicates each return `string[]` and fan into one aggregated check, so every pr
 | `NODE_ENV=production` | Matching email-provider key(s) non-empty (Cloudflare needs *both* account ID + token) |
 | `AI_ENABLED=true` | `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` depending on provider |
 | `BILLING_ENABLED=true` | `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` |
-| `NODE_ENV=production` + any Valkey-using feature | `REDIS_PASSWORD` non-empty |
+| `NODE_ENV=production` + any Valkey-using feature | `VALKEY_PASSWORD` non-empty |
 
 `NODE_ENV=test` skips most of these so integration tests don't need real provider credentials.
 

@@ -45,7 +45,7 @@ The always-on services: Postgres + Valkey + Traefik + api-migrate (one-shot) + t
 Postgres + Valkey. The services that hold state. Deliberately not exposed to the `frontend` Docker network, so the only path from the world to the data plane is through the API.
 
 **Valkey**
-The BSD-licensed Redis-protocol-compatible store BoringStack uses for cache + queues. Drop-in compatible with Redis: same wire protocol, same client libraries (`ioredis`, BullMQ), same env-var names (`REDIS_HOST`, etc.; those are protocol-level identifiers). Maintained by the Linux Foundation with AWS, Google, and Oracle as primary sponsors.
+The BSD-licensed Redis-protocol-compatible store BoringStack uses for cache + queues. Drop-in compatible with Redis: same wire protocol, same client libraries (`ioredis`, BullMQ). Env vars are renamed `VALKEY_HOST` / `VALKEY_PORT` / `VALKEY_PASSWORD` / `VALKEY_DB` so the operator-facing names match the binary; third-party containers (bull-board, GlitchTip) still read their own `REDIS_*` env names internally, with our compose overlays bridging the value. Maintained by the Linux Foundation with AWS, Google, and Oracle as primary sponsors.
 
 ## Architecture rules vocabulary
 

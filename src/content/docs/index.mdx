@@ -38,6 +38,12 @@ import { Card, CardGrid } from "@astrojs/starlight/components";
     detection. One `./dev.sh up -d` boots the full stack.
     <br /><a href="/infra/overview/">Read more →</a>
   </Card>
+  <Card title="infra-bootstrap-tofu-template" icon="seti:terraform">
+    OpenTofu. One `tofu apply` provisions a Hetzner VPS, configures
+    Cloudflare DNS + zone settings, and bootstraps the docker-compose stack
+    on first boot. Optional fourth template for hands-off deploys.
+    <br /><a href="/topics/provisioning-with-tofu/">Read more →</a>
+  </Card>
 </CardGrid>
 
 ## What we optimize for
