@@ -168,7 +168,6 @@ export default defineConfig({
             {
               label: "Provisioning with OpenTofu",
               link: "/topics/provisioning-with-tofu/",
-              badge: { text: "planned", variant: "caution" },
             },
           ],
         },
