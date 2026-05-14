@@ -5,7 +5,7 @@ description: Clone three repos, run a script, log in. Five minutes from zero to 
 
 import { Steps, Aside } from "@astrojs/starlight/components";
 
-This walks you from nothing to a logged-in dashboard, locally, in about five minutes. You'll end up with Postgres, Valkey, Traefik, the API, and the UI all running under Docker, with a seeded demo user you can sign in as.
+This walks you from nothing to a logged-in dashboard, locally, in about five minutes. You'll end up with Postgres, Valkey, the API, and the UI all running under Docker, with a seeded demo user you can sign in as. The dev stack uses Vite's dev-server proxy for the API (same-origin from the browser's perspective), so there's no Traefik to learn, no `*.localhost` subdomains, and no CORS preflights.
 
 ## Prerequisites
 
@@ -15,9 +15,9 @@ This walks you from nothing to a logged-in dashboard, locally, in about five min
 
 You don't need Node or Bun locally for the quickstart; the dev stack runs everything inside containers.
 
-## Clone the three repos as siblings
+## Fork the templates and clone them as siblings
 
-The infra `docker-compose.yml` references the API + UI repos via relative paths (`../../api-template`, `../../ui-template`). All three must be siblings under one parent directory.
+BoringStack ships as four GitHub template repos. Click **"Use this template"** on each — see [After "Use this template"](/topics/use-this-template/) for the full after-fork checklist. For a quick local spin you can also just clone the upstream repos directly:
 
 ```bash
 mkdir boringstack && cd boringstack
@@ -26,6 +26,8 @@ git clone https://github.com/AI-Starter-Templates/api-template
 git clone https://github.com/AI-Starter-Templates/ui-template
 git clone https://github.com/AI-Starter-Templates/infra-docker-compose-template
 ```
+
+The infra `docker-compose.yml` references the API + UI repos via relative paths (`../../api-template`, `../../ui-template`), so all three must be siblings under one parent directory.
 
 <Aside type="tip" title="Optional: setup.sh">
   The parent repo ships a `setup.sh` that bootstraps `compose/.env`, generates a
@@ -71,14 +73,15 @@ You should land on the dashboard with real counts of users + widgets pulled from
 
 ## What just happened
 
-| Service       | Where it lives              | What it does                                                |
-| ------------- | --------------------------- | ----------------------------------------------------------- |
-| `postgres`    | container, host port 5432   | App database with `auth`, `billing`, `audit`, `app` schemas |
-| `valkey`      | container, host port 6379   | Cache + BullMQ queues                                       |
-| `traefik`     | container, host port 80/443 | Routes `api.localhost` → api, `app.localhost` → ui          |
-| `api-migrate` | one-shot                    | Ran `db:push` + seeded the demo user, then exited           |
-| `api-dev`     | container, host port 3000   | The Bun + Elysia API (hot-reload via bind mount)            |
-| `ui-dev`      | container, host port 3001   | Vite dev server (hot-reload via bind mount)                 |
+| Service       | Where it lives            | What it does                                                |
+| ------------- | ------------------------- | ----------------------------------------------------------- |
+| `postgres`    | container, host port 5432 | App database with `auth`, `billing`, `audit`, `app` schemas |
+| `valkey`      | container, host port 6379 | Cache + BullMQ queues                                       |
+| `api-migrate` | one-shot                  | Ran `db:push` + seeded the demo user, then exited           |
+| `api-dev`     | container, host port 3000 | The Bun + Elysia API (hot-reload via bind mount)            |
+| `ui-dev`      | container, host port 3001 | Vite dev server (hot-reload via bind mount); proxies `/api/*` to `api-dev` |
+
+Traefik isn't part of the dev stack — it only runs in the prod profile, where it terminates TLS and path-routes `/api/*` + `/health` to the api container and everything else to the ui container on a single domain.
 
 ## Common next steps
 

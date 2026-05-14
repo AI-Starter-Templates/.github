@@ -48,7 +48,7 @@ For Docker-Compose-driven setups (the default), **`compose/.env` is the single f
 |---|---|---|---|
 | `JWT_SECRET` | api | yes (≥ 32 chars) | Signs auth cookie; rotation invalidates all sessions |
 | `FRONTEND_URL` | api | yes | OAuth success redirect target |
-| `ALLOWED_ORIGINS` | api | yes in prod | CSV; must be HTTPS, no wildcards in prod |
+| `ALLOWED_ORIGINS` | api | no (default empty) | CSV. Empty = same-origin deployment (default), CORS not mounted. When set, must be HTTPS with no wildcards. |
 | `GOOGLE_OAUTH_CLIENT_ID` / `_SECRET` | api | when Google enabled | |
 | `GITHUB_OAUTH_CLIENT_ID` / `_SECRET` | api | when GitHub enabled | |
 | `LINKEDIN_OAUTH_CLIENT_ID` / `_SECRET` | api | when LinkedIn enabled | |
@@ -87,7 +87,7 @@ For Docker-Compose-driven setups (the default), **`compose/.env` is the single f
 
 | Var | Repo | Required? | Notes |
 |---|---|---|---|
-| `VITE_API_URL` | ui | yes | API base URL |
+| `VITE_API_URL` | ui | no (default empty) | API base URL. Empty = same-origin (`/api/*` relative). Set to a full HTTPS URL only for cross-origin deployments. |
 | `VITE_LOCALES` | ui | no | CSV of locale codes; first is fallback |
 | `VITE_GOOGLE_CLIENT_ID` | ui | no | Display gate for the Google button |
 
@@ -97,7 +97,7 @@ For Docker-Compose-driven setups (the default), **`compose/.env` is the single f
 |---|---|---|---|
 | `STACK` | infra | yes | `dev` / `prod` |
 | `POSTGRES_USER` / `_PASSWORD` / `_DB` | infra | yes | Postgres bootstrap credentials |
-| `PUBLIC_API_HOST` / `PUBLIC_UI_HOST` | infra | yes in prod | DNS names for Traefik routers |
+| `PUBLIC_UI_HOST` | infra | yes in prod | Apex DNS name for Traefik. Same-origin path routing serves both UI and `/api/*` from this single host. |
 | `ACME_EMAIL` | infra | yes in prod | Let's Encrypt contact |
 | `GRAFANA_ADMIN_USER` / `_PASSWORD` | infra | when observability on | |
 | `*_LIMITS_CPUS` / `_MEMORY` | infra | no | Per-service resource caps; see [Resource limits](/infra/resource-limits/) |

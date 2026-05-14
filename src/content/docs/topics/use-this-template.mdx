@@ -1,0 +1,107 @@
+---
+title: After "Use this template"
+description: What to do the moment you click "Use this template" on the four BoringStack repos. Covers renames, GHCR auth, OpenTofu vars, and the after-fork checklist.
+---
+
+import { Steps, Aside } from "@astrojs/starlight/components";
+
+BoringStack ships as four GitHub template repos. The expected flow is **"Use this template" → rename to taste → clone → boot**. The toolchain is built to follow your rename: the GHCR workflows, the prod compose stack, and the OpenTofu bootstrap all derive image names and owners from your fork's actual URLs.
+
+This page documents the small handful of things that aren't fully automatic.
+
+## Step 1 — fork the four repos
+
+Click **"Use this template"** → **"Create a new repository"** on each of:
+
+- [`api-template`](https://github.com/AI-Starter-Templates/api-template) → e.g. `acme-api`
+- [`ui-template`](https://github.com/AI-Starter-Templates/ui-template) → e.g. `acme-ui`
+- [`infra-docker-compose-template`](https://github.com/AI-Starter-Templates/infra-docker-compose-template) → e.g. `acme-infra`
+- [`infra-bootstrap-tofu-template`](https://github.com/AI-Starter-Templates/infra-bootstrap-tofu-template) → e.g. `acme-bootstrap`
+
+You can keep the canonical names if you prefer; nothing breaks either way.
+
+<Aside type="note">
+The docs site source (`.github` repo) is **not** a template. It's BoringStack-specific content. You don't need to fork it.
+</Aside>
+
+## Step 2 — clone them as siblings
+
+The compose stack's build contexts use relative paths (`../../api-template`, `../../ui-template`). Whatever you named your repos, lay them out as siblings:
+
+```
+acme/
+├── acme-api/         (your fork of api-template)
+├── acme-ui/          (your fork of ui-template)
+├── acme-infra/       (your fork of infra-docker-compose-template)
+└── acme-bootstrap/   (your fork of infra-bootstrap-tofu-template)
+```
+
+If you renamed the api or ui repo, you'll either need to (a) rename the cloned directory to match the build-context path the compose YAML expects, or (b) edit the `build: context:` lines in `compose/docker-compose.yml` once.
+
+## Step 3 — dev boot
+
+```bash
+cd acme-infra/compose
+cp .env.example .env
+./dev.sh up -d
+open http://localhost:3001
+```
+
+Sign in as `demo@example.com` / `password123`.
+
+## Step 4 — wire GHCR for prod
+
+The `release.yml` workflows publish on `push: main` and on tag pushes (`v*.*.*`). They use `${{ github.event.repository.name }}`, so they automatically publish under your fork's path: `ghcr.io/<your-owner>/<your-renamed-repo>:latest`. No edit needed.
+
+The default `GITHUB_TOKEN` has `packages: write` permission via the workflow-level grant, so the first push from a freshly-forked repo works without any secret setup.
+
+**Make the GHCR package public** the first time the workflow publishes:
+
+1. Go to `https://github.com/<your-owner>/<your-renamed-repo>/pkgs/container/<your-renamed-repo>`
+2. Package settings → "Change visibility" → Public.
+
+Otherwise downstream consumers (your Hetzner VPS) need a pull credential.
+
+## Step 5 — wire prod compose to your images
+
+In `acme-infra/compose/.env`:
+
+```bash
+# If you renamed your repos:
+IMAGE_OWNER=acme
+API_IMAGE_NAME=acme-api
+UI_IMAGE_NAME=acme-ui
+```
+
+If you kept the canonical names, only `IMAGE_OWNER` needs to change.
+
+## Step 6 — wire OpenTofu bootstrap
+
+In `acme-bootstrap/terraform.tfvars`:
+
+```hcl
+api_repo   = "https://github.com/acme/acme-api"
+ui_repo    = "https://github.com/acme/acme-ui"
+infra_repo = "https://github.com/acme/acme-infra"
+domain     = "acme.com"
+# ... other vars per terraform.tfvars.example
+```
+
+The bootstrap module derives `IMAGE_OWNER`, `API_IMAGE_NAME`, and `UI_IMAGE_NAME` from those URLs and renders them into `compose/.env` on the VPS automatically. You never set them twice.
+
+## Checklist
+
+- [ ] All four template repos forked under your org/user
+- [ ] First image successfully published to GHCR (push to `main` and watch the Actions tab)
+- [ ] GHCR package visibility set to Public
+- [ ] `acme-infra/compose/.env` set with your `IMAGE_OWNER` (+ `*_IMAGE_NAME` if renamed)
+- [ ] `acme-bootstrap/terraform.tfvars` set with your fork URLs and a real `domain`
+- [ ] `demo@example.com` / `password123` deleted or rotated before any production traffic
+- [ ] `JWT_SECRET` regenerated for production
+- [ ] `ACME_EMAIL` set to a real address (not `example.com`)
+
+## Related
+
+- [Quickstart](/quickstart/) — local boot in five minutes.
+- [Provisioning with OpenTofu](/topics/provisioning-with-tofu/) — `tofu apply` to a live VPS.
+- [Environment variables](/reference/env-vars/) — every var, what it does, which file owns it.

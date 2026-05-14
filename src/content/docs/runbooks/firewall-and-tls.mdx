@@ -34,12 +34,11 @@ This walks through the firewall + TLS setup we recommend for a single-host VPS s
 1. Edit `compose/.env`:
 
    ```bash
-   PUBLIC_API_HOST=api.example.com
-   PUBLIC_UI_HOST=app.example.com
+   PUBLIC_UI_HOST=example.com
    ACME_EMAIL=ops@example.com
    ```
 
-   The domains must resolve to this server (via Cloudflare proxied A/AAAA records).
+   The domain must resolve to this server (via a Cloudflare proxied A/AAAA record on the apex). BoringStack uses **same-origin path routing**: Traefik serves the SPA at `https://example.com/*` and the API at `https://example.com/api/*` + `https://example.com/health` on the same host and cert.
 
 2. Boot the prod stack:
 
@@ -62,16 +61,15 @@ This walks through the firewall + TLS setup we recommend for a single-host VPS s
 ## Verify
 
 ```bash
-# From the server itself (should reach Traefik dashboard if enabled in dev,
-# 404 in prod since the dashboard is disabled there):
-curl -sI -H "Host: api.example.com" https://localhost/health -k
+# From the server itself (apex Host header, self-signed accepted):
+curl -sI -H "Host: example.com" https://localhost/health -k
 
 # From a Cloudflare-proxied request (real client):
-curl -sI https://api.example.com/health
+curl -sI https://example.com/health
 # → 200 + Cloudflare's CF-Ray header
 
 # From a direct connection (bypassing Cloudflare):
-curl -sI --resolve api.example.com:443:<your-server-ip> https://api.example.com/health
+curl -sI --resolve example.com:443:<your-server-ip> https://example.com/health
 # → connection timeout (UFW blocked it)
 ```
 

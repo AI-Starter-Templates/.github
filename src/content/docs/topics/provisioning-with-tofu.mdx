@@ -99,7 +99,7 @@ open $(tofu output -raw site_url)
 | **Hetzner module first, others swappable** | Hetzner is the cheapest production-viable VPS shop. The bootstrap module is provider-agnostic (cloud-init is universal), so replacing the VPS module is the only thing that changes for DigitalOcean / OVH / Linode |
 | **Single `vps_type` variable using provider-native size names** | `cx32`, `s-2vcpu-4gb`: the same names the provider's docs, support, and billing page use |
 | **Opinionated Cloudflare zone defaults** | SSL strict, HSTS 6mo, TLS min 1.2, browser integrity on. Matches what `production-labels.yml` expects; each setting is one override away |
-| **DNS: apex + `api.` + `www.`** | `www.` is a CNAME to apex with a redirect rule. Both work; nobody is stuck typing the wrong one |
+| **DNS: apex + `www.` only** | One A/AAAA pair on the apex serves both the SPA and `/api/*` via same-origin path routing. `www.` is a CNAME to apex with a redirect rule. No `api.` subdomain — Traefik path-routes `/api/*` on the same host. |
 | **State stays local by default** | Single-operator default; an S3 backend block is one paste away for teams |
 | **Secrets in `terraform.tfvars` (gitignored)** | Same pragmatic floor as `compose/.env`; upgrade to a secret manager when team size demands it |
 | **Outputs print, never side-effect** | Apply prints the IP, ssh command, and site URL. Never auto-opens anything |
