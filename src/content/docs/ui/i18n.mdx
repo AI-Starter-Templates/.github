@@ -65,7 +65,7 @@ For interpolation, [react-i18next docs](https://react.i18next.com/guides/quick-s
 ## Patterns to avoid
 
 - Concatenating translated fragments: `t("the") + " " + t("button")`. Word order is language-specific; build full sentences as keys.
-- Translation IDs that are sentences: `t("Click here to continue")`. Hard to refactor when the copy changes; use semantic keys like `t("onboarding.continue")`.
+- Translation IDs that are sentences: `t("Click here to continue")`. Hard to refactor when the copy changes; use semantic keys like `t("checkout.continue")`.
 - Hardcoded `aria-label` / `placeholder`: these are content, not technical strings. The lint rule applies.
 
 ## Lint coverage
