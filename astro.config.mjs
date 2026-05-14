@@ -161,6 +161,11 @@ export default defineConfig({
         {
           label: "Topics",
           items: [
+            {
+              label: 'After "Use this template"',
+              link: "/topics/use-this-template/",
+            },
+            { label: "Email in development", link: "/topics/email-in-dev/" },
             { label: "Cloudflare Email", link: "/topics/cloudflare-email/" },
             { label: "Error tracking", link: "/topics/error-tracking/" },
             { label: "Observability", link: "/topics/observability/" },
