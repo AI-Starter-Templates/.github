@@ -49,6 +49,7 @@ For Docker-Compose-driven setups (the default), **`compose/.env` is the single f
 | `JWT_SECRET` | api | yes (≥ 32 chars) | Signs auth cookie; rotation invalidates all sessions |
 | `FRONTEND_URL` | api | yes | OAuth success redirect target |
 | `ALLOWED_ORIGINS` | api | no (default empty) | CSV. Empty = same-origin deployment (default), CORS not mounted. When set, must be HTTPS with no wildcards. |
+| `SUPERUSER_EMAIL` / `SUPERUSER_PASSWORD` | api | no (default empty) | Optional first-boot superuser. Both set → `db:seed` creates a user with `admin` role on first run. Empty → no-op; register via the UI instead. |
 | `GOOGLE_OAUTH_CLIENT_ID` / `_SECRET` | api | when Google enabled | |
 | `GITHUB_OAUTH_CLIENT_ID` / `_SECRET` | api | when GitHub enabled | |
 | `LINKEDIN_OAUTH_CLIENT_ID` / `_SECRET` | api | when LinkedIn enabled | |

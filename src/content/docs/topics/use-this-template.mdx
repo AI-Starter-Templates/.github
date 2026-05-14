@@ -47,7 +47,7 @@ cp .env.example .env
 open http://localhost:3001
 ```
 
-Sign in as `demo@example.com` / `password123`.
+Sign up via the registration form, or set `SUPERUSER_EMAIL` + `SUPERUSER_PASSWORD` in `compose/.env` before boot and the migrate job creates an admin user for you.
 
 ## Step 4. Wire GHCR for prod
 
@@ -96,7 +96,7 @@ The module derives `IMAGE_OWNER`, `API_IMAGE_NAME`, and `UI_IMAGE_NAME` from tho
 - [ ] GHCR package visibility set to Public
 - [ ] `acme-infra/compose/.env`: `IMAGE_OWNER` + `*_IMAGE_NAME` (if renamed)
 - [ ] `acme-bootstrap/terraform.tfvars`: fork URLs + real `domain`
-- [ ] `demo@example.com` deleted or rotated before any production traffic
+- [ ] `SUPERUSER_PASSWORD` rotated via the password-reset flow after first login
 - [ ] `JWT_SECRET` regenerated for production
 - [ ] `ACME_EMAIL` set to a real address (not `example.com`)
 

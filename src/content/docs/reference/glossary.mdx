@@ -13,10 +13,10 @@ The terms below show up repeatedly. They're defined consistently across the docs
 The three sibling repositories that compose BoringStack's runtime: `api-template`, `ui-template`, `infra-docker-compose-template`. They sit as siblings under one parent directory because the infra repo references the other two via relative paths in its compose builds. An optional fourth template, `infra-bootstrap-tofu-template`, provisions a VPS via OpenTofu.
 
 **Feature folder**
-A single directory per feature (`src/api/widgets/`, `src/features/dashboard/`). Holds the routes, services, types, and tests for that one feature. The unit of independent change. [Read more](/architecture/three-repos/).
+A single directory per feature (`src/api/<feature>/`, `src/features/<feature>/`). Holds the routes, services, types, and tests for that one feature. The unit of independent change. The api-template ships `auth`, `users`, `billing`, `dashboard`, `admin`, `health` as framework features; no demo domain resource. [Read more](/architecture/three-repos/).
 
 **Route / service / types split**
-The api-template's per-feature pattern. `widgets.routes.ts` does HTTP only, `widgets.service.ts` does business logic + DB, `widgets.types.ts` holds the shapes shared between them. Enforced by ESLint. [Read more](/api/overview/).
+The api-template's per-feature pattern. For a hypothetical `posts` resource: `posts.routes.ts` does HTTP only, `posts.service.ts` does business logic + DB, `posts.types.ts` holds the shapes shared between them. Enforced by ESLint. [Read more](/api/overview/).
 
 **Component anatomy**
 The ui-template's per-component pattern. A page like `DashboardPage/` is a folder of ~8 files (`.tsx`, `.hooks.ts`, `.types.ts`, `.constants.ts`, `.utils.ts`, `.test.tsx`, `.stories.tsx`, `index.ts`). [Read more](/ui/overview/).

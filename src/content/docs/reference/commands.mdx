@@ -39,7 +39,7 @@ Flags compose: `WITH_OBSERVABILITY=1 WITH_GLITCHTIP=1 ./scripts/compose-up.sh`.
 | Generate migration | `bun run db:generate` |
 | Apply migrations | `bun run db:migrate` |
 | Push schema (dev) | `bun run db:push --force` |
-| Seed demo user | `bun run db:seed` |
+| Seed superuser (if `SUPERUSER_EMAIL` + `_PASSWORD` set) | `bun run db:seed` |
 | Drizzle studio | `bun run db:studio` |
 | Scaffold a new resource | `bun run new:resource <name>` |
 | Build email templates | `bun run build:templates` |

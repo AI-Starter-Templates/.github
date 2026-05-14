@@ -36,7 +36,7 @@ Convention: `<area>.<verb>`. Examples:
 
 - `auth.login_success`, `auth.password_reset_completed`
 - `billing.checkout_session_created`
-- `widget.created`
+- `user.profile_updated`
 
 A `<area>.<verb>` shape means admin queries can group cleanly:
 
@@ -53,9 +53,9 @@ New event types add a constant before the first call site. Both code review and 
 ```ts
 void auditLogService.record({
   userId: actor.id,                          // null for system events
-  action: AUDIT_ACTIONS.WIDGET_CREATED,
-  resource: `widget:${widget.id}`,           // optional
-  metadata: { source: "import_csv" },        // optional, PII-free
+  action: AUDIT_ACTIONS.USER_PROFILE_UPDATED,
+  resource: `user:${user.id}`,               // optional
+  metadata: { fieldsChanged: ["firstName"] },// optional, PII-free
 });
 ```
 

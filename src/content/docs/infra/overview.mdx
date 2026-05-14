@@ -16,7 +16,7 @@ The base stack (always on) plus per-profile services:
 | `postgres` | always | App DB |
 | `valkey` | always | Cache + queues (Redis-protocol; BSD-licensed Redis fork) |
 | `traefik` | prod | Reverse proxy + ACME, path-routes one apex domain |
-| `api-migrate` | always (one-shot) | Schema push + demo user seed |
+| `api-migrate` | always (one-shot) | Schema push + optional superuser seed (when `SUPERUSER_EMAIL` + `SUPERUSER_PASSWORD` set) |
 | `api-dev` | dev | Bun + Elysia API, bind-mounted source |
 | `ui-dev` | dev | Vite dev server with proxy to api-dev, bind-mounted source |
 | `api` | prod | API image pulled from GHCR |

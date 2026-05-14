@@ -15,7 +15,7 @@ You start with a domain on Cloudflare, a Hetzner account, and a `terraform.tfvar
 
 You run `tofu apply`.
 
-A few minutes later the site is live at `https://<your-domain>`: VPS provisioned, DNS configured, HTTPS valid, demo user seeded.
+A few minutes later the site is live at `https://<your-domain>`: VPS provisioned, DNS configured, HTTPS valid, optional superuser seeded (when `superuser_email` + `superuser_password` are set in `terraform.tfvars`).
 
 ## What one apply does
 
@@ -86,8 +86,8 @@ curl -sI $(tofu output -raw site_url)/health
 
 # Sign in
 open $(tofu output -raw site_url)
-# Email:    demo@example.com
-# Password: password123
+# Use the SUPERUSER_EMAIL + SUPERUSER_PASSWORD you set in terraform.tfvars,
+# or sign up via the registration form.
 ```
 
 ## Design choices

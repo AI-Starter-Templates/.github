@@ -5,7 +5,7 @@ description: Clone three repos, run a script, log in. Five minutes from zero to 
 
 import { Steps, Aside } from "@astrojs/starlight/components";
 
-Local stack up in about five minutes. Postgres, Valkey, API, UI, all in Docker, demo user pre-seeded. The dev stack uses Vite's dev-server to proxy `/api/*` to api-dev, so the browser sees one origin and there are no CORS preflights.
+Local stack up in about five minutes. Postgres, Valkey, API, UI, all in Docker. Sign up via the registration form (or set `SUPERUSER_EMAIL` + `SUPERUSER_PASSWORD` in `compose/.env` first to bootstrap an admin user). The dev stack uses Vite's dev-server to proxy `/api/*` to api-dev, so the browser sees one origin and there are no CORS preflights.
 
 ## Prerequisites
 
@@ -56,7 +56,7 @@ Compose build contexts use `../../api-template` and `../../ui-template`, so the 
    ./dev.sh up -d --build
    ```
 
-   First boot pulls base images, builds the api/ui dev images, runs migrations, seeds the demo user. About 3 minutes on a fast laptop.
+   First boot pulls base images, builds the api/ui dev images, runs migrations. If you set `SUPERUSER_EMAIL` + `SUPERUSER_PASSWORD` in `compose/.env`, an admin user is also created. About 3 minutes on a fast laptop.
 
 </Steps>
 
@@ -64,10 +64,7 @@ Compose build contexts use `../../api-template` and `../../ui-template`, so the 
 
 Open **http://localhost:3001**.
 
-- Email: `demo@example.com`
-- Password: `password123`
-
-You land on the dashboard with live counts pulled from Postgres.
+If you set `SUPERUSER_EMAIL` + `SUPERUSER_PASSWORD` in `compose/.env` before booting, sign in with those credentials. Otherwise hit "Sign up" on the form and register a new account; that user is the first user in the system. You land on the dashboard, which is intentionally minimal — start building from here.
 
 ## What's running
 
@@ -75,7 +72,7 @@ You land on the dashboard with live counts pulled from Postgres.
 | --- | --- | --- |
 | `postgres` | 5432 | App database, schemas `auth`, `billing`, `audit`, `app` |
 | `valkey` | 6379 | Cache + BullMQ queues |
-| `api-migrate` | (one-shot) | `db:push` + seed demo user, then exits |
+| `api-migrate` | (one-shot) | `db:push` + (optionally) seed the superuser, then exits |
 | `api-dev` | 3000 | Bun + Elysia API, hot reload via bind mount |
 | `ui-dev` | 3001 | Vite dev server, hot reload, proxies `/api/*` to `api-dev` |
 
