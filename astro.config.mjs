@@ -109,7 +109,7 @@ export default defineConfig({
         {
           label: "Architecture",
           items: [
-            { label: "The three repos", link: "/architecture/three-repos/" },
+            { label: "Repository layout", link: "/architecture/three-repos/" },
             {
               label: "Why not a monorepo",
               link: "/architecture/why-not-monorepo/",
