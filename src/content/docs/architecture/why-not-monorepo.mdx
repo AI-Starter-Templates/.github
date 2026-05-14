@@ -1,21 +1,21 @@
 ---
 title: Why not a monorepo?
-description: Three repos vs. one mega-repo; what we gain by separating, and the price we pay for it.
+description: Sibling repos vs. one mega-repo; what we gain by separating, and the price we pay for it.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-BoringStack is three repos, not a monorepo. Deliberate choice. Monorepos are great for some things and miserable for others; the tradeoffs flip depending on what you're optimizing for.
+BoringStack is a sibling-repo layout, not a monorepo. Deliberate choice. Monorepos are great for some things and miserable for others; the tradeoffs flip depending on what you're optimizing for.
 
 ## What we're optimizing for
 
-Small context per task. Most "new SaaS" work is a single layer at a time: a new API route, a UI form, a compose tweak. Editing a route shouldn't drag in cluster YAML; tuning Traefik shouldn't load the Drizzle schema. Three repos means three small contexts and three small mental models instead of one big one.
+Small context per task. Most "new SaaS" work is a single layer at a time: a new API route, a UI form, a compose tweak. Editing a route shouldn't drag in cluster YAML; tuning Traefik shouldn't load the Drizzle schema. Splitting by layer means small contexts and small mental models instead of one big one.
 
 That matters more in the agent era. An agent pulling a 50k-line monorepo into context to change one Elysia handler is wasteful. An agent pulling the api-template alone gets exactly what it needs.
 
 ## Trade-off, plain
 
-| Monorepo wins | Three repos win |
+| Monorepo wins | Separation wins |
 |---|---|
 | Atomic cross-cutting refactors (rename a type used in API + UI in one PR) | Independent release cadence (Postgres bump doesn't wait for a UI tweak) |
 | One CI to run, one lint config to maintain | Narrower CI; each repo only runs tests for its own code |
@@ -24,9 +24,9 @@ That matters more in the agent era. An agent pulling a 50k-line monorepo into co
 | One git history | Per-repo permissions, per-repo SECURITY.md, per-repo release notes |
 | Whole-stack search in one tree | Smaller blast radius for a bad commit |
 
-Read horizontally: monorepos win when you do a lot of cross-cutting work. Three repos win when most work is single-layer and the contract between layers is stable and explicit.
+Read horizontally: monorepos win when you do a lot of cross-cutting work. Separation wins when most work is single-layer and the contract between layers is stable and explicit.
 
-## Why three layers fits this stack
+## Why this layering fits the stack
 
 The contract between api-template and ui-template is the OpenAPI spec. When the API changes, `pnpm generate:api` on the UI side regenerates the typed client. Drift is a compile error. Machine-checked.
 
@@ -36,13 +36,13 @@ These contracts mean the layers can move on their own clocks without breaking ea
 
 ## What we pay for it
 
-Cross-cutting changes are 2-3 PRs. A new feature that needs a new API route plus a new UI page plus a new env var is three PRs across three repos. The cost is real. The mitigation:
+Cross-cutting changes touch multiple repos. A new feature that needs a new API route plus a new UI page plus a new env var is one PR per repo. The cost is real. The mitigation:
 
 - OpenAPI as the contract. Drift is caught at compile time, not in code review.
 - Sibling-clone layout on disk. Local development still feels like one project; every command works in any repo, paths are predictable.
 - Per-repo CI is fast. Each repo's `validate` runs in 1-2 minutes because it's only doing its own work.
 
-Tooling duplication is real too. Three ESLint configs, three TypeScript configs, three Husky setups. The custom ESLint plugins are published as npm packages so all three repos consume the same versions ([Lint as the contract](/architecture/lint-as-contract/)).
+Tooling duplication is real too. Each repo has its own ESLint, TypeScript, and Husky setup. The custom ESLint plugins are published as npm packages so every repo consumes the same versions ([Lint as the contract](/architecture/lint-as-contract/)).
 
 Onboarding overhead: "Where do I clone what?" needs documenting. The [Quickstart](/quickstart/) is that documenting.
 
@@ -50,11 +50,11 @@ Onboarding overhead: "Where do I clone what?" needs documenting. The [Quickstart
 
 If BoringStack were a tightly coupled team product where every feature changed both API and UI, a monorepo would have been the right call. The templates are independently useful instead, which tips it the other way; somebody can use `api-template` without ever touching the UI or infra repos.
 
-If you fork BoringStack and your team uses all three layers as one product, merging the repos is a one-PR exercise. The on-disk layout already looks like a monorepo; you'd just add a top-level `package.json` workspaces config.
+If you fork BoringStack and your team uses every layer as one product, merging the repos is a one-PR exercise. The on-disk layout already looks like a monorepo; you'd just add a top-level `package.json` workspaces config.
 
-## When three repos would have been wrong
+## When this split would have been wrong
 
-If the contracts between layers were fuzzy and constantly shifting (a typical state for very early-stage products), the three-repo split would be friction without payoff. You'd be doing cross-cutting work all the time, and every change would be a multi-PR dance.
+If the contracts between layers were fuzzy and constantly shifting (a typical state for very early-stage products), splitting the repos would be friction without payoff. You'd be doing cross-cutting work all the time, and every change would be a multi-PR dance.
 
 BoringStack's templates are explicitly not for that stage. The point of using a template is to skip the fuzzy-contract phase. If you're at "what even is the data model?", a monorepo prototype gets you to clarity faster.
 
@@ -64,6 +64,6 @@ A Kubernetes-flavored infra repo is planned (`infra-k3s-template`, separately). 
 
 ## Related
 
-- [The three repos](/architecture/three-repos/); the contracts between them.
+- [Repository layout](/architecture/three-repos/); the contracts between them.
 - [Lint as the contract](/architecture/lint-as-contract/); why machine-checked rules matter even more when layers are separated.
 - [Stack at a glance](/architecture/stack/); what's in each repo.

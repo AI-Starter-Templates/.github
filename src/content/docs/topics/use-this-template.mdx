@@ -1,15 +1,15 @@
 ---
 title: After "Use this template"
-description: What to do after clicking "Use this template" on the four BoringStack repos. Renames, GHCR setup, OpenTofu vars, after-fork checklist.
+description: What to do after clicking "Use this template" on the BoringStack repos. Renames, GHCR setup, OpenTofu vars, after-fork checklist.
 ---
 
 import { Steps, Aside } from "@astrojs/starlight/components";
 
-BoringStack ships as four GitHub template repos. The flow is **"Use this template" → rename to taste → clone → boot**. The toolchain follows your rename: GHCR workflows, the prod compose stack, and the OpenTofu bootstrap derive image names and owners from your fork's actual URLs.
+BoringStack ships as GitHub template repos. The flow is **"Use this template" → rename to taste → clone → boot**. The toolchain follows your rename: GHCR workflows, the prod compose stack, and the OpenTofu bootstrap derive image names and owners from your fork's actual URLs.
 
 This page covers the few things that aren't fully automatic.
 
-## Step 1. Fork the four repos
+## Step 1. Fork the repos
 
 Click **"Use this template"** → **"Create a new repository"** on each:
 
@@ -91,7 +91,7 @@ The module derives `IMAGE_OWNER`, `API_IMAGE_NAME`, and `UI_IMAGE_NAME` from tho
 
 ## Checklist
 
-- [ ] All four template repos forked under your org/user
+- [ ] Every template repo forked under your org/user
 - [ ] First image published to GHCR (push to `main`, watch the Actions tab)
 - [ ] GHCR package visibility set to Public
 - [ ] `acme-infra/compose/.env`: `IMAGE_OWNER` + `*_IMAGE_NAME` (if renamed)

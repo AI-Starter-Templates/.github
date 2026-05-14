@@ -1,6 +1,6 @@
 ---
 title: Quickstart
-description: Clone three repos, run a script, log in. Five minutes from zero to a working full-stack.
+description: Clone the sibling repos, run a script, log in. Five minutes from zero to a working full-stack.
 ---
 
 import { Steps, Aside } from "@astrojs/starlight/components";
@@ -13,9 +13,9 @@ Local stack up in about five minutes. Postgres, Valkey, API, UI, all in Docker. 
 - About 4 GB of free RAM.
 - No local Node or Bun needed; everything runs in containers.
 
-## Clone four siblings
+## Clone the siblings
 
-The four templates live as siblings under one parent. Click "Use this template" on each GitHub repo (see the [after-fork checklist](/topics/use-this-template/)), or clone the upstream:
+The templates live as siblings under one parent. Click "Use this template" on each GitHub repo (see the [after-fork checklist](/topics/use-this-template/)), or clone the upstream. The `api-template`, `ui-template`, and `infra-docker-compose-template` boot the local stack. The `infra-bootstrap-tofu-template` is only needed later when you provision a VPS, but clone it now so the layout is complete:
 
 ```bash
 mkdir boringstack && cd boringstack
@@ -23,6 +23,7 @@ mkdir boringstack && cd boringstack
 git clone https://github.com/AI-Starter-Templates/api-template
 git clone https://github.com/AI-Starter-Templates/ui-template
 git clone https://github.com/AI-Starter-Templates/infra-docker-compose-template
+git clone https://github.com/AI-Starter-Templates/infra-bootstrap-tofu-template
 ```
 
 Compose build contexts use `../../api-template` and `../../ui-template`, so the directory names matter.
@@ -64,7 +65,7 @@ Compose build contexts use `../../api-template` and `../../ui-template`, so the 
 
 Open **http://localhost:3001**.
 
-If you set `SUPERUSER_EMAIL` + `SUPERUSER_PASSWORD` in `compose/.env` before booting, sign in with those credentials. Otherwise hit "Sign up" on the form and register a new account; that user is the first user in the system. You land on the dashboard, which is intentionally minimal — start building from here.
+If you set `SUPERUSER_EMAIL` + `SUPERUSER_PASSWORD` in `compose/.env` before booting, sign in with those credentials. Otherwise hit "Sign up" on the form and register a new account; that user is the first user in the system. You land on the dashboard, which is intentionally minimal. Start building from here.
 
 ## What's running
 

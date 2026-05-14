@@ -1,11 +1,11 @@
 ---
-title: The three repos
-description: Why BoringStack ships as three independent repositories (plus an optional fourth for hands-off provisioning), and how they wire together.
+title: Repository layout
+description: Why BoringStack ships as independent sibling repositories, what runs where, and how they wire together.
 ---
 
 import { Aside, FileTree } from "@astrojs/starlight/components";
 
-BoringStack is three repos that compose into the runtime, plus an optional fourth for OpenTofu-driven provisioning:
+BoringStack is a set of sibling repos. The runtime is composed from `api-template`, `ui-template`, and `infra-docker-compose-template`. The `infra-bootstrap-tofu-template` repo is optional and only used to provision a VPS.
 
 <FileTree>
 - boringstack/
@@ -17,7 +17,7 @@ BoringStack is three repos that compose into the runtime, plus an optional fourt
 
 Each repo has its own `package.json`, its own CI, its own deploy story (fork one and use it standalone if you want), and its own ESLint config tuned to the layer.
 
-The three runtime repos wire together through the infra repo's `docker-compose.yml`, which references the API and UI via relative paths (`../../api-template`, `../../ui-template`).
+The runtime repos wire together through the infra repo's `docker-compose.yml`, which references the API and UI via relative paths (`../../api-template`, `../../ui-template`).
 
 ## The disk layout
 

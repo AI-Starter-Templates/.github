@@ -1,11 +1,11 @@
 ---
 title: Deployment
-description: Boring deployment. Single-host VPS, Docker, four repos forked, GHCR images, one prod profile. HTTPS via ACME, perimeter locked by Cloudflare.
+description: Boring deployment. Single-host VPS, Docker, the templates forked, GHCR images, one prod profile. HTTPS via ACME, perimeter locked by Cloudflare.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-No Kubernetes, no platform, no app-specific CI runner. A VPS, four repos forked, one env file, one `tofu apply` (or one `compose up -d`). HTTPS provisions itself. The perimeter is locked by Cloudflare + a Hetzner firewall.
+No Kubernetes, no platform, no app-specific CI runner. A VPS, the templates forked, one env file, one `tofu apply` (or one `compose up -d`). HTTPS provisions itself. The perimeter is locked by Cloudflare + a Hetzner firewall.
 
 Every layer that isn't there is a layer you don't have to operate.
 

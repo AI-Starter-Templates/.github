@@ -9,8 +9,8 @@ The terms below show up repeatedly. They're defined consistently across the docs
 
 ## Architecture vocabulary
 
-**The three repos**
-The three sibling repositories that compose BoringStack's runtime: `api-template`, `ui-template`, `infra-docker-compose-template`. They sit as siblings under one parent directory because the infra repo references the other two via relative paths in its compose builds. An optional fourth template, `infra-bootstrap-tofu-template`, provisions a VPS via OpenTofu.
+**The sibling repos**
+The repositories that compose BoringStack's runtime: `api-template`, `ui-template`, `infra-docker-compose-template`. They sit as siblings under one parent directory because the infra repo references the others via relative paths in its compose builds. The `infra-bootstrap-tofu-template` repo provisions a VPS via OpenTofu and is optional.
 
 **Feature folder**
 A single directory per feature (`src/api/<feature>/`, `src/features/<feature>/`). Holds the routes, services, types, and tests for that one feature. The unit of independent change. The api-template ships `auth`, `users`, `billing`, `dashboard`, `admin`, `health` as framework features; no demo domain resource. [Read more](/architecture/three-repos/).
