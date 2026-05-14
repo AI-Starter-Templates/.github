@@ -15,6 +15,7 @@ description: Every command you'll run during a normal day of working on BoringSt
 | With error tracking | `WITH_GLITCHTIP=1 ./scripts/compose-up.sh` | n/a |
 | With queue dashboard | `WITH_BULLMQ=1 ./scripts/compose-up.sh` | n/a |
 | With image-update bot | `WITH_WUD=1 ./scripts/compose-up.sh` | n/a |
+| With local email catcher | `WITH_MAILPIT=1 ./scripts/compose-up.sh` (dev only) | n/a |
 | Service status | `docker compose -f compose/docker-compose.yml -f compose/docker-compose.development-labels.yml --profile dev ps` | n/a |
 | Live logs | `docker compose ... logs -f api-dev` | n/a |
 | Live resource use | `docker stats` | n/a |
@@ -29,9 +30,10 @@ Flags compose: `WITH_OBSERVABILITY=1 WITH_GLITCHTIP=1 ./scripts/compose-up.sh`.
 | Run in watch mode | `bun run dev` |
 | Production bundle | `bun run build` |
 | Run production bundle | `bun run start` |
-| Typecheck + lint | `bun run check` |
+| Typecheck + lint + knip | `bun run check` |
 | Lint only | `bun run lint` |
 | Auto-fix lint | `bun run lint:fix` |
+| Dead-code detection | `bun run knip` |
 | Unit + integration tests | `bun run test` |
 | Full merge gate | `bun run validate` |
 | Generate migration | `bun run db:generate` |
@@ -51,8 +53,9 @@ Flags compose: `WITH_OBSERVABILITY=1 WITH_GLITCHTIP=1 ./scripts/compose-up.sh`.
 | Production build | `pnpm build` |
 | Production preview | `pnpm preview` |
 | Typecheck | `pnpm typecheck` |
-| Lint + format + typecheck | `pnpm check` |
+| Lint + format + typecheck + knip | `pnpm check` |
 | Auto-fix lint | `pnpm lint:fix` |
+| Dead-code detection | `pnpm knip` |
 | Unit + component tests | `pnpm test` |
 | Coverage | `pnpm test:ci` |
 | e2e (Playwright) | `pnpm e2e` |

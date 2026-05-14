@@ -29,14 +29,17 @@ Every BoringStack repo applies a **seven-day minimum release age**: package vers
 
 ## Overriding for a specific package
 
-pnpm supports per-package overrides via `minimumReleaseAgeExclude` in `.npmrc`:
+pnpm supports per-package overrides via `minimumReleaseAgeExclude` in `.npmrc`. The array syntax with `[]=` is required; a comma-separated list won't parse:
 
-```bash
-# Allow the freshly-released patch only for this package
-minimum-release-age-exclude=some-critical-package
+```ini
+minimum-release-age-exclude[]=yaml
+minimum-release-age-exclude[]=msw
+minimum-release-age-exclude[]=@tailwindcss/oxide*
 ```
 
-Use sparingly. Each exclusion is a small concession on the original threat model.
+Glob patterns are supported, useful for platform-variant packages like `@tailwindcss/oxide-*`.
+
+Use sparingly. Each exclusion is a small concession on the original threat model. The default `ui-template` `.npmrc` already excludes a handful of high-churn packages whose latest versions routinely sit inside the seven-day window and would otherwise block every install.
 
 ## Why not just trust npm?
 

@@ -3,62 +3,76 @@ title: Stack at a glance
 description: Every dependency, every choice, in one table.
 ---
 
-The full set of runtime + dev dependencies, what each does, and why we picked it.
+The full set of runtime + dev dependencies, what each does, and why.
 
 ## api-template
 
 | Concern | Choice | Why |
 |---|---|---|
-| Runtime | **Bun** | Bun-native APIs, fastest install + cold boot |
-| HTTP framework | **Elysia** | TypeBox-typed routes, OpenAPI auto-emit, fast |
-| ORM | **Drizzle** | TS-first, SQL-shaped, real migrations |
-| Database | **Postgres** | Boring, durable, well-tooled |
-| Cache + queue store | **Valkey** | OSS-licensed Redis fork (BSD-3) backed by the Linux Foundation; drop-in compatible with Redis clients |
-| Queues | **BullMQ** | Canonical Valkey/Redis-protocol job queue |
-| Auth | **bcryptjs** + **JWT** + **Arctic** (OAuth) | Hand-rolled, server-side, no third-party hosted auth |
-| Email | **Cloudflare Email Service** (default), **Resend**, **SendGrid** | Pluggable; Cloudflare for cost |
-| Error tracking | **@sentry/bun** | Points at hosted Sentry or self-hosted GlitchTip |
-| AI | **OpenAI SDK**, **Anthropic SDK**, or **noop** | Pluggable; `OPENAI_BASE_URL` enables any OpenAI-compatible endpoint |
-| Logger | **Pino** + **pino-pretty** | Structured logs, JSON in prod |
-| Templates | **Handlebars** (compiled to JSON at build time) | Email templates as static JSON, zero runtime parse cost |
+| Runtime | Bun | Bun-native APIs, fastest install + cold boot |
+| HTTP framework | Elysia | TypeBox-typed routes, OpenAPI auto-emit |
+| ORM | Drizzle | TS-first, SQL-shaped, real migrations |
+| Database | Postgres | Boring, durable, well-tooled |
+| Cache + queue store | Valkey | OSS-licensed Redis fork (BSD-3) backed by the Linux Foundation; drop-in compatible with Redis clients |
+| Queues | BullMQ | Canonical Valkey/Redis-protocol job queue |
+| Auth | bcryptjs + JWT + Arctic (OAuth) | Server-side, no third-party hosted auth |
+| Email | Cloudflare Email Service (default), Resend, SendGrid, SMTP, noop | Pluggable. SMTP works against Mailpit in dev and any RFC-5321 server in prod |
+| Error tracking | @sentry/bun | Points at hosted Sentry or self-hosted GlitchTip |
+| AI | OpenAI SDK, Anthropic SDK, or noop | Pluggable; `OPENAI_BASE_URL` enables any OpenAI-compatible endpoint |
+| Logger | Pino + pino-pretty | Structured logs, JSON in prod |
+| Templates | Handlebars (precompiled to JSON at build time) | Email templates as static JSON, zero runtime parse cost |
+| Dead-code detection | Knip | Gates `bun run validate` |
 
 ## ui-template
 
 | Concern | Choice | Why |
 |---|---|---|
-| Build tool | **Vite** | Fast HMR, native ESM |
-| Framework | **React 19** | New compiler, server components if needed later |
-| Server state | **TanStack Query** | Widely used; cache invariants are well documented |
-| Client state | **Zustand** | Small, no provider chain |
-| Forms | **React Hook Form** + **Zod** | Typed forms, schema validation |
-| Routing | **React Router** | Stable, well-known |
-| Component primitives | **shadcn/ui** + **Radix** | Copy-paste primitives, no UI dependency lock-in |
-| Styling | **Tailwind** + `@theme` tokens | Utility-first, design tokens at the CSS layer |
-| HTTP | **openapi-fetch** + generated schema | Typed against the live API spec |
-| Error tracking | **@sentry/react** | Matching API-side wiring |
-| i18n | **react-i18next** | en + de out of the box |
-| Tests | **Vitest** + **Testing Library** + **Playwright** | Unit + integration + e2e |
-| Visual regression | **Playwright snapshots** | Per-platform baselines |
-| Storybook | **Storybook** | Component catalog with controls |
+| Build tool | Vite | Fast HMR, native ESM, dev-server proxy for same-origin `/api/*` |
+| Framework | React 19 | New compiler, server components if needed later |
+| Server state | TanStack Query | Widely used; cache invariants are well documented |
+| Client state | Zustand | Small, no provider chain |
+| Forms | React Hook Form + Zod | Typed forms, schema validation |
+| Routing | React Router | Stable, well-known |
+| Component primitives | shadcn/ui + Radix | Copy-paste primitives, no UI dependency lock-in |
+| Styling | Tailwind + `@theme` tokens | Utility-first, design tokens at the CSS layer |
+| HTTP | openapi-fetch + generated schema | Typed against the live API spec |
+| Error tracking | @sentry/react | Matches API-side wiring |
+| i18n | react-i18next | en + de out of the box |
+| Tests | Vitest + Testing Library + Playwright | Unit + integration + e2e |
+| Visual regression | Playwright snapshots | Per-platform baselines |
+| Storybook | Storybook | Component catalog with controls |
+| Dead-code detection | Knip | Gates `pnpm check` |
 
 ## infra-docker-compose-template
 
 | Concern | Choice | Why |
 |---|---|---|
-| Reverse proxy | **Traefik** | Docker-label-driven, ACME built in |
-| Cert provider | **Let's Encrypt** via ACME HTTP-01 | Free, automatic, renewed by Traefik |
-| Metrics | **Prometheus** + node-exporter + postgres-exporter + valkey-exporter | Standard exporters; per-component metrics |
-| Logs | **Loki** + **Promtail** | Per-container labels, queryable in Grafana |
-| Dashboards | **Grafana** | Auto-provisions Prometheus + Loki datasources |
-| Alerts | **Alertmanager** | Routes Prometheus alerts |
-| Error tracking (self-hosted) | **GlitchTip** | Sentry-compatible, runs on the same Postgres + Valkey |
-| Image update detection | **WUD** (What's Up Docker) | Notify-only mode, Discord webhook |
-| Queue dashboard | **bull-board** | Dev-only Bull/BullMQ UI |
-| Firewall | **UFW** | Single-host VPS hardening, Cloudflare IP allowlist |
-| Backups | **rclone** | Off-site, timestamped, retention-managed |
+| Reverse proxy (prod only) | Traefik | Docker-label-driven, ACME built in, same-origin path routing |
+| Cert provider | Let's Encrypt via ACME HTTP-01 | Free, automatic, renewed by Traefik |
+| Metrics | Prometheus + node-exporter + postgres-exporter + valkey-exporter | Standard exporters, per-component metrics |
+| Logs | Loki + Promtail | Per-container labels, queryable in Grafana |
+| Dashboards | Grafana | Auto-provisions datasources; drop JSON into `compose/grafana/dashboards/` |
+| Alerts | Alertmanager | Routes Prometheus alerts |
+| Error tracking (self-hosted) | GlitchTip | Sentry-compatible, runs on the base Postgres + Valkey |
+| Image update detection | WUD (What's Up Docker) | Notify-only, Discord webhook + dashboard at `:3033` |
+| Local email catcher | Mailpit | SMTP on `:1025`, web UI on `:8025`, opt-in via `WITH_MAILPIT=1` |
+| Queue dashboard | bull-board | Dev-only Bull/BullMQ UI |
+| Backups | rclone | Off-site, timestamped, retention-managed |
+| Optional second-layer firewall | UFW (example script) | Defense in depth on top of Hetzner cloud firewall |
+
+## infra-bootstrap-tofu-template
+
+| Concern | Choice | Why |
+|---|---|---|
+| IaC tool | OpenTofu | MPL-licensed Terraform fork, drop-in compatible |
+| VPS | Hetzner Cloud | Cheap, EU-friendly, good API |
+| DNS + edge | Cloudflare (apex + www only) | Proxied for DDoS, same-origin path routing means no api. subdomain |
+| Firewall | Hetzner cloud firewall | Auto-pulls live Cloudflare IPv4 + IPv6 ranges at plan time |
+| First-boot bootstrap | cloud-init + `bootstrap.sh` | Versioned shell script: clone infra repo, drop env, `compose pull && up -d` |
+| Backups (optional) | rclone via cron | Configured at apply time |
 
 ## Architecture-enforcement plugins
 
-Each app repo ships custom ESLint plugins (all open-sourced) that codify the patterns and stop drift at the lint gate. That matters most for agent-driven edits: `AGENTS.md` gets skipped; the linter does not.
+Each app repo ships custom ESLint plugins (all open-sourced) that codify the patterns and stop drift at the lint gate.
 
-→ Full inventory with GitHub links: [Lint as the contract](/architecture/lint-as-contract/).
+[Full inventory with GitHub links →](/architecture/lint-as-contract/)

@@ -5,12 +5,12 @@ description: TypeBox for shape, hand-written predicates for cross-field rules. B
 
 import { Aside } from "@astrojs/starlight/components";
 
-`env` is **deploy-time configuration**, not runtime state. The validator runs once at boot, freezes the result, and exposes a typed `env` object. Anything that needs to change at runtime belongs in a service.
+`env` is deploy-time configuration, not runtime state. The validator runs once at boot, freezes the result, and exposes a typed `env` object. Anything that needs to change at runtime belongs in a service.
 
 Two principles drive the design:
 
-- **No silent fallbacks in production.** A missing or malformed var fails the boot, with a readable error listing *every* problem, not just the first.
-- **One place to read `process.env`.** Direct `process.env.FOO` outside the validator is a lint error.
+- No silent fallbacks in production. A missing or malformed var fails the boot, with a readable error listing every problem, not just the first.
+- One place to read `process.env`. Direct `process.env.FOO` outside the validator is a lint error.
 
 ## How boot validates env
 
@@ -39,15 +39,15 @@ The two-pass split matters: running invariants on an already-shape-validated obj
 
 ## Shape vs. invariant
 
-A **shape** rule expresses "this field must be a positive int between 1 and 65535." TypeBox does that:
+A shape rule expresses "this field must be a positive int between 1 and 65535." TypeBox does that:
 
 ```ts
 PORT: t.Integer({ minimum: 1, maximum: 65535, default: 3000 }),
 JWT_SECRET: t.String({ minLength: 32 }),
-EMAIL_PROVIDER: t.Union([t.Literal("cloudflare"), t.Literal("resend"), t.Literal("sendgrid")]),
+EMAIL_PROVIDER: t.Union([t.Literal("cloudflare"), t.Literal("resend"), t.Literal("sendgrid"), t.Literal("smtp")]),
 ```
 
-An **invariant** rule expresses "if A is true, B must be set." TypeBox can't say that cleanly. A predicate can:
+An invariant rule expresses "if A is true, B must be set." TypeBox can't say that cleanly. A predicate can:
 
 ```ts
 if (env.BILLING_ENABLED && env.STRIPE_SECRET_KEY === "") {
@@ -61,8 +61,8 @@ Predicates each return `string[]` and fan into one aggregated check, so every pr
 
 | Triggers when | Requires |
 |---|---|
-| `NODE_ENV=production` | `ALLOWED_ORIGINS` non-empty, all HTTPS, no wildcards |
-| `NODE_ENV=production` | Matching email-provider key(s) non-empty (Cloudflare needs *both* account ID + token) |
+| `NODE_ENV=production` + `ALLOWED_ORIGINS` non-empty | Every origin starts with `https://` and contains no wildcards. Empty `ALLOWED_ORIGINS` is valid (same-origin deployment, CORS not mounted). |
+| `NODE_ENV=production` | Matching email-provider key(s) non-empty (Cloudflare needs both account ID + token; smtp needs `SMTP_HOST`) |
 | `AI_ENABLED=true` | `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` depending on provider |
 | `BILLING_ENABLED=true` | `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` |
 | `NODE_ENV=production` + any Valkey-using feature | `VALKEY_PASSWORD` non-empty |
@@ -86,7 +86,7 @@ Three problems, one redeploy to fix all of them.
 2. Add it to `readRaw()` with a parser helper (`toInt`, `toBool`, `toCsv`, `nonEmpty`, `toFloat`).
 3. If it has a cross-field rule, write a `check*` predicate and add it to `checkInvariants()`.
 4. Document it in `.env.example` (and in `compose/.env.example` if it flows through the prod profile).
-5. Use `env.MY_VAR` everywhere. **Don't** touch `process.env` directly; the lint plugin will catch it.
+5. Use `env.MY_VAR` everywhere. Don't touch `process.env` directly; the lint plugin will catch it.
 
 ## The lint contract
 

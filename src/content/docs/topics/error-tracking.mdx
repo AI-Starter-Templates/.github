@@ -32,9 +32,9 @@ flowchart LR
   backend -- "https://...glitchtip.localhost/..." --> glitchtip["self-hosted GlitchTip"]
 ```
 
-On the **API side**, Sentry initialises once at boot. If `SENTRY_DSN` is empty, init is a no-op. The shared `captureError` helper is wired into unhandled-rejection and uncaught-exception handlers so anything that escapes the request loop reaches the backend.
+API side: Sentry initialises once at boot. If `SENTRY_DSN` is empty, init is a no-op. The shared `captureError` helper is wired into unhandled-rejection and uncaught-exception handlers, so anything that escapes the request loop reaches the backend.
 
-On the **UI side**, Sentry initialises once at app mount when `VITE_SENTRY_DSN` is set. Replays-on-error capture the broken flow; full-session replays are off so you don't accidentally collect a video of every customer.
+UI side: Sentry initialises once at app mount when `VITE_SENTRY_DSN` is set. Replays-on-error capture the broken flow; full-session replays are off so you don't accidentally collect a video of every customer.
 
 ## Self-hosting with GlitchTip
 
@@ -46,7 +46,7 @@ WITH_GLITCHTIP=1 ./dev.sh up -d
 
 First boot bootstraps a superuser, a default org, and two projects (`API` and `Frontend`). Visit `http://glitchtip.localhost`, grab each project's DSN, and drop them into the matching env vars.
 
-The overlay reuses the base stack's Postgres (in a separate `glitchtip` database) and Valkey (DB 1). Adding GlitchTip costs **two extra containers**, not a separate database server.
+The overlay reuses the base stack's Postgres (in a separate `glitchtip` database) and Valkey (DB 1). Adding GlitchTip costs two extra containers, not a separate database server.
 
 For production hardening (Basic Auth, HTTPS, real SMTP), see the [GlitchTip docs in the infra repo](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/docs/glitchtip.md).
 

@@ -5,16 +5,16 @@ description: WUD (What's-Up-Docker) overlay; get a Discord ping when a base imag
 
 import { Aside } from "@astrojs/starlight/components";
 
-`WITH_WUD=1` brings up [WUD](https://getwud.github.io/wud/): it watches every running container's image and pings a Discord webhook when a newer tag is available. **Manual `docker compose pull` + recreate is still the apply step**; no surprise restarts.
+`WITH_WUD=1` brings up [WUD](https://getwud.github.io/wud/): it watches every running container's image and pings a Discord webhook when a newer tag is available. Manual `docker compose pull` + recreate is still the apply step. No surprise restarts.
 
 ## Why notify-only
 
 Auto-pull-and-restart sounds appealing until the first time a bad image breaks production at 2 AM. The template's stance:
 
-- **Detection automated.** You always know when a base image moves.
-- **Application manual.** A human reviews the changelog before bumping.
+- Detection automated. You always know when a base image moves.
+- Application manual. A human reviews the changelog before bumping.
 
-This is one philosophical step less aggressive than Watchtower. Pick Watchtower if you want hands-off; pick this if you want a human in the loop.
+One philosophical step less aggressive than Watchtower. Pick Watchtower if you want hands-off; pick this if you want a human in the loop.
 
 ## How it works
 
@@ -34,7 +34,7 @@ flowchart LR
   human --> apply
 ```
 
-WUD does **not** mount `docker-compose.yml` read-write, deliberately. It can't modify your stack; only inform.
+WUD doesn't mount `docker-compose.yml` read-write. By design. It can't modify your stack, only inform.
 
 ## Design choices
 
@@ -91,12 +91,14 @@ When WUD pings you about, say, a new `postgres:17.1`:
 5. Verify: `./dev.sh logs -f postgres`, then a few sanity SQL queries.
 6. Commit the bumped `docker-compose.yml`.
 
-For the app images (`api`, `ui`), bumping the base layers requires a rebuild:
+For the app images (`api`, `ui`), the new tag is published to GHCR by the release workflow when the app repo pushes. Apply it on the VPS:
 
 ```bash
-git -C ../api-template pull        # if base bump came from upstream
-STACK=prod ./scripts/compose-up.sh --build
+docker compose pull api ui
+docker compose up -d
 ```
+
+To pin a specific version instead of tracking `latest`, set `API_IMAGE_TAG` / `UI_IMAGE_TAG` in `compose/.env` (e.g. `sha-abc1234` or `0.3.0`) and `compose pull` only when you bump those values.
 
 ## Rollback
 
@@ -104,9 +106,9 @@ Pin the old tag in `docker-compose.yml`, redeploy. Image tags are immutable (goo
 
 ## When to skip WUD
 
-- **You use [Renovate](https://github.com/renovatebot/renovate) on this repo.** Renovate opens PRs for image bumps; same intent, integrated into your PR review flow. Don't run both.
-- **You're on a managed runtime** (ECS, GKE, etc.) where the platform handles image rollouts.
-- **You don't ship to production.** Dev-only stacks don't need this.
+- You use [Renovate](https://github.com/renovatebot/renovate) on this repo. Renovate opens PRs for image bumps; same intent, integrated into your PR review flow. Don't run both.
+- You're on a managed runtime (ECS, GKE, etc.) where the platform handles image rollouts.
+- You don't ship to production. Dev-only stacks don't need this.
 
 ## Source
 

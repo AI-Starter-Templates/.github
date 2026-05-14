@@ -5,7 +5,7 @@ description: An optional fourth template. One `tofu apply` provisions a Hetzner 
 
 import { Aside } from "@astrojs/starlight/components";
 
-BoringStack's [Deployment](/topics/deployment/) story is deliberately boring: SSH into a VPS, install Docker, clone three repos, `compose up`. That works, and some operators prefer it.
+BoringStack's [Deployment](/topics/deployment/) story is boring: SSH into a VPS, install Docker, clone the infra repo, `compose pull && compose up -d`. That works, and some operators prefer it.
 
 The OpenTofu template is the alternative for people who'd rather drive the same outcome from a single declarative apply. Source lives at [AI-Starter-Templates/infra-bootstrap-tofu-template](https://github.com/AI-Starter-Templates/infra-bootstrap-tofu-template).
 
@@ -26,7 +26,7 @@ flowchart LR
   hetz["Hetzner<br/>VPS · SSH key · firewall"]
   cf["Cloudflare<br/>A records · zone settings"]
   init["cloud-init on first boot<br/>installs Docker + git<br/>runs bootstrap.sh"]
-  script["bootstrap.sh from repo<br/>clones 3 sibling repos<br/>renders compose/.env<br/>compose up -d --build"]
+  script["bootstrap.sh from repo<br/>clones infra repo<br/>renders compose/.env<br/>compose pull && compose up -d"]
   live["live site"]
   tfvars --> apply
   apply --> hetz
@@ -67,7 +67,7 @@ tofu apply
 
 ## Wait for cloud-init
 
-Bootstrap (Docker install, repo clones, image builds, first `compose up`) runs in the background after the server boots. A few minutes on first run.
+Bootstrap (Docker install, infra-repo clone, GHCR image pulls, first `compose up -d`) runs in the background after the server boots. A few minutes on first run.
 
 ```bash
 # Blocks until cloud-init is done:
@@ -99,7 +99,7 @@ open $(tofu output -raw site_url)
 | **Hetzner module first, others swappable** | Hetzner is the cheapest production-viable VPS shop. The bootstrap module is provider-agnostic (cloud-init is universal), so replacing the VPS module is the only thing that changes for DigitalOcean / OVH / Linode |
 | **Single `vps_type` variable using provider-native size names** | `cx32`, `s-2vcpu-4gb`: the same names the provider's docs, support, and billing page use |
 | **Opinionated Cloudflare zone defaults** | SSL strict, HSTS 6mo, TLS min 1.2, browser integrity on. Matches what `production-labels.yml` expects; each setting is one override away |
-| **DNS: apex + `www.` only** | One A/AAAA pair on the apex serves both the SPA and `/api/*` via same-origin path routing. `www.` is a CNAME to apex with a redirect rule. No `api.` subdomain — Traefik path-routes `/api/*` on the same host. |
+| **DNS: apex + `www.` only** | One A/AAAA pair on the apex serves both the SPA and `/api/*` via same-origin path routing. `www.` is a CNAME to apex with a redirect rule. No `api.` subdomain; Traefik path-routes `/api/*` on the same host. |
 | **State stays local by default** | Single-operator default; an S3 backend block is one paste away for teams |
 | **Secrets in `terraform.tfvars` (gitignored)** | Same pragmatic floor as `compose/.env`; upgrade to a secret manager when team size demands it |
 | **Outputs print, never side-effect** | Apply prints the IP, ssh command, and site URL. Never auto-opens anything |
@@ -163,7 +163,7 @@ Everything in `terraform.tfvars.example` ships with comments explaining what it'
 | `modules/hetzner/` | VPS, SSH key, firewall, cloud-init injection |
 | `modules/cloudflare/` | DNS records, opinionated zone settings, redirect rules |
 | `modules/bootstrap/` | Cloud-init template that installs Docker plus git, then runs `bootstrap.sh` |
-| `bootstrap.sh` | Versioned shell script: clones repos, renders `compose/.env`, runs `compose up` |
+| `bootstrap.sh` | Versioned shell script: clones the infra repo, renders `compose/.env`, runs `compose pull && compose up -d` |
 
 ## State management
 
@@ -185,20 +185,18 @@ The state file holds secrets (cloud-init renders with sensitive values). Encrypt
 
 ## Updating
 
-OpenTofu owns the **infrastructure**. Git owns the **code**.
+OpenTofu owns the infrastructure. GHCR + the infra repo own the running code.
 
-Code updates are the same pull-and-rebuild as the manual deployment path:
+Code updates land via the release workflows. Push to `main` on `api-template` or `ui-template`, a new image tag appears on GHCR, WUD on the VPS posts a notification, then on the VPS:
 
 ```bash
 ssh root@$(tofu output -raw vps_ipv4)
 cd /opt/boringstack/infra
-git -C ../api-template pull
-git -C ../ui-template pull
-git pull
-STACK=prod ./scripts/compose-up.sh --build
+docker compose pull
+docker compose up -d
 ```
 
-Infrastructure changes (VPS resize, DNS record edit, firewall rule): edit `terraform.tfvars` or the modules, then `tofu apply`.
+Infra YAML or env-var changes: `git pull` the infra repo on the VPS, then re-run `compose up -d`. Infrastructure changes (VPS resize, DNS, firewall rule): edit `terraform.tfvars` or the modules, then `tofu apply`.
 
 ## Scaling up
 

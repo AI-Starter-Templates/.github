@@ -30,38 +30,35 @@ flowchart LR
   domain --> token --> api
 ```
 
-You need both the **account ID** (in the endpoint URL) and the **API token** (in the bearer header). Lose either and sends fail.
+You need both the account ID (in the endpoint URL) and the API token (in the bearer header). Lose either and sends fail.
 
 ## Setup
 
 <Steps>
 
-1. **Enable Workers Paid.**
-   Cloudflare dashboard → Workers & Pages → Plans → upgrade to Workers Paid. Email Service is bundled into this plan; there's no separate billing line. ([Current pricing](https://www.cloudflare.com/plans/developer-platform/).)
+1. Enable Workers Paid. Cloudflare dashboard → Workers & Pages → Plans → upgrade to Workers Paid. Email Service is bundled into this plan; there's no separate billing line. ([Current pricing](https://www.cloudflare.com/plans/developer-platform/).)
 
-2. **Enable Email Service on your domain.**
-   Dashboard → Email → Email Routing or Email Sending → enable for the domain. Cloudflare auto-provisions the required DNS records (SPF, DKIM, DMARC) because the zone is on Cloudflare. That removes the usual hand-edited DNS step, which is where most transactional-email setups go wrong.
+2. Enable Email Service on your domain. Dashboard → Email → Email Routing or Email Sending → enable for the domain. Cloudflare auto-provisions the required DNS records (SPF, DKIM, DMARC) because the zone is on Cloudflare. That removes the usual hand-edited DNS step, where most transactional-email setups go wrong. Wait for the dashboard to show all three records as Active (usually under a minute).
 
-   Wait for the dashboard to show all three records as **Active** (usually < 1 min).
+3. Capture the Account ID. Dashboard → any domain → right sidebar → "Account ID". 32 hex characters. Drop it into `compose/.env`:
 
-3. **Capture the Account ID.**
-   Dashboard → any domain → right sidebar → "Account ID". 32 hex characters. Drop it into `compose/.env`:
    ```bash
    CLOUDFLARE_ACCOUNT_ID=<your-account-id>
    ```
 
-4. **Scope an API token.**
-   Dashboard → My Profile → API Tokens → Create Token → Custom Token with:
-   - **Permissions:** `Email Sending: Edit` (only this; principle of least privilege).
-   - **Account resources:** include the specific account.
-   - **TTL:** indefinite for now; rotate quarterly or after any staff change.
+4. Scope an API token. Dashboard → My Profile → API Tokens → Create Token → Custom Token with:
+   - Permissions: `Email Sending: Edit` only (principle of least privilege).
+   - Account resources: include the specific account.
+   - TTL: indefinite for now; rotate quarterly or after any staff change.
 
    Copy the token (you can't view it again). Drop it into `compose/.env`:
+
    ```bash
    CLOUDFLARE_EMAIL_API_TOKEN=<your-token>
    ```
 
-5. **Set the sender + provider.**
+5. Set the sender + provider.
+
    ```bash
    EMAIL_PROVIDER=cloudflare        # already the default
    EMAIL_FROM=noreply@<your-domain>
@@ -69,7 +66,8 @@ You need both the **account ID** (in the endpoint URL) and the **API token** (in
 
    `EMAIL_FROM` must be on a domain you've enabled Email Service for. Sending from a domain that isn't enabled returns a 403.
 
-6. **Smoke-test.**
+6. Smoke-test.
+
    ```bash
    # Restart the API to pick up the new env
    ./dev.sh restart api

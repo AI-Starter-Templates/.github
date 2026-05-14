@@ -53,12 +53,15 @@ Each repo's `eslint.config.ts` imports these plugins from `node_modules/` (they'
 
 ```bash
 # In each repo
-pnpm validate     # typecheck + lint + tests (merge bar)
+pnpm validate     # typecheck + lint + knip + tests (merge bar)
 pnpm lint         # lint only
 pnpm lint:fix     # autofix what's autofixable
+pnpm knip         # dead-code detection
 ```
 
 Husky runs `pnpm lint-staged` on every commit, so most violations get caught before they reach CI. CI re-runs the full `validate` to catch what the staged-only run missed.
+
+[Knip](https://knip.dev) sits alongside the lint plugins, surfacing unused files, unused exports, and unused dependencies. It runs as part of `validate` so dead code can't drift in unnoticed.
 
 ## Why this matters for agent-driven development
 

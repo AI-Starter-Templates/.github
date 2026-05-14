@@ -9,19 +9,19 @@ The ui-template enforces its architecture through ESLint, not vibes. The UI-spec
 
 | Concern | What's caught |
 |---|---|
-| **Component anatomy** | `useState` / `useEffect` / other hooks inside `.tsx` files; logic belongs in `.hooks.ts` |
-| **Single semantic module** | A `.tsx` file holding constants, utils, or types; each belongs in its own file (`.constants.ts`, `.utils.ts`, `.types.ts`) |
-| **`className` discipline** | Long inline class strings without `cn(...)`; classes pulled out so conditional logic is readable |
-| **File-naming** | PascalCase for components, kebab-case for non-components, suffix matches purpose (`.hooks.ts`, `.queries.ts`, `.store.ts`) |
-| **Prop ordering** | Required props first, then optional, then handlers; predictable readout in JSX call sites |
-| **View object boundary** | Components don't import TanStack Query / Zustand / `import.meta.env` directly; they read the view object their hook returns |
-| **Queries layer** | `useQuery` only inside `*.queries.ts`; component hooks consume the resulting query hooks, never call TanStack Query directly |
+| Component anatomy | `useState` / `useEffect` / other hooks inside `.tsx` files; logic belongs in `.hooks.ts` |
+| Single semantic module | A `.tsx` file holding constants, utils, or types; each belongs in its own file (`.constants.ts`, `.utils.ts`, `.types.ts`) |
+| `className` discipline | Long inline class strings without `cn(...)`; classes pulled out so conditional logic is readable |
+| File-naming | PascalCase for components, kebab-case for non-components, suffix matches purpose (`.hooks.ts`, `.queries.ts`, `.store.ts`) |
+| Prop ordering | Required props first, then optional, then handlers; predictable readout in JSX call sites |
+| View object boundary | Components don't import TanStack Query / Zustand / `import.meta.env` directly; they read the view object their hook returns |
+| Queries layer | `useQuery` only inside `*.queries.ts`; component hooks consume the resulting query hooks, never call TanStack Query directly |
 
 Each rule has a fix-it suggestion where mechanical; the rest fail the lint gate and need a real edit.
 
 ## Why the component anatomy matters
 
-The anatomy makes any component **mechanically testable**. A `.tsx` with no state is pure JSX: a snapshot test or a single render assertion. A `.hooks.ts` returning a typed view object is testable via `renderHook`, no DOM needed. Together they give you full coverage of behavior without ever simulating a click.
+The anatomy makes any component mechanically testable. A `.tsx` with no state is pure JSX: a snapshot test or a single render assertion. A `.hooks.ts` returning a typed view object is testable via `renderHook`, no DOM needed. Together they give you full coverage of behavior without ever simulating a click.
 
 The rules above are what keeps that split from collapsing back into one-big-`.tsx`-file under deadline pressure.
 
@@ -29,8 +29,8 @@ The rules above are what keeps that split from collapsing back into one-big-`.ts
 
 `// eslint-disable-next-line <rule>` works, but every suppression is reviewed. Common valid cases:
 
-- **Third-party render-prop APIs** that force a hook-like pattern in `.tsx`.
-- **Sub-components that genuinely have no state** but are too small to split into their own folder. Inline them; the lint rule has a size threshold.
+- Third-party render-prop APIs that force a hook-like pattern in `.tsx`.
+- Sub-components that have no state but are too small to split into their own folder. Inline them; the lint rule has a size threshold.
 
 If you find yourself suppressing the same rule across many files, that's a signal to update the rule, not to keep suppressing.
 

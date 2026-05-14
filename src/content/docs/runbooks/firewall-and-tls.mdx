@@ -5,7 +5,9 @@ description: UFW + Cloudflare IP allowlist + Traefik ACME for a single-VPS deplo
 
 import { Aside, Steps } from "@astrojs/starlight/components";
 
-This walks through the firewall + TLS setup we recommend for a single-host VPS sitting behind Cloudflare. Goal: only Cloudflare can reach port 80/443; SSH stays open from anywhere (or your jump host); Traefik handles TLS termination via ACME HTTP-01.
+Firewall + TLS for a single VPS sitting behind Cloudflare. Goal: only Cloudflare can reach port 80/443; SSH stays open from your operator IPs; Traefik handles TLS termination via ACME HTTP-01.
+
+If you're provisioning via the [OpenTofu template](/topics/provisioning-with-tofu/), the Hetzner cloud firewall already enforces the Cloudflare-only allowlist at the provider level. This UFW path is for manually-provisioned hosts, or as defense-in-depth on top of the cloud firewall.
 
 <Aside type="caution" title="Read before running">
   The `scripts/ufw.example.sh` script in the infra repo resets your UFW
@@ -15,11 +17,11 @@ This walks through the firewall + TLS setup we recommend for a single-host VPS s
 
 ## What you'll end up with
 
-- **Inbound 22**: SSH from anywhere (change `SSH_PORT` if you've moved it).
-- **Inbound 80, 443**: only from Cloudflare IP ranges (IPv4 + IPv6).
-- **All other inbound**: dropped.
-- **Outbound**: unrestricted.
-- **Traefik on 80/443**: HTTPS via Let's Encrypt ACME HTTP-01, cert renewal automatic, HTTP redirects to HTTPS.
+- Inbound 22: SSH from anywhere (change `SSH_PORT` if you've moved it).
+- Inbound 80, 443: only from Cloudflare IP ranges (IPv4 + IPv6).
+- All other inbound: dropped.
+- Outbound: unrestricted.
+- Traefik on 80/443: HTTPS via Let's Encrypt ACME HTTP-01, cert renewal automatic, HTTP redirects to HTTPS.
 
 ## Prerequisites
 
@@ -38,7 +40,7 @@ This walks through the firewall + TLS setup we recommend for a single-host VPS s
    ACME_EMAIL=ops@example.com
    ```
 
-   The domain must resolve to this server (via a Cloudflare proxied A/AAAA record on the apex). BoringStack uses **same-origin path routing**: Traefik serves the SPA at `https://example.com/*` and the API at `https://example.com/api/*` + `https://example.com/health` on the same host and cert.
+   The domain must resolve to this server (via a Cloudflare proxied A/AAAA record on the apex). BoringStack uses same-origin path routing: Traefik serves the SPA at `https://example.com/*` and the API at `https://example.com/api/*` + `https://example.com/health` on the same host and cert.
 
 2. Boot the prod stack:
 
@@ -87,10 +89,10 @@ It resets to a clean state, re-fetches the current ranges, and re-applies. Idemp
 
 ## When the firewall is NOT enough
 
-UFW + Cloudflare-IP-allowlist protects you from random scans hitting your origin IP. It does **not** protect against:
+UFW + Cloudflare-IP-allowlist protects you from random scans hitting your origin IP. It doesn't protect against:
 
-- **Cloudflare-routed attacks** (DDoS aimed at your hostname). Use Cloudflare's WAF + rate-limiting rules for that.
-- **App-layer abuse** (credential stuffing, scraping). Use Traefik's rate-limit middleware (already configured for the API router in prod) and per-account rate limits in the API.
-- **Compromise via SSH**. Move SSH to a non-standard port, disable password auth, use a hardware key.
+- Cloudflare-routed attacks (DDoS aimed at your hostname). Use Cloudflare's WAF + rate-limiting rules for that.
+- App-layer abuse (credential stuffing, scraping). Use Traefik's rate-limit middleware (already configured for the API router in prod) and per-account rate limits in the API.
+- Compromise via SSH. Move SSH to a non-standard port, disable password auth, use a hardware key.
 
 The infra repo's `docs/security-hardening.md` has a full checklist.

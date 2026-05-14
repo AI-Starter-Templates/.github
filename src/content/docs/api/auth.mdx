@@ -7,8 +7,8 @@ import { Aside } from "@astrojs/starlight/components";
 
 Two flows share one session model:
 
-- **Password**; register / login / verify-email / forgot-password / reset-password.
-- **OAuth**; Google, GitHub, LinkedIn. Server-side: the SPA never holds a client secret.
+- Password: register / login / verify-email / forgot-password / reset-password.
+- OAuth: Google, GitHub, LinkedIn. Server-side; the SPA never holds a client secret.
 
 Both end the same way: an `HttpOnly` cookie carrying a short-lived JWT.
 

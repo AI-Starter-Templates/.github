@@ -46,11 +46,11 @@ In `compose/.env` (the script sources it):
 
 ## Setting it up
 
-1. **Configure rclone once.** `rclone config` on the host. Pick a remote (S3, B2, etc.), name it `backup` (or whatever; match `RCLONE_REMOTE_NAME`).
-2. **Copy the wrapper.** `cp scripts/backup-wrapper.example.sh scripts/backup-wrapper.sh && chmod +x scripts/backup-wrapper.sh`.
-3. **Dry-run it.** `BACKUP_DRY_RUN=1 ./scripts/backup-wrapper.sh`. Verify the plan reads correctly.
-4. **Real run.** Drop the flag, run it once manually, confirm a file lands in the remote.
-5. **Schedule it.** Drop a cron entry:
+1. Configure rclone once: `rclone config` on the host. Pick a remote (S3, B2, etc.), name it `backup` (or anything; match `RCLONE_REMOTE_NAME`).
+2. Copy the wrapper: `cp scripts/backup-wrapper.example.sh scripts/backup-wrapper.sh && chmod +x scripts/backup-wrapper.sh`.
+3. Dry-run: `BACKUP_DRY_RUN=1 ./scripts/backup-wrapper.sh`. Verify the plan reads correctly.
+4. Real run: drop the flag, run once manually, confirm a file lands in the remote.
+5. Schedule it. Drop a cron entry:
    ```bash
    # /etc/cron.d/backups; daily at 03:15
    15 3 * * * root /path/to/infra-docker-compose-template/scripts/backup-wrapper.sh
@@ -63,7 +63,7 @@ In `compose/.env` (the script sources it):
 | Daily, 30 days | 30 backups | A month of point-in-time recovery |
 | Daily, with monthly retention | Custom; see below | Years of monthly snapshots, days of recent |
 
-For longer retention (compliance, year-over-year audits), run **two** crons with different `RCLONE_REMOTE_PATH` values:
+For longer retention (compliance, year-over-year audits), run two crons with different `RCLONE_REMOTE_PATH` values:
 
 ```bash
 # Daily, 30 days
@@ -75,7 +75,7 @@ For longer retention (compliance, year-over-year audits), run **two** crons with
 
 ## Restore drill
 
-A backup you can't restore is not a backup. **Run the drill quarterly.**
+A backup you can't restore is not a backup. Run the drill quarterly.
 
 1. Pick a recent backup. `rclone ls backup:db/`.
 2. Download to a workstation. `rclone copy backup:db/<file>.sql.gz ./`.
@@ -84,23 +84,23 @@ A backup you can't restore is not a backup. **Run the drill quarterly.**
 5. Restore. `cat <file>.sql | docker exec -i pg-restore psql -U postgres`.
 6. Sanity-query. Row counts in the main tables; `users`, `audit_log`, whatever's important.
 
-If any step fails, the runbook is broken. **Fix it before you need it.**
+If any step fails, the runbook is broken. Fix it before you need it.
 
 ## Encryption
 
 The script uploads gzip'd SQL; readable to anyone with access to the remote. Two patterns to encrypt:
 
-- **Server-side at the remote.** S3, B2, etc. all support encryption-at-rest. Easiest; you trust the provider.
-- **Client-side via rclone crypt.** `rclone config` a crypt-wrapped remote on top of the bucket. Encrypted before leaving the host.
+- Server-side at the remote. S3, B2, etc. all support encryption-at-rest. Easiest; you trust the provider.
+- Client-side via rclone crypt. `rclone config` a crypt-wrapped remote on top of the bucket. Encrypted before leaving the host.
 
 For sensitive data, client-side is the right answer. Document the password in your secret store; without it, the backups are useless.
 
-## What's NOT backed up
+## What's not backed up
 
-- **Valkey.** It's cache + queues; not authoritative. If you can't rebuild it, you have an architecture problem, not a backup problem.
-- **Audit log table.** It *is* backed up because it's part of Postgres. Just noting it explicitly because some templates treat audit separately.
-- **`compose/.env`.** Back up separately; it's small enough to live in a private secrets repo or password manager.
-- **Container images.** Pull from registry on restore; not part of the backup loop.
+- Valkey. Cache + queues, not authoritative. If you can't rebuild it, that's an architecture problem, not a backup problem.
+- Audit log table. It is backed up because it's part of Postgres. Noting it because some templates treat audit separately.
+- `compose/.env`. Back up separately; it's small enough to live in a private secrets repo or password manager.
+- Container images. Pull from registry on restore; not part of the backup loop.
 
 ## Source
 

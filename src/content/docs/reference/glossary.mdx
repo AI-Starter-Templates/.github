@@ -10,7 +10,7 @@ The terms below show up repeatedly. They're defined consistently across the docs
 ## Architecture vocabulary
 
 **The three repos**
-The three sibling repositories that compose BoringStack: `api-template`, `ui-template`, `infra-docker-compose-template`. They sit as siblings under one parent directory because the infra repo references the other two via relative paths in its compose builds.
+The three sibling repositories that compose BoringStack's runtime: `api-template`, `ui-template`, `infra-docker-compose-template`. They sit as siblings under one parent directory because the infra repo references the other two via relative paths in its compose builds. An optional fourth template, `infra-bootstrap-tofu-template`, provisions a VPS via OpenTofu.
 
 **Feature folder**
 A single directory per feature (`src/api/widgets/`, `src/features/dashboard/`). Holds the routes, services, types, and tests for that one feature. The unit of independent change. [Read more](/architecture/three-repos/).
@@ -25,7 +25,7 @@ The ui-template's per-component pattern. A page like `DashboardPage/` is a folde
 The shape a hook returns to its component (`IDashboardPageView` returned by `useDashboardPage`). The component never reads queries, stores, or env directly; it only renders the view object. Decouples logic from JSX.
 
 **Module boundary**
-The lint-enforced rule that a file can have **one** semantic concern. No mixing routes + services + utils in one file. Enforced by [`eslint-plugin-module-boundaries`](https://github.com/agjs/eslint-plugin-module-boundaries).
+The lint-enforced rule that a file can have one semantic concern. No mixing routes + services + utils in one file. Enforced by [`eslint-plugin-module-boundaries`](https://github.com/agjs/eslint-plugin-module-boundaries).
 
 ## Infra vocabulary
 
@@ -39,7 +39,7 @@ An opt-in `docker-compose.<name>.yml` file that adds services to the base stack.
 A docker-compose feature for grouping services within a single file. The infra stack uses profiles (`--profile dev`, `--profile observability`) alongside overlays; profiles activate services within a file, overlays add files.
 
 **Base stack**
-The always-on services: Postgres + Valkey + Traefik + api-migrate (one-shot) + the app containers. Everything else is an overlay.
+The always-on services: Postgres + Valkey + api-migrate (one-shot) + the app containers. Traefik is in the prod profile only; dev uses Vite's dev-server proxy. Everything else is an overlay.
 
 **Data plane**
 Postgres + Valkey. The services that hold state. Deliberately not exposed to the `frontend` Docker network, so the only path from the world to the data plane is through the API.
@@ -78,7 +78,7 @@ A named work buffer in Valkey, owned by a directory under `src/queues/<name>/`. 
 The process-singleton that owns all queues + workers. Application code never imports BullMQ's `Queue` class directly; it calls `manager.enqueueX(...)`. [Read more](/api/queues/).
 
 **Idempotent**
-A job that produces the same result if run twice. BullMQ retries on failure, so workers **must** be idempotent. Patterns: natural keys, UNIQUE constraints with caught violations, check-then-do inside a transaction.
+A job that produces the same result if run twice. BullMQ retries on failure, so workers must be idempotent. Patterns: natural keys, UNIQUE constraints with caught violations, check-then-do inside a transaction.
 
 ## Other
 

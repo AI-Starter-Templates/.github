@@ -1,100 +1,111 @@
 ---
 title: Deployment
-description: Boring deployment story; single-host VPS, Docker, three repos cloned, one prod profile. HTTPS via ACME, perimeter locked by UFW + Cloudflare.
+description: Boring deployment. Single-host VPS, Docker, four repos forked, GHCR images, one prod profile. HTTPS via ACME, perimeter locked by Cloudflare.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-The deployment story is intentionally boring. There's no Kubernetes, no platform, no app-specific CI runner. There's a VPS, three repos cloned next to each other, one env file, one command. HTTPS is automatic; the perimeter is locked down by UFW.
+No Kubernetes, no platform, no app-specific CI runner. A VPS, four repos forked, one env file, one `tofu apply` (or one `compose up -d`). HTTPS provisions itself. The perimeter is locked by Cloudflare + a Hetzner firewall.
 
-That's the **point**. Every layer that isn't there is a layer you don't have to operate.
+Every layer that isn't there is a layer you don't have to operate.
 
 ## The mental model
 
-A Ubuntu VPS with Docker, three repos cloned as siblings, one `compose/.env` filled in, one `STACK=prod ./scripts/compose-up.sh`. Traefik provisions HTTPS via Let's Encrypt automatically; UFW restricts 80/443 to Cloudflare's IP ranges. That's the entire deploy.
+Push to `main` on `api-template` or `ui-template`. The release workflow builds a Docker image and pushes it to `ghcr.io/<your-owner>/<repo>:latest`. WUD on the VPS notices the new tag and notifies you. You pull and restart with two commands. Traefik handles TLS via Let's Encrypt; Cloudflare proxies all traffic to your single apex domain via same-origin path routing.
 
 ## Design choices
 
 | Decision | Reason |
 |---|---|
-| Single-host first | One VPS handles real traffic for years; horizontal scaling is a *later* problem |
-| Three repos cloned as siblings | The same layout that works on your laptop works on the VPS |
-| Pull-based deploys (`git pull && compose up -d --build`) | One mental model; no CI runner state to debug |
+| Single-host first | One VPS handles real traffic for years; horizontal scaling is a later problem |
+| Pre-built images from GHCR, not on-box builds | Reproducible deploys; cold pushes take 2 min instead of waiting for npm install |
+| WUD notify-only, not auto-pull | Surprise restarts are worse than missed CVE notifications |
 | Traefik + ACME, not a cloud LB | TLS is automatic and free; the LB isn't a bill line item |
-| UFW + Cloudflare IP allowlist | Random scans bounce off the firewall; only Cloudflare can hit your origin |
-| `Dockerfile.prod` is multi-stage non-root | Smallest possible runtime; no shell in the prod image |
+| Same-origin path routing on the apex | One TLS cert, no CORS, no `api.` subdomain |
+| Cloudflare-only ingress on 80/443 | Random scans bounce off the firewall; only Cloudflare can hit your origin |
+| `Dockerfile.prod` is multi-stage non-root | Smallest possible runtime, no shell in the prod image |
 
-## What you actually do
+## First-time deploy
 
-The first time:
+The preferred path is [Provisioning with OpenTofu](/topics/provisioning-with-tofu/): one `tofu apply` provisions the VPS, configures Cloudflare DNS + zone settings, and runs cloud-init which clones the infra repo, drops a rendered `compose/.env`, and pulls the GHCR images.
 
-1. Provision a VPS (Hetzner, OVH, DigitalOcean; anything with Ubuntu + a static IP).
-2. Harden SSH (key-only, non-standard port, disabled root).
-3. Install Docker + the compose plugin.
-4. `git clone` the three repos as siblings.
-5. `cp compose/.env.example compose/.env`, fill in the prod values.
-6. `STACK=prod ./scripts/compose-up.sh`.
-7. Run the [Firewall & TLS](/runbooks/firewall-and-tls/) runbook to lock the perimeter.
+Manual path if you'd rather:
 
-After that, deploys are:
+1. Provision a Ubuntu VPS with Docker installed.
+2. Clone your `infra-docker-compose-template` fork onto the VPS.
+3. Write `compose/.env` with `PUBLIC_UI_HOST`, `ACME_EMAIL`, `IMAGE_OWNER`, and the rest from `.env.example`.
+4. `STACK=prod ./scripts/compose-up.sh pull && STACK=prod ./scripts/compose-up.sh up -d`.
+5. Run the [Firewall & TLS runbook](/runbooks/firewall-and-tls/) to verify Cloudflare-only ingress.
+
+You do **not** clone `api-template` or `ui-template` on the VPS. Their built images come from GHCR.
+
+## Subsequent deploys
+
+For changes to the api or the ui, you don't touch the VPS:
+
+```bash
+# On your laptop:
+git push origin main
+# release.yml builds + pushes ghcr.io/.../...:latest + :sha-<7> + :<semver>
+```
+
+WUD watches `latest` and posts a notification when a new tag appears. To apply:
 
 ```bash
 ssh <vps>
-cd ai-starter-templates/infra-docker-compose-template
-git -C ../api-template pull
-git -C ../ui-template pull
-git pull
-STACK=prod ./scripts/compose-up.sh --build
+cd /opt/boringstack/infra
+docker compose pull
+docker compose up -d
 ```
 
-Five lines. No platform.
+For changes to the infra YAML or env vars, `git pull` the infra repo on the VPS then re-run `compose up -d`.
 
 ## Image update strategy
 
 | Strategy | When | How |
 |---|---|---|
-| **Manual pull + rebuild** | Default | The script above; full control |
-| **WUD notify-only** | You want to know when base images drift | `WITH_WUD=1` → Discord ping; still manual `pull` |
-| **Watchtower (auto-pull)** | Hands-off, lower-stakes envs | Not in the template; opt-in by you |
+| WUD notify + manual pull | Default | `WITH_WUD=1`, Discord ping or dashboard at `:3033`, then the two commands above |
+| Hands-off auto-pull | Lower-stakes envs only | Not in the template; swap to Watchtower or enable WUD's docker-compose trigger |
+| Pin to a specific tag | Production hardening | Set `API_IMAGE_TAG=sha-abc1234` or `:0.3.0` in `compose/.env`, never auto-update |
 
-The template ships manual + WUD notify because surprise restarts are a worse failure mode than a missed CVE notification. See [Image updates](/runbooks/image-updates/).
+The default ships notify-only because surprise restarts in production are a worse failure mode than a missed CVE notification. See [Image updates](/runbooks/image-updates/).
 
 ## Rollback
 
-There isn't a special "rollback" command. There's `git` and `compose up -d --build`:
-
 ```bash
-git -C ../api-template checkout <previous-sha>
-STACK=prod ./scripts/compose-up.sh --build
+# On the VPS:
+echo "API_IMAGE_TAG=sha-<previous-7>" >> compose/.env  # or a previous :<semver>
+docker compose pull
+docker compose up -d
 ```
 
-Postgres schema is the only thing this doesn't roll back automatically; destructive migrations are forward-only. The api-template's migration discipline is "additive changes are normal, destructive changes are deliberate" so most rollbacks just work.
+Postgres schema is the only thing this doesn't roll back. Destructive migrations are forward-only by convention. The api-template's discipline is "additive changes are normal, destructive changes are deliberate," so most rollbacks just work.
 
-For high-stakes deploys, take a Postgres backup *before* applying a destructive migration. See [Backups](/runbooks/backups/).
+For high-stakes deploys, snapshot Postgres before applying a destructive migration. See [Backups](/runbooks/backups/).
 
 ## Where to scale up
 
-When single-host stops being enough, the bottleneck is almost always Postgres. In rough order:
+When single-host runs out of room, Postgres is almost always the bottleneck. In rough order:
 
-1. **Vertical first.** Move to a bigger VPS, bump `POSTGRES_LIMITS_*`.
-2. **Move Postgres to a managed service.** Neon, Supabase, Crunchy, AWS RDS; depending on your cloud bias. App stays on the VPS.
-3. **Replicate the API horizontally.** Multiple boxes behind a real load balancer.
-4. **Kubernetes.** A separate template is planned; not in this repo because mixing Compose + cluster YAML is exactly the confusion BoringStack tries to avoid.
+1. Vertical: bigger VPS, bump `POSTGRES_LIMITS_*`.
+2. Managed Postgres: Neon, Supabase, Crunchy, RDS. App stays on the VPS.
+3. Replicate the API horizontally behind a real load balancer.
+4. Kubernetes. Separate template planned; not in this repo because mixing Compose + cluster YAML is exactly the confusion BoringStack avoids.
 
 ## Provider notes
 
 | Provider | Pros | Watch out for |
 |---|---|---|
-| **Hetzner Cloud** | Cheap, EU-friendly, fast network | New accounts get fraud-checked; allow 1-2 days |
-| **OVH** | Cheap, ipv4 included | Web console is rough; use the API |
-| **DigitalOcean** | Polished UX, good docs | Cheaper alternatives for the same specs |
-| **Your own metal** | Cheapest at scale | You're now the datacenter operator |
+| Hetzner Cloud | Cheap, EU-friendly, fast network | New accounts get fraud-checked; allow 1–2 days |
+| OVH | Cheap, IPv4 included | Web console is rough; use the API |
+| DigitalOcean | Polished UX, good docs | Cheaper alternatives for the same specs |
+| Your own metal | Cheapest at scale | You're now the datacenter operator |
 
-Cloudflare in front is standard regardless of provider; that's what makes the UFW + IP allowlist work.
+Cloudflare in front is standard regardless of provider; that's what makes the firewall + IP allowlist work.
 
 ## Related runbooks
 
-- [Firewall & TLS](/runbooks/firewall-and-tls/); UFW + Cloudflare allowlist; HTTPS via Traefik.
-- [Backups](/runbooks/backups/); Postgres → rclone.
-- [Image updates](/runbooks/image-updates/); WUD notify-only.
-- [Cloudflare Email setup](/runbooks/cloudflare-email-setup/); outbound mail.
+- [Firewall & TLS](/runbooks/firewall-and-tls/). Cloudflare-only ingress, HTTPS via Traefik.
+- [Backups](/runbooks/backups/). Postgres + rclone.
+- [Image updates](/runbooks/image-updates/). WUD notify-only.
+- [Cloudflare Email setup](/runbooks/cloudflare-email-setup/). Outbound mail.

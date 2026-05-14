@@ -57,12 +57,15 @@ For Docker-Compose-driven setups (the default), **`compose/.env` is the single f
 
 | Var | Repo | Required? | Notes |
 |---|---|---|---|
-| `EMAIL_PROVIDER` | api | always | `cloudflare` (default) / `resend` / `sendgrid` |
+| `EMAIL_PROVIDER` | api | always | `cloudflare` (default) / `resend` / `sendgrid` / `smtp` |
 | `EMAIL_FROM` | api | always | Sender on a verified domain |
 | `CLOUDFLARE_ACCOUNT_ID` | api | when cloudflare | |
 | `CLOUDFLARE_EMAIL_API_TOKEN` | api | when cloudflare | Scoped `Email Sending: Edit` |
 | `RESEND_API_KEY` | api | when resend | |
 | `SENDGRID_API_KEY` | api | when sendgrid | |
+| `SMTP_HOST` | api | when smtp | `mailpit` against the dev overlay; any RFC-5321 server in prod |
+| `SMTP_PORT` | api | when smtp | Default 25; Mailpit listens on 1025 |
+| `SMTP_USER` / `SMTP_PASS` | api | optional | Auth, when the server requires it |
 
 ### Billing
 

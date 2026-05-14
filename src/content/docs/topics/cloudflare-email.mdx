@@ -17,11 +17,11 @@ The api-template ships [Cloudflare Email Service](https://developers.cloudflare.
 
 Pricing tiers, free-tier limits, and per-message rates all evolve. See [Cloudflare](https://developers.cloudflare.com/email-service/) · [Resend](https://resend.com/pricing) · [SendGrid](https://sendgrid.com/en-us/pricing) for current numbers.
 
-If you're already paying for Workers (or willing to), Cloudflare Email is **free transactional sending at the margin**. That maps directly to BoringStack's cost-of-goods bias.
+If you're already paying for Workers (or willing to), Cloudflare Email is free transactional sending at the margin. That maps to BoringStack's cost-of-goods bias.
 
 ## How it slots in
 
-The api-template's email layer is pluggable: one `IEmailService` interface, four concrete implementations (Cloudflare, Resend, SendGrid, noop). The Cloudflare provider POSTs to an account-scoped endpoint on `api.cloudflare.com` with a bearer token. Retries, structured logging, and the shared `retryWithBackoff` wrapper apply equally to all providers; Cloudflare gets the same robustness treatment as Resend.
+The api-template's email layer is pluggable: one `IEmailService` interface, five concrete implementations (Cloudflare, Resend, SendGrid, SMTP, noop). The Cloudflare provider POSTs to an account-scoped endpoint on `api.cloudflare.com` with a bearer token. Retries, structured logging, and the shared `retryWithBackoff` wrapper apply equally to all providers; Cloudflare gets the same reliability treatment as Resend. For local template iteration, set `EMAIL_PROVIDER=smtp` with `SMTP_HOST=mailpit` and the [Mailpit overlay](/topics/email-in-dev/) catches everything for inspection.
 
 See [Email](/api/email/) for the abstraction shape and how dispatch works.
 
@@ -58,6 +58,6 @@ The [env validator](/api/env-validator/) refuses to boot in production if the ma
 
 ## Caveats
 
-- **Cloudflare Email Service is in beta** (as of writing). Pricing may evolve; daily limits are variable and account-scoped.
-- **DNS must be on Cloudflare.** Auto-provisioned SPF/DKIM/DMARC are how deliverability works; you can't skip the step.
-- **New accounts** can only send to verified addresses until upgraded. The runbook covers the unlock.
+- Cloudflare Email Service is in beta. Pricing may evolve; daily limits are variable and account-scoped.
+- DNS must be on Cloudflare. Auto-provisioned SPF/DKIM/DMARC are how deliverability works; you can't skip the step.
+- New accounts can only send to verified addresses until upgraded. The runbook covers the unlock.

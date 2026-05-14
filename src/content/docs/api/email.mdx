@@ -1,17 +1,17 @@
 ---
 title: Email
-description: One pluggable interface, four providers (Cloudflare default, Resend, SendGrid, noop). Templates precompiled to JSON at build time; dispatch is queue-aware.
+description: One pluggable interface, five providers (Cloudflare default, Resend, SendGrid, SMTP, noop). Templates precompiled to JSON at build time; dispatch is queue-aware.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
 Email has three independently swappable layers:
 
-1. **Provider**: the wire to whoever actually delivers the mail.
-2. **Templates**: Handlebars `.hbs` files precompiled to JSON at build time.
-3. **Dispatch**: `sendTemplate(...)` chooses queue or inline based on env, so the call site does not care which.
+1. Provider: the wire to whoever actually delivers the mail.
+2. Templates: Handlebars `.hbs` files precompiled to JSON at build time.
+3. Dispatch: `sendTemplate(...)` chooses queue or inline based on env, so the call site doesn't care which.
 
-The default is [Cloudflare Email Service](/topics/cloudflare-email/) because it's the cheapest at scale. Resend and SendGrid implementations ship alongside; swapping is a one-env-var change.
+The default is [Cloudflare Email Service](/topics/cloudflare-email/) because it's the cheapest at scale. Resend, SendGrid, and a plain SMTP provider ship alongside; swapping is a one-env-var change. SMTP is what you use locally against [Mailpit](/topics/email-in-dev/).
 
 ## How a send flows
 
@@ -23,7 +23,7 @@ flowchart LR
   worker --> render["render template<br/>(precompiled JSON)"]
   dispatch -- no --> render
   render --> provider["provider.send()<br/>retryWithBackoff"]
-  provider -- cloudflare/resend/sendgrid --> sent[(provider API)]
+  provider -- cloudflare/resend/sendgrid/smtp --> sent[(provider)]
   provider -- noop / missing key --> log["log only"]
 ```
 
@@ -46,7 +46,7 @@ Every concrete provider implements one shape:
 ```ts
 interface IEmailService {
   send: (msg: { to; subject; html; text? }) => Promise<{ id; provider }>;
-  readonly providerName: "cloudflare" | "resend" | "sendgrid" | "noop";
+  readonly providerName: "cloudflare" | "resend" | "sendgrid" | "smtp" | "noop";
 }
 ```
 

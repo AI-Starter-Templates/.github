@@ -57,7 +57,7 @@ flowchart LR
 | valkey-exporter | Valkey metrics | Hit ratio, evictions, memory |
 | Alertmanager | internal | Routes defined in `alertmanager/` |
 
-Dashboards are pre-provisioned from `compose/grafana/`. Add new ones by dropping JSON files there.
+Drop dashboard JSON exports into `compose/grafana/dashboards/` and Grafana auto-loads them within 30s. Datasources and the dashboard provider are already wired in `compose/grafana/provisioning/`.
 
 ## Querying
 

@@ -50,7 +50,7 @@ Every queue is a small directory under `src/queues/<name>/`:
 | File | Holds |
 |---|---|
 | `<name>.constants.ts` | Queue name, job name, retry defaults; one place so producer + consumer can't drift |
-| `<name>.types.ts` | The job-data type. **Strict**: BullMQ serializes to JSON; type-drift here means 3 AM debugging |
+| `<name>.types.ts` | The job-data type. Strict: BullMQ serializes to JSON; type-drift here means 3 AM debugging |
 | `<name>.queue.ts` | BullMQ `Queue` factory |
 | `<name>.worker.ts` | BullMQ `Worker` + structured-logged event handlers |
 | `<name>.setup.ts` | Wires queue + worker together at boot |
@@ -69,11 +69,11 @@ A new queue therefore needs four additions to `QueueManager`: the constructor in
 
 ## Idempotency
 
-BullMQ retries on failure. If a worker dies *after* writing to the database but *before* marking the job complete, the same job runs again. **Workers must be idempotent.** Patterns:
+BullMQ retries on failure. If a worker dies after writing to the database but before marking the job complete, the same job runs again. Workers must be idempotent. Patterns:
 
-- **Natural keys.** "Send verification email for `userId=X`, `token=Y`" is idempotent: re-sending the same token is harmless.
-- **UNIQUE constraints + catch.** A second `INSERT` of the same audit row fails on the constraint; the worker treats unique-violation as success.
-- **Check-then-do, transactional.** Read state, decide if work is still needed, write atomically.
+- Natural keys. "Send verification email for `userId=X`, `token=Y`" is idempotent: re-sending the same token is harmless.
+- UNIQUE constraints plus catch. A second `INSERT` of the same audit row fails on the constraint; the worker treats unique-violation as success.
+- Check-then-do, transactional. Read state, decide if work is still needed, write atomically.
 
 Using BullMQ's `jobId` for deduplication only protects against simultaneous duplicate enqueues; not retries.
 

@@ -21,7 +21,7 @@ flowchart LR
 | Decision | Reason |
 |---|---|
 | Three layers, not one | Unit tests can't catch routing bugs; e2e can't catch every hook edge case |
-| **No MSW** | Hand-written mocks drift from the real backend; HTTP-shaped tests run e2e instead |
+| No MSW | Hand-written mocks drift from the real backend; HTTP-shaped tests run e2e instead |
 | e2e runs against the real stack (`./dev.sh up -d`) | Catches API-shape drift and integration regressions for free |
 | Playwright with Chromium + WebKit | Safari behavior bugs surface in CI, not from a user report |
 | Visual snapshots per-platform | macOS vs Linux font rendering differs; baselines committed per OS |
@@ -40,25 +40,25 @@ flowchart LR
 
 Unit and component tests focus on pure logic; anything HTTP-shaped is e2e against the real backend. Three reasons:
 
-- **Drift.** Hand-written mocks fall behind the real API shape, and tests pass while the real backend drifts.
-- **Mental tax.** Contributors would have to learn the mocking framework *and* the real API.
-- **False signal.** "Mock tests are green" is not "the feature works." Only the e2e tier proves the feature.
+- Drift. Hand-written mocks fall behind the real API shape, and tests pass while the real backend drifts.
+- Mental tax. Contributors would have to learn the mocking framework and the real API.
+- False signal. "Mock tests are green" isn't "the feature works." Only the e2e tier proves the feature.
 
 ## Patterns
 
-**Component test**: render the component, assert on the rendered output. Don't reach into hook internals; hooks have their own test if they're complex enough to need one.
+Component test: render the component, assert on the rendered output. Don't reach into hook internals; hooks have their own test if they're complex enough to need one.
 
-**Hook test**: `renderHook` from Testing Library; assert on the returned view object (the `IXxxView` shape). This is the canonical pattern for testing a component's logic without rendering the UI.
+Hook test: `renderHook` from Testing Library; assert on the returned view object (the `IXxxView` shape). Canonical pattern for testing a component's logic without rendering the UI.
 
-**e2e test**: navigate, interact, assert. Use Playwright's page-object pattern under `e2e/pages/` for anything reused across specs. Baseline visual diffs live in `e2e/visual.spec.ts-snapshots/`.
+E2E test: navigate, interact, assert. Use Playwright's page-object pattern under `e2e/pages/` for anything reused across specs. Baseline visual diffs live in `e2e/visual.spec.ts-snapshots/`.
 
 ## When tests break in CI but pass locally
 
 Usually one of three things:
 
-- **Visual baselines**; different OS font rendering. The CI workflow stores baselines per-platform; run `pnpm e2e:visual:update` on a matching machine, or regenerate baselines in CI itself.
-- **Flaky timing**; Playwright auto-waits, but custom polling loops in app code can race. Look for `setTimeout`-based assumptions.
-- **API drift**; backend changed, `pnpm generate:api` wasn't run. CI catches this via the schema diff check.
+- Visual baselines: different OS font rendering. The CI workflow stores baselines per-platform; run `pnpm e2e:visual:update` on a matching machine, or regenerate baselines in CI itself.
+- Flaky timing: Playwright auto-waits, but custom polling loops in app code can race. Look for `setTimeout`-based assumptions.
+- API drift: backend changed, `pnpm generate:api` wasn't run. CI catches this via the schema diff check.
 
 ## Lint coverage
 

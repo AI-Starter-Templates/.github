@@ -1,27 +1,23 @@
 ---
 title: The three repos
-description: Why BoringStack ships as three independent repositories, and how they wire together.
+description: Why BoringStack ships as three independent repositories (plus an optional fourth for hands-off provisioning), and how they wire together.
 ---
 
 import { Aside, FileTree } from "@astrojs/starlight/components";
 
-BoringStack is three repos, by design:
+BoringStack is three repos that compose into the runtime, plus an optional fourth for OpenTofu-driven provisioning:
 
 <FileTree>
 - boringstack/
-  - **api-template**/ Bun + Elysia + Drizzle API
-  - **ui-template**/ Vite + React SPA
-  - **infra-docker-compose-template**/ docker-compose stack
+  - api-template/ Bun + Elysia + Drizzle API
+  - ui-template/ Vite + React SPA
+  - infra-docker-compose-template/ docker-compose stack
+  - infra-bootstrap-tofu-template/ (optional) OpenTofu bootstrap
 </FileTree>
 
-Each repo:
+Each repo has its own `package.json`, its own CI, its own deploy story (fork one and use it standalone if you want), and its own ESLint config tuned to the layer.
 
-- has its **own `package.json` / dependency tree** (or `bun.lock` for the API),
-- has its **own CI** that runs in isolation,
-- has its **own deploy story**: you could fork just one and use it on its own,
-- has its **own ESLint config** + custom plugins tailored to that layer.
-
-They wire together through the infra repo's `docker-compose.yml`, which references the API and UI via relative paths (`../../api-template`, `../../ui-template`).
+The three runtime repos wire together through the infra repo's `docker-compose.yml`, which references the API and UI via relative paths (`../../api-template`, `../../ui-template`).
 
 ## The disk layout
 
@@ -37,10 +33,12 @@ boringstack/                 ← parent dir; can have any name
         └── ...
 ```
 
-<Aside type="caution" title="Renaming a clone">
-  If you rename `api-template` or `ui-template`, edit the `build.context`
-  paths in `infra-docker-compose-template/compose/docker-compose.yml` to
-  match. The infra repo doesn't auto-discover; the paths are explicit.
+<Aside type="caution" title="Renaming a fork">
+  If you rename your fork of `api-template` or `ui-template`, either rename
+  the cloned directory back to the canonical name or edit the
+  `build.context` paths in
+  `infra-docker-compose-template/compose/docker-compose.yml` once. The infra
+  repo doesn't auto-discover; the paths are explicit.
 </Aside>
 
 ## What lives where
@@ -59,11 +57,12 @@ boringstack/                 ← parent dir; can have any name
 | docker-compose YAMLs, profile overlays | infra-docker-compose-template |
 | Prometheus / Grafana / Loki / Promtail configs | infra-docker-compose-template |
 | Traefik labels, ACME, security middlewares | infra-docker-compose-template |
-| Backup script, UFW script, runbooks | infra-docker-compose-template |
+| Backup script, runbooks | infra-docker-compose-template |
+| Hetzner provisioning, Cloudflare DNS, cloud-init | infra-bootstrap-tofu-template |
 
 ## The contract between API and UI
 
-The API exposes its OpenAPI document at `/swagger/json`. The UI ships a `pnpm generate:api` script that reads that document and rewrites `src/lib/api/schema.d.ts`. The UI's typed `apiClient` (built on `openapi-fetch`) refuses, at compile time, to call a path that isn't in the schema or to pass a body that doesn't match.
+The API exposes its OpenAPI document at `/swagger/json`. The UI ships a `pnpm generate:api` script that reads that document and rewrites `src/lib/api/schema.d.ts`. The UI's typed `apiClient` (built on `openapi-fetch`) refuses, at compile time, to call a path that isn't in the schema or pass a body that doesn't match.
 
 So when the API gains, renames, or removes a route, the UI either fails to typecheck or generates the new contract on the next `pnpm generate:api`. There is no "I thought the field was `userName` not `username`" class of bug. TypeScript catches it before runtime.
 
@@ -71,10 +70,12 @@ See [OpenAPI client](/ui/openapi-client/) for the full flow.
 
 ## The contract between infra and the app repos
 
-The infra `docker-compose.yml` defines `api-dev` / `api` / `ui-dev` / `ui` services whose **build context** is the sibling app repo and whose **env vars** are documented in `compose/api.dev.env.example` and `compose/api.prod.env.example`.
+The infra `docker-compose.yml` defines `api-dev` / `api` / `ui-dev` / `ui` services whose build context is the sibling app repo and whose env vars are documented in `compose/api.dev.env.example` and `compose/api.prod.env.example`.
 
 The api-template's `.env.example` and the infra's `api.*.env.example` overlap deliberately: same variable names, same shapes. If you move config between local-dev and the infra, the names don't change.
 
+In prod the `build:` reference is a fallback. The default `image:` reference pulls a pre-built image from `ghcr.io/${IMAGE_OWNER}/${API_IMAGE_NAME}:${API_IMAGE_TAG}`, published by the api/ui repos' release workflows. See [Deployment](/topics/deployment/).
+
 ## Why not a monorepo?
 
-[See "Why not a monorepo"](/architecture/why-not-monorepo/) for the long version. Short version: independent deploy lifecycles, separate dependency surfaces, and you should be able to fork **just the API** for a project that doesn't need a SPA.
+[See "Why not a monorepo"](/architecture/why-not-monorepo/) for the long version. Short version: independent deploy lifecycles, separate dependency surfaces, and you should be able to fork just the API for a project that doesn't need a SPA.

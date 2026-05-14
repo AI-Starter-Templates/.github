@@ -5,7 +5,7 @@ description: Every service has CPU and memory caps driven by env vars. Defaults 
 
 import { Aside } from "@astrojs/starlight/components";
 
-Every container in the stack has `deploy.resources.limits` and `deploy.resources.reservations` set from env vars. The defaults target a **4-vCPU / 8 GB VPS**; the cheapest tier on Hetzner / OVH / DigitalOcean that's actually usable in production. Bigger box? Bump the knobs.
+Every container in the stack has `deploy.resources.limits` and `deploy.resources.reservations` set from env vars. The defaults target a 4-vCPU / 8 GB VPS, the cheapest tier on Hetzner / OVH / DigitalOcean that's usable in production. Bigger box? Bump the knobs.
 
 ## Why limits matter
 
@@ -15,7 +15,7 @@ A misbehaving worker that consumes all memory shouldn't take Postgres down with 
 
 | Decision | Reason |
 |---|---|
-| Limits + reservations on **every** service | Failures stay isolated; the host stays responsive |
+| Limits + reservations on every service | Failures stay isolated; the host stays responsive |
 | Knobs in `compose/.env`, not hardcoded | Right-sizing is a config change, not a code change |
 | Defaults target 4 vCPU / 8 GB | Cheapest production-viable VPS tier; everything else scales up from there |
 | Reservations < limits (~1:4 ratio) | Reserves the minimum to boot; allows bursts up to the limit |
@@ -32,7 +32,7 @@ POSTGRES_RESERVATIONS_CPUS=0.25
 POSTGRES_RESERVATIONS_MEMORY=128M
 ```
 
-Same pattern for `REDIS_`, `TRAEFIK_`, `API_DEV_`, `UI_DEV_`, `API_`, `UI_`, and the optional overlays.
+Same pattern for `VALKEY_`, `TRAEFIK_`, `API_DEV_`, `UI_DEV_`, `API_`, `UI_`, and the optional overlays.
 
 ## Default sizing (4 vCPU / 8 GB)
 

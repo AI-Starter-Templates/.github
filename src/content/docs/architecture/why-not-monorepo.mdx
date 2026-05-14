@@ -5,11 +5,11 @@ description: Three repos vs. one mega-repo; what we gain by separating, and the 
 
 import { Aside } from "@astrojs/starlight/components";
 
-BoringStack is **three repos**, not a monorepo. That's a deliberate choice, not an oversight. Monorepos are great for some things and miserable for others; the tradeoffs flip depending on what you're optimizing for.
+BoringStack is three repos, not a monorepo. Deliberate choice. Monorepos are great for some things and miserable for others; the tradeoffs flip depending on what you're optimizing for.
 
 ## What we're optimizing for
 
-**Small context per task.** Most "new SaaS" work is a single layer at a time; a new API route, a UI form, a compose tweak. Editing a route shouldn't drag in cluster YAML; tuning Traefik shouldn't load the Drizzle schema. Three repos means three small contexts, and three small mental models, instead of one big one.
+Small context per task. Most "new SaaS" work is a single layer at a time: a new API route, a UI form, a compose tweak. Editing a route shouldn't drag in cluster YAML; tuning Traefik shouldn't load the Drizzle schema. Three repos means three small contexts and three small mental models instead of one big one.
 
 That matters more in the agent era. An agent pulling a 50k-line monorepo into context to change one Elysia handler is wasteful. An agent pulling the api-template alone gets exactly what it needs.
 
@@ -24,39 +24,39 @@ That matters more in the agent era. An agent pulling a 50k-line monorepo into co
 | One git history | Per-repo permissions, per-repo SECURITY.md, per-repo release notes |
 | Whole-stack search in one tree | Smaller blast radius for a bad commit |
 
-Read horizontally: monorepos win when you do **a lot of cross-cutting work**. Three repos win when most work is **single-layer** and the contract between layers is **stable and explicit**.
+Read horizontally: monorepos win when you do a lot of cross-cutting work. Three repos win when most work is single-layer and the contract between layers is stable and explicit.
 
 ## Why three layers fits this stack
 
-The contract between api-template and ui-template is the **OpenAPI spec**. When the API changes, `pnpm generate:api` on the UI side regenerates the typed client. Drift is a compile error. The contract is machine-checked.
+The contract between api-template and ui-template is the OpenAPI spec. When the API changes, `pnpm generate:api` on the UI side regenerates the typed client. Drift is a compile error. Machine-checked.
 
-The contract between the apps and infra is **`compose/.env`** plus image versions. When infra adds an overlay, the apps don't need to know. When the apps need a new env var, infra updates `compose/.env.example`.
+The contract between the apps and infra is `compose/.env` plus image versions. When infra adds an overlay, the apps don't need to know. When the apps need a new env var, infra updates `compose/.env.example`.
 
-These contracts mean the layers can move on their own clocks without breaking each other. That's the load-bearing observation behind the three-repo split. **If the contracts were leaky, the monorepo would win**; you'd need atomic refactors all the time.
+These contracts mean the layers can move on their own clocks without breaking each other. That's the load-bearing observation behind the split. If the contracts were leaky, the monorepo would win; you'd need atomic refactors all the time.
 
 ## What we pay for it
 
-**Cross-cutting changes are 2-3 PRs.** A new feature that needs a new API route + a new UI page + a new env var is three PRs across three repos, not one. The cost is real. The mitigation:
+Cross-cutting changes are 2-3 PRs. A new feature that needs a new API route plus a new UI page plus a new env var is three PRs across three repos. The cost is real. The mitigation:
 
-- **OpenAPI as the contract.** Drift is caught at compile time, not in code review.
-- **Sibling-clone layout on disk.** Local development still feels like one project; every command works in any repo, paths are predictable.
-- **Per-repo CI is fast.** Each repo's `validate` runs in 1-2 minutes because it's only doing its own work.
+- OpenAPI as the contract. Drift is caught at compile time, not in code review.
+- Sibling-clone layout on disk. Local development still feels like one project; every command works in any repo, paths are predictable.
+- Per-repo CI is fast. Each repo's `validate` runs in 1-2 minutes because it's only doing its own work.
 
-**Tooling duplication.** Three ESLint configs, three TypeScript configs, three Husky setups. The custom ESLint plugins are published as npm packages so all three repos consume the same versions ([Lint as the contract](/architecture/lint-as-contract/)).
+Tooling duplication is real too. Three ESLint configs, three TypeScript configs, three Husky setups. The custom ESLint plugins are published as npm packages so all three repos consume the same versions ([Lint as the contract](/architecture/lint-as-contract/)).
 
-**Onboarding overhead.** "Where do I clone what?" needs documenting. The [Quickstart](/quickstart/) is that documenting.
+Onboarding overhead: "Where do I clone what?" needs documenting. The [Quickstart](/quickstart/) is that documenting.
 
 ## When a monorepo would have been right
 
-Honest answer: if BoringStack were a tightly coupled team product where every feature changed both API and UI, a monorepo would have been the right call. The fact that **the templates are independently useful** is what tips it the other way; somebody can use `api-template` without ever touching the UI or infra repos.
+If BoringStack were a tightly coupled team product where every feature changed both API and UI, a monorepo would have been the right call. The templates are independently useful instead, which tips it the other way; somebody can use `api-template` without ever touching the UI or infra repos.
 
-If you fork BoringStack and your team uses all three layers as one product, **merging the repos is a one-PR exercise**. The on-disk layout already looks like a monorepo; you're just adding a top-level `package.json` workspaces config.
+If you fork BoringStack and your team uses all three layers as one product, merging the repos is a one-PR exercise. The on-disk layout already looks like a monorepo; you'd just add a top-level `package.json` workspaces config.
 
 ## When three repos would have been wrong
 
-If the contracts between layers were fuzzy and constantly shifting; a typical state for very early-stage products; the three-repo split would be friction without payoff. You'd be doing cross-cutting work all the time, and every change would be a multi-PR dance.
+If the contracts between layers were fuzzy and constantly shifting (a typical state for very early-stage products), the three-repo split would be friction without payoff. You'd be doing cross-cutting work all the time, and every change would be a multi-PR dance.
 
-BoringStack's templates are explicitly **not** for that stage. The point of using a template is to skip the fuzzy-contract phase. If you're at "what even is the data model?", a monorepo prototype gets you to clarity faster.
+BoringStack's templates are explicitly not for that stage. The point of using a template is to skip the fuzzy-contract phase. If you're at "what even is the data model?", a monorepo prototype gets you to clarity faster.
 
 ## Future: the Kubernetes path
 
