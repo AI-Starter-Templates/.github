@@ -20,7 +20,7 @@ This file documents the wire-up so future-you (or a teammate) can rebuild it fro
    |---|---|
    | Production branch | `main` |
    | Framework preset | Astro |
-   | Build command | `npm run build` |
+   | Build command | `pnpm build` |
    | Build output directory | `dist` |
    | Root directory | `/` |
    | Node version | `22` (via `.nvmrc`) |
@@ -36,10 +36,10 @@ This file documents the wire-up so future-you (or a teammate) can rebuild it fro
 
 ```bash
 cd .github
-npm install
-npm run dev       # local preview at http://localhost:4321
-npm run build     # produces dist/
-npm run preview   # serves dist/ at http://localhost:4321
+pnpm install
+pnpm dev       # local preview at http://localhost:4321
+pnpm build     # produces dist/
+pnpm preview   # serves dist/ at http://localhost:4321
 ```
 
 The build runs Pagefind automatically (Starlight bundles it), so search works on the built site too.

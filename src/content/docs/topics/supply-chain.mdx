@@ -1,0 +1,48 @@
+---
+title: Supply-chain protection
+description: Every BoringStack repo refuses to install npm package versions younger than seven days. A small delay; a real mitigation against rug-pull and account-hijack attacks.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+npm supply-chain attacks usually run on the same clock: a maintainer's account gets hijacked, a malicious version is published, the community notices and yanks within hours to a couple of days. The window where the malicious version is live but undetected is short.
+
+Every BoringStack repo applies a **seven-day minimum release age**: package versions younger than seven days simply won't install. By the time we install, the community has had time to spot a bad release.
+
+## How it works per package manager
+
+| Repo | Package manager | Setting |
+|---|---|---|
+| `api-template` | Bun | `bunfig.toml`: `[install] minimumReleaseAge = 604800` (seconds) |
+| `ui-template` | pnpm | `.npmrc`: `minimum-release-age=10080` (minutes) |
+| `.github` (docs) | pnpm | `.npmrc`: `minimum-release-age=10080` |
+| `infra-docker-compose-template` | (no JS deps) | n/a |
+| `infra-bootstrap-tofu-template` | (no JS deps) | n/a |
+
+## Trade-offs
+
+| Cost | Mitigation |
+|---|---|
+| First-time installs may fail when the version range resolves to a brand-new release | Pin to a specific older version or wait |
+| Critical security patches are delayed seven days | Override per-package via `minimumReleaseAgeExclude` (pnpm) when a real CVE drops |
+| Slightly behind the bleeding edge | This is the point |
+
+## Overriding for a specific package
+
+pnpm supports per-package overrides via `minimumReleaseAgeExclude` in `.npmrc`:
+
+```bash
+# Allow the freshly-released patch only for this package
+minimum-release-age-exclude=some-critical-package
+```
+
+Use sparingly. Each exclusion is a small concession on the original threat model.
+
+## Why not just trust npm?
+
+npm's audit signal is real but lagging. By the time `npm audit` reports a malicious version, the attack window already closed. The point of this rule isn't to replace audits or socket.dev or any other tool: it's a cheap, independent layer that buys time for those tools to do their job.
+
+## References
+
+- [pnpm settings: minimumReleaseAge](https://pnpm.io/settings#minimum-release-age)
+- [Bun docs: install lockfile settings](https://bun.com/docs/install/lockfile)

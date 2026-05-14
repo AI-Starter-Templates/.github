@@ -169,6 +169,10 @@ export default defineConfig({
               label: "Provisioning with OpenTofu",
               link: "/topics/provisioning-with-tofu/",
             },
+            {
+              label: "Supply-chain protection",
+              link: "/topics/supply-chain/",
+            },
           ],
         },
         {
