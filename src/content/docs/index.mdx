@@ -1,14 +1,18 @@
 ---
 title: BoringStack
-description: SaaS starters with the boring parts already thought through. Auth, billing, an API contract, and a deploy story you can run locally, not a slideshow.
+description: Postgres, HTTP, React, and Compose wired into a SaaS spine you can run locally. Fast feedback from Bun and Vite, lint as the contract for humans and agents.
 template: splash
 hero:
-  tagline: Three independent templates, cut from codebases that have been in production for 15 years. Stop rebuilding the same spine on every greenfield.
+  tagline: Boring means it just works. Postgres, HTTP, React, and Compose, wired together so you ship product instead of reinventing the spine. Developer experience matters. Bun and Vite keep feedback tight, the API and SPA stay separate jobs, and ESLint carries the architecture so humans and agents get errors they can fix, not prose to interpret.
   actions:
+    - text: Why BoringStack
+      link: /architecture/why-boringstack/
+      icon: right-arrow
+      variant: primary
     - text: Quickstart
       link: /quickstart/
       icon: right-arrow
-      variant: primary
+      variant: minimal
     - text: View on GitHub
       link: https://github.com/AI-Starter-Templates
       icon: external
@@ -16,6 +20,12 @@ hero:
 ---
 
 import { Card, CardGrid } from "@astrojs/starlight/components";
+
+Three sibling templates (API, UI, infra) come from codebases that have shipped for years. Each layer does one job. You get Bun on the API, Vite on the UI, and Compose for the spine, plus ESLint rules you can read in the repo instead of guessing from markdown alone.
+
+[Lint as the contract](/architecture/lint-as-contract/) is where the agent story lives: same rules as humans, same `validate` gate.
+
+Read [Why BoringStack](/architecture/why-boringstack/) for the details, then [Quickstart](/quickstart/) when you want to clone.
 
 ## The templates
 

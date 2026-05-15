@@ -4,6 +4,8 @@ description: How `STACK=` and `WITH_*=1` flags compose docker-compose files. The
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
 The infra stack defaults small: Postgres + Valkey + your apps. Everything else (observability, error tracking, queue dashboard, image-update detection, local email catcher) is opt-in via a flag. Traefik runs in the prod profile only; dev uses Vite's dev-server proxy for same-origin DX. Composition happens in `dev.sh`, which assembles the `docker-compose` invocation based on env vars.
 
@@ -34,35 +36,65 @@ The result is a single `docker compose -f ... -f ... --profile ...` command. `de
 
 ## Design choices
 
-| Decision | Reason |
-|---|---|
-| Base stack always-on, everything else opt-in | First-time setup boots fast and uses minimal RAM |
-| Flags compose freely (`WITH_OBSERVABILITY=1 WITH_GLITCHTIP=1 ...`) | No combinatorial config files; each overlay is independent |
-| Separate `dev` / `prod` overlays for labels | HTTPS, ACME, and security headers live in prod-only files |
-| `WITH_BULLMQ` only valid in dev | Bull-board has no auth and no place in production |
-| Profiles + overlay files (not just one giant file) | `docker compose config` stays readable; overlays can be skipped cleanly |
+<FaqGroup>
+  <FaqItem title="Base stack always-on, everything else opt-in" open>
+    First-time setup boots fast and uses minimal RAM.
+  </FaqItem>
+  <FaqItem title="Flags compose freely (WITH_OBSERVABILITY=1 WITH_GLITCHTIP=1 ...)">
+    No combinatorial config files; each overlay is independent.
+  </FaqItem>
+  <FaqItem title="Separate dev / prod overlays for labels">
+    HTTPS, ACME, and security headers live in prod-only files.
+  </FaqItem>
+  <FaqItem title="WITH_BULLMQ only valid in dev">
+    Bull-board has no auth and no place in production.
+  </FaqItem>
+  <FaqItem title="Profiles + overlay files (not one giant file)">
+    `docker compose config` stays readable; overlays can be skipped cleanly.
+  </FaqItem>
+</FaqGroup>
 
 ## The full opt-in matrix
 
-| Flag | Adds |
-|---|---|
-| `WITH_OBSERVABILITY=1` | Prometheus, Grafana, Loki, Promtail, Alertmanager + exporters |
-| `WITH_GLITCHTIP=1` | GlitchTip (Sentry-compatible error tracking); reuses base Postgres + Valkey |
-| `WITH_BULLMQ=1` | Bull-board UI at `bullmq.localhost`; dev only |
-| `WITH_WUD=1` | What's-Up-Docker image-update detector; Discord webhook optional |
-| `WITH_MAILPIT=1` | Mailpit SMTP catcher at `:8025`; dev only |
+<FaqGroup>
+  <FaqItem title="WITH_OBSERVABILITY=1" open>
+    Adds Prometheus, Grafana, Loki, Promtail, Alertmanager, and exporters.
+  </FaqItem>
+  <FaqItem title="WITH_GLITCHTIP=1">
+    GlitchTip (Sentry-compatible error tracking); reuses base Postgres + Valkey.
+  </FaqItem>
+  <FaqItem title="WITH_BULLMQ=1">
+    Bull-board UI at `bullmq.localhost`; dev only.
+  </FaqItem>
+  <FaqItem title="WITH_WUD=1">
+    WUD watches container images and notifies when newer tags exist; Discord webhook optional.
+  </FaqItem>
+  <FaqItem title="WITH_MAILPIT=1">
+    Mailpit SMTP catcher at `:8025`; dev only.
+  </FaqItem>
+</FaqGroup>
 
 Combinations: `WITH_OBSERVABILITY=1 WITH_GLITCHTIP=1 ./scripts/compose-up.sh` is supported (and runs in CI).
 
 ## STACK=dev vs STACK=prod
 
-| Aspect | `dev` | `prod` |
-|---|---|---|
-| API + UI | Bind-mounted source, hot reload | Pre-built images pulled from GHCR |
-| Traefik | Not started; Vite's dev-server proxies `/api/*` directly | Started; terminates TLS, path-routes `/api/*` + `/health` → api, everything else → ui |
-| Host(s) | `http://localhost:3001` | `https://${PUBLIC_UI_HOST}` (one domain, same-origin) |
-| TLS | None | Let's Encrypt ACME via Traefik |
-| Data ports | Postgres on `:5432`, Valkey on `:6379` published to host | Internal-only, not published |
+<FaqGroup>
+  <FaqItem title="API + UI" open>
+    **dev:** bind-mounted source, hot reload. **prod:** pre-built images pulled from GHCR.
+  </FaqItem>
+  <FaqItem title="Traefik">
+    **dev:** not started; Vite dev-server proxies `/api/*` directly. **prod:** started; terminates TLS, path-routes `/api/*` and `/health` to api, everything else to ui.
+  </FaqItem>
+  <FaqItem title="Host(s)">
+    **dev:** `http://localhost:3001`. **prod:** `https://${PUBLIC_UI_HOST}` (one domain, same-origin).
+  </FaqItem>
+  <FaqItem title="TLS">
+    **dev:** none. **prod:** Let's Encrypt ACME via Traefik.
+  </FaqItem>
+  <FaqItem title="Data ports">
+    **dev:** Postgres on `:5432`, Valkey on `:6379` published to host. **prod:** internal-only, not published.
+  </FaqItem>
+</FaqGroup>
 
 `STACK=prod` adds Traefik and path-routing on top of the same data plane (Postgres + Valkey). No CORS in either profile.
 
@@ -95,4 +127,4 @@ Overlays are independent files, so you can ship one without touching the base.
 
 - [Infra overview](/infra/overview/); service inventory.
 - [Resource limits](/infra/resource-limits/); sizing per service.
-- [Commands cheatsheet](/reference/commands/); every flag in one table.
+- [Commands cheatsheet](/reference/commands/); every flag in one place.

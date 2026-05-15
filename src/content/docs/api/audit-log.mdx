@@ -4,6 +4,8 @@ description: Append-only, fire-and-forget log of security- and compliance-releva
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
 The audit log is the answer to "who did what, when?" Auth events, OAuth link/unlink, billing actions, mutations on flagged resources; they all land in `audit.audit_log`.
 
@@ -22,13 +24,23 @@ The `void` prefix at call sites is load-bearing: it tells the reader (and the li
 
 ## Design choices
 
-| Decision | Reason |
-|---|---|
-| Separate Postgres schema (`audit`, not `public`) | Independent grants, retention, and archival; app migrations on `public` can't touch audit rows |
-| Fire-and-forget writes (errors logged + swallowed) | A flaky audit table can never break a customer action |
-| Nullable `userId` + `ON DELETE SET NULL` | System events have no actor; "this account did X" history survives the user being scrubbed |
-| `jsonb` `metadata` | Add new fields without a migration; cost is no per-field index |
-| Centralized `AUDIT_ACTIONS` constant | Magic strings drift; admin queries depend on a stable vocabulary |
+<FaqGroup>
+  <FaqItem title="Separate Postgres schema (audit, not public)" open>
+    Independent grants, retention, and archival; app migrations on `public` cannot touch audit rows.
+  </FaqItem>
+  <FaqItem title="Fire-and-forget writes (errors logged + swallowed)">
+    A flaky audit table can never break a customer action.
+  </FaqItem>
+  <FaqItem title="Nullable userId + ON DELETE SET NULL">
+    System events have no actor; "this account did X" history survives the user being scrubbed.
+  </FaqItem>
+  <FaqItem title="jsonb metadata">
+    Add new fields without a migration; cost is no per-field index.
+  </FaqItem>
+  <FaqItem title="Centralized AUDIT_ACTIONS constant">
+    Magic strings drift; admin queries depend on a stable vocabulary.
+  </FaqItem>
+</FaqGroup>
 
 ## The action vocabulary
 
@@ -70,13 +82,19 @@ Structured context the action name doesn't capture. Keep it small and PII-free.
 
 The lint plugin flags common leak patterns (keys named `password`, `token`, raw `email`).
 
-## What `userId` should be
+## What userId should be
 
-| Context | Value |
-|---|---|
-| Authenticated user action | Actor's id |
-| System action (cron, webhook with no user context) | `null` |
-| Admin impersonating a user | Acting admin's id, with `metadata.actingAs = <target>` |
+<FaqGroup>
+  <FaqItem title="Authenticated user action" open>
+    Actor's id.
+  </FaqItem>
+  <FaqItem title="System action (cron, webhook with no user context)">
+    `null`.
+  </FaqItem>
+  <FaqItem title="Admin impersonating a user">
+    Acting admin's id, with `metadata.actingAs` set to the target.
+  </FaqItem>
+</FaqGroup>
 
 Never quietly attribute an admin's actions to the impersonated user.
 

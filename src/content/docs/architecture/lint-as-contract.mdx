@@ -1,15 +1,17 @@
 ---
 title: Lint as the contract
-description: A family of custom ESLint plugins encodes the architecture. Agents skip AGENTS.md; lint still enforces it.
+description: Custom ESLint plugins encode the architecture. Machine-checked rules keep the shape intact through refactors and AI-assisted edits.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
-Every BoringStack template ships an `AGENTS.md`, a `CLAUDE.md`, and an `AGENT_CONTRACT.md`. They explain the patterns: where routes go, when to use a service, how to write a Drizzle query, why `process.env` is forbidden outside the env validator.
+This is the load-bearing piece of [Why BoringStack](/architecture/why-boringstack/): architecture lives in tooling, with prose for context.
 
-Agents skim them, skip them, then violate them on the next edit with full confidence.
+Every template ships `AGENTS.md`, `CLAUDE.md`, and `AGENT_CONTRACT.md`. They explain the patterns: where routes go, when to use a service, how to write a Drizzle query, why `process.env` is forbidden outside the env validator.
 
-The **custom ESLint plugins** are how the architecture survives anyway. Every rule that matters is machine-checked. `pnpm validate` / `bun run validate` is the merge gate: if lint fails, the diff does not ship. The docs are the *why*; the lint is the *what's enforced*.
+Custom ESLint plugins make those patterns stick. Every rule that matters is machine-checked. `pnpm validate` / `bun run validate` is the merge gate: if lint fails, the diff does not ship. Prose is the why; lint is what ships.
 
 <Aside type="tip" title="The hierarchy">
   Prose docs (`AGENTS.md`) are *aspirational*. Lint rules are *load-bearing*.
@@ -19,33 +21,63 @@ The **custom ESLint plugins** are how the architecture survives anyway. Every ru
 
 ## Shared across api-template + ui-template
 
-| Plugin | What it enforces |
-|---|---|
-| [`resource-architecture`](https://github.com/agjs/eslint-plugin-resource-architecture) | Per-feature route/service/types split. No business logic in routes; no HTTP in services. |
-| [`module-boundaries`](https://github.com/agjs/eslint-plugin-module-boundaries) | Single-semantic-module files. No mixed-concern dumps. |
-| [`structured-logging`](https://github.com/agjs/eslint-plugin-structured-logging) | Pino discipline. No `console.log`, no string-interpolated log lines, no logging secrets. |
-| [`env-access`](https://github.com/agjs/eslint-plugin-env-access) | `process.env` (or `import.meta.env`) is only readable inside the env validator. Everywhere else imports the validated config. |
-| [`test-conventions`](https://github.com/agjs/eslint-plugin-test-conventions) | `tests/` mirrors `src/`. Test files match their source by path. No orphan tests. |
+<FaqGroup>
+  <FaqItem title="resource-architecture" open>
+    [`eslint-plugin-resource-architecture`](https://github.com/agjs/eslint-plugin-resource-architecture): per-feature route/service/types split. No business logic in routes; no HTTP in services.
+  </FaqItem>
+  <FaqItem title="module-boundaries">
+    [`eslint-plugin-module-boundaries`](https://github.com/agjs/eslint-plugin-module-boundaries): single-semantic-module files. No mixed-concern dumps.
+  </FaqItem>
+  <FaqItem title="structured-logging">
+    [`eslint-plugin-structured-logging`](https://github.com/agjs/eslint-plugin-structured-logging): Pino discipline. No `console.log`, no string-interpolated log lines, no logging secrets.
+  </FaqItem>
+  <FaqItem title="env-access">
+    [`eslint-plugin-env-access`](https://github.com/agjs/eslint-plugin-env-access): `process.env` / `import.meta.env` only inside the env validator; everywhere else uses validated config.
+  </FaqItem>
+  <FaqItem title="test-conventions">
+    [`eslint-plugin-test-conventions`](https://github.com/agjs/eslint-plugin-test-conventions): `tests/` mirrors `src/`; no orphan tests.
+  </FaqItem>
+</FaqGroup>
 
 ## api-template only
 
-| Plugin | What it enforces |
-|---|---|
-| [`elysia`](https://github.com/agjs/eslint-plugin-elysia) | Elysia idioms: TypeBox schemas on every route, no untyped handlers, plugin registration patterns. |
-| [`drizzle-conventions`](https://github.com/agjs/eslint-plugin-drizzle-conventions) | Schema and query patterns, including index naming and `with` usage. |
-| [`db-transactions`](https://github.com/agjs/eslint-plugin-db-transactions) | Multi-write paths must run inside a transaction. No partial-state foot-guns. |
-| [`jwt-cookies`](https://github.com/agjs/eslint-plugin-jwt-cookies) | Cookie attributes (`HttpOnly`, `Secure`, `SameSite`) and JWT verify call sites. |
-| [`oauth-security`](https://github.com/agjs/eslint-plugin-oauth-security) | OAuth state + PKCE invariants on the server-side flow. |
-| [`bullmq`](https://github.com/agjs/eslint-plugin-bullmq) | Queue + worker patterns: idempotency, dead-letter handling, name discipline. |
-| [`cache-keys`](https://github.com/agjs/eslint-plugin-cache-keys) | Cache key naming + TTL discipline. No unnamespaced keys, no TTL-free writes by accident. |
-| [`audit-log`](https://github.com/agjs/eslint-plugin-audit-log) | Audit-log writes on flagged mutations. Security-relevant events can't be silently skipped. |
-| [`stripe-webhooks`](https://github.com/agjs/eslint-plugin-stripe-webhooks) | Stripe handler safety: signature verification, idempotency, raw-body access. |
+<FaqGroup>
+  <FaqItem title="elysia" open>
+    [`eslint-plugin-elysia`](https://github.com/agjs/eslint-plugin-elysia): TypeBox on every route, no untyped handlers, plugin registration patterns.
+  </FaqItem>
+  <FaqItem title="drizzle-conventions">
+    [`eslint-plugin-drizzle-conventions`](https://github.com/agjs/eslint-plugin-drizzle-conventions): schema and query patterns, index naming, `with` usage.
+  </FaqItem>
+  <FaqItem title="db-transactions">
+    [`eslint-plugin-db-transactions`](https://github.com/agjs/eslint-plugin-db-transactions): multi-write paths inside a transaction.
+  </FaqItem>
+  <FaqItem title="jwt-cookies">
+    [`eslint-plugin-jwt-cookies`](https://github.com/agjs/eslint-plugin-jwt-cookies): cookie attributes and JWT verify call sites.
+  </FaqItem>
+  <FaqItem title="oauth-security">
+    [`eslint-plugin-oauth-security`](https://github.com/agjs/eslint-plugin-oauth-security): OAuth state + PKCE on the server flow.
+  </FaqItem>
+  <FaqItem title="bullmq">
+    [`eslint-plugin-bullmq`](https://github.com/agjs/eslint-plugin-bullmq): queue/worker idempotency, failed handlers, name discipline.
+  </FaqItem>
+  <FaqItem title="cache-keys">
+    [`eslint-plugin-cache-keys`](https://github.com/agjs/eslint-plugin-cache-keys): namespaced cache keys and TTL discipline.
+  </FaqItem>
+  <FaqItem title="audit-log">
+    [`eslint-plugin-audit-log`](https://github.com/agjs/eslint-plugin-audit-log): audit writes on flagged mutations.
+  </FaqItem>
+  <FaqItem title="stripe-webhooks">
+    [`eslint-plugin-stripe-webhooks`](https://github.com/agjs/eslint-plugin-stripe-webhooks): signature verification, idempotency, raw-body access.
+  </FaqItem>
+</FaqGroup>
 
 ## ui-template only
 
-| Plugin | What it enforces |
-|---|---|
-| [`react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture) | Component anatomy, hook placement, `className` discipline, file-naming, prop ordering; a multi-rule package covering the whole component contract. |
+<FaqGroup>
+  <FaqItem title="react-component-architecture" open>
+    [`eslint-plugin-react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture): component anatomy, hooks, `className` discipline, file naming, prop ordering.
+  </FaqItem>
+</FaqGroup>
 
 ## How they're wired
 
@@ -65,12 +97,10 @@ Husky runs `pnpm lint-staged` on every commit, so most violations get caught bef
 
 ## Why this matters for agent-driven development
 
-A human reading `AGENTS.md` tends to absorb the patterns. An agent reading `AGENTS.md` often ships plausible code that ignores half of them: different file, different layer, same rule. Without machine enforcement, you spend review time on `process.env` leaks, untyped routes, and mis-namespaced cache keys instead of the actual logic.
+Lint turns architecture into a closed loop: code is written, violations surface as parseable errors, the fix is specific (wrong layer, missing schema, env read outside the validator). Review time stays on product logic instead of rediscovering folder rules.
 
-Push the rule into a linter and it becomes a closed loop: agent writes code → lint catches drift → agent gets a parseable error → agent fixes the right thing. The merge gate stays green only when the architecture stays intact.
-
-That's the whole bet: **docs explain, lint enforces.** Both matter, but if you had to keep only one, you'd keep the lint.
+For humans and agents alike, docs explain and lint enforces. Both matter; lint is what keeps the merge gate honest.
 
 ## Contributing back
 
-The plugins are MIT-licensed and developed in the open. If you find a gap, file an issue or PR against the relevant plugin repo (linked in the tables above). Rules that prove themselves in production end up promoted to `recommended` configs.
+The plugins are MIT-licensed and developed in the open. If you find a gap, file an issue or PR against the relevant plugin repo (linked above). Rules that prove themselves in production end up promoted to `recommended` configs.

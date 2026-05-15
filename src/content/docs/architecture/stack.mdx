@@ -1,75 +1,78 @@
 ---
 title: Stack at a glance
-description: Every dependency, every choice, in one table.
+description: Every dependency, every choice, grouped by template.
 ---
 
-The full set of runtime + dev dependencies, what each does, and why.
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
-## api-template
+Runtime and dev dependencies, what each does, and why. For what *boring* means (battle-tested pieces that just work), see [Why BoringStack](/architecture/why-boringstack/).
 
-| Concern | Choice | Why |
-|---|---|---|
-| Runtime | Bun | Bun-native APIs, fastest install + cold boot |
-| HTTP framework | Elysia | TypeBox-typed routes, OpenAPI auto-emit |
-| ORM | Drizzle | TS-first, SQL-shaped, real migrations |
-| Database | Postgres | Boring, durable, well-tooled |
-| Cache + queue store | Valkey | OSS-licensed Redis fork (BSD-3) backed by the Linux Foundation; drop-in compatible with Redis clients |
-| Queues | BullMQ | Canonical Valkey/Redis-protocol job queue |
-| Auth | bcryptjs + JWT + Arctic (OAuth) | Server-side, no third-party hosted auth |
-| Email | Cloudflare Email Service (default), Resend, SendGrid, SMTP, noop | Pluggable. SMTP works against Mailpit in dev and any RFC-5321 server in prod |
-| Error tracking | @sentry/bun | Points at hosted Sentry or self-hosted GlitchTip |
-| AI | OpenAI SDK, Anthropic SDK, or noop | Pluggable; `OPENAI_BASE_URL` enables any OpenAI-compatible endpoint |
-| Logger | Pino + pino-pretty | Structured logs, JSON in prod |
-| Templates | Handlebars (precompiled to JSON at build time) | Email templates as static JSON, zero runtime parse cost |
-| Dead-code detection | Knip | Gates `bun run validate` |
-
-## ui-template
-
-| Concern | Choice | Why |
-|---|---|---|
-| Build tool | Vite | Fast HMR, native ESM, dev-server proxy for same-origin `/api/*` |
-| Framework | React 19 | New compiler, server components if needed later |
-| Server state | TanStack Query | Widely used; cache invariants are well documented |
-| Client state | Zustand | Small, no provider chain |
-| Forms | React Hook Form + Zod | Typed forms, schema validation |
-| Routing | React Router | Stable, well-known |
-| Component primitives | shadcn/ui + Radix | Copy-paste primitives, no UI dependency lock-in |
-| Styling | Tailwind + `@theme` tokens | Utility-first, design tokens at the CSS layer |
-| HTTP | openapi-fetch + generated schema | Typed against the live API spec |
-| Error tracking | @sentry/react | Matches API-side wiring |
-| i18n | react-i18next | en + de out of the box |
-| Tests | Vitest + Testing Library + Playwright | Unit + integration + e2e |
-| Visual regression | Playwright snapshots | Per-platform baselines |
-| Storybook | Storybook | Component catalog with controls |
-| Dead-code detection | Knip | Gates `pnpm check` |
-
-## infra-docker-compose-template
-
-| Concern | Choice | Why |
-|---|---|---|
-| Reverse proxy (prod only) | Traefik | Docker-label-driven, ACME built in, same-origin path routing |
-| Cert provider | Let's Encrypt via ACME HTTP-01 | Free, automatic, renewed by Traefik |
-| Metrics | Prometheus + node-exporter + postgres-exporter + valkey-exporter | Standard exporters, per-component metrics |
-| Logs | Loki + Promtail | Per-container labels, queryable in Grafana |
-| Dashboards | Grafana | Auto-provisions datasources; drop JSON into `compose/grafana/dashboards/` |
-| Alerts | Alertmanager | Routes Prometheus alerts |
-| Error tracking (self-hosted) | GlitchTip | Sentry-compatible, runs on the base Postgres + Valkey |
-| Image update detection | WUD (What's Up Docker) | Notify-only, Discord webhook + dashboard at `:3033` |
-| Local email catcher | Mailpit | SMTP on `:1025`, web UI on `:8025`, opt-in via `WITH_MAILPIT=1` |
-| Queue dashboard | bull-board | Dev-only Bull/BullMQ UI |
-| Backups | rclone | Off-site, timestamped, retention-managed |
-| Optional second-layer firewall | UFW (example script) | Defense in depth on top of Hetzner cloud firewall |
-
-## infra-bootstrap-tofu-template
-
-| Concern | Choice | Why |
-|---|---|---|
-| IaC tool | OpenTofu | MPL-licensed Terraform fork, drop-in compatible |
-| VPS | Hetzner Cloud | Cheap, EU-friendly, good API |
-| DNS + edge | Cloudflare (apex + www only) | Proxied for DDoS, same-origin path routing means no api. subdomain |
-| Firewall | Hetzner cloud firewall | Auto-pulls live Cloudflare IPv4 + IPv6 ranges at plan time |
-| First-boot bootstrap | cloud-init + `bootstrap.sh` | Versioned shell script: clone infra repo, drop env, `compose pull && up -d` |
-| Backups (optional) | rclone via cron | Configured at apply time |
+<Tabs>
+  <TabItem label="api-template">
+    <FaqGroup>
+      <FaqItem title="Runtime: Bun" open>Bun-native APIs, fastest install and cold boot.</FaqItem>
+      <FaqItem title="HTTP framework: Elysia">TypeBox-typed routes, OpenAPI auto-emit.</FaqItem>
+      <FaqItem title="ORM: Drizzle">TS-first, SQL-shaped, real migrations.</FaqItem>
+      <FaqItem title="Database: Postgres">Durable, well-tooled.</FaqItem>
+      <FaqItem title="Cache + queue store: Valkey">OSS Redis-protocol fork (BSD-3); drop-in for Redis clients.</FaqItem>
+      <FaqItem title="Queues: BullMQ">Canonical Valkey job queue.</FaqItem>
+      <FaqItem title="Auth">bcryptjs + JWT + Arctic (OAuth); server-side sessions.</FaqItem>
+      <FaqItem title="Email">Cloudflare Email (default), Resend, SendGrid, SMTP, noop. SMTP works with Mailpit in dev.</FaqItem>
+      <FaqItem title="Error tracking">@sentry/bun → hosted Sentry or self-hosted GlitchTip.</FaqItem>
+      <FaqItem title="AI">OpenAI SDK, Anthropic SDK, or noop. `OPENAI_BASE_URL` for compatible endpoints.</FaqItem>
+      <FaqItem title="Logger">Pino + pino-pretty. JSON in prod.</FaqItem>
+      <FaqItem title="Templates">Handlebars precompiled to JSON at build; zero runtime parse.</FaqItem>
+      <FaqItem title="Dead-code detection">Knip gates `bun run validate`.</FaqItem>
+    </FaqGroup>
+  </TabItem>
+  <TabItem label="ui-template">
+    <FaqGroup>
+      <FaqItem title="Build tool: Vite" open>Fast HMR, native ESM, dev proxy for same-origin `/api/*`.</FaqItem>
+      <FaqItem title="Framework: React 19">Current React with compiler support.</FaqItem>
+      <FaqItem title="Server state: TanStack Query">Documented cache invariants.</FaqItem>
+      <FaqItem title="Client state: Zustand">Small, no provider chain.</FaqItem>
+      <FaqItem title="Forms">React Hook Form + Zod.</FaqItem>
+      <FaqItem title="Routing">React Router.</FaqItem>
+      <FaqItem title="Components">shadcn/ui + Radix; you own the primitives.</FaqItem>
+      <FaqItem title="Styling">Tailwind + `@theme` tokens.</FaqItem>
+      <FaqItem title="HTTP">openapi-fetch + generated schema from live API.</FaqItem>
+      <FaqItem title="Error tracking">@sentry/react.</FaqItem>
+      <FaqItem title="i18n">react-i18next; en + de.</FaqItem>
+      <FaqItem title="Tests">Vitest, Testing Library, Playwright.</FaqItem>
+      <FaqItem title="Visual regression">Playwright snapshots per platform.</FaqItem>
+      <FaqItem title="Storybook">Component catalog with controls.</FaqItem>
+      <FaqItem title="Dead-code detection">Knip gates `pnpm check`.</FaqItem>
+    </FaqGroup>
+  </TabItem>
+  <TabItem label="infra-docker-compose">
+    <FaqGroup>
+      <FaqItem title="Reverse proxy (prod): Traefik" open>Docker labels, ACME, same-origin path routing.</FaqItem>
+      <FaqItem title="Certs">Let's Encrypt via ACME HTTP-01.</FaqItem>
+      <FaqItem title="Metrics">Prometheus + standard exporters.</FaqItem>
+      <FaqItem title="Logs">Loki + Promtail; per-container labels.</FaqItem>
+      <FaqItem title="Dashboards">Grafana; drop JSON into `compose/grafana/dashboards/`.</FaqItem>
+      <FaqItem title="Alerts">Alertmanager.</FaqItem>
+      <FaqItem title="Error tracking (self-hosted)">GlitchTip on base Postgres + Valkey.</FaqItem>
+      <FaqItem title="Image updates">WUD notify-only; Discord webhook + dashboard `:3033`.</FaqItem>
+      <FaqItem title="Local email">Mailpit; `WITH_MAILPIT=1`.</FaqItem>
+      <FaqItem title="Queue dashboard">bull-board; dev only.</FaqItem>
+      <FaqItem title="Backups">rclone; off-site, retention-managed.</FaqItem>
+      <FaqItem title="Optional firewall">UFW example script on Hetzner cloud firewall.</FaqItem>
+    </FaqGroup>
+  </TabItem>
+  <TabItem label="infra-bootstrap-tofu">
+    <FaqGroup>
+      <FaqItem title="IaC: OpenTofu" open>Terraform-compatible fork (MPL).</FaqItem>
+      <FaqItem title="VPS: Hetzner Cloud">EU-friendly API and pricing.</FaqItem>
+      <FaqItem title="DNS + edge">Cloudflare apex + www; proxied; same-origin routing.</FaqItem>
+      <FaqItem title="Firewall">Hetzner cloud firewall; Cloudflare IP ranges at plan time.</FaqItem>
+      <FaqItem title="First boot">cloud-init + `bootstrap.sh`; clone infra, `compose pull && up -d`.</FaqItem>
+      <FaqItem title="Backups (optional)">rclone via cron at apply time.</FaqItem>
+    </FaqGroup>
+  </TabItem>
+</Tabs>
 
 ## Architecture-enforcement plugins
 

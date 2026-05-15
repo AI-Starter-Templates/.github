@@ -3,71 +3,172 @@ title: Commands cheatsheet
 description: Every command you'll run during a normal day of working on BoringStack.
 ---
 
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
+
 ## Infra (docker-compose stack)
 
-| Task | Command | Data preserved? |
-|---|---|---|
-| Start dev stack | `./scripts/compose-up.sh` | n/a |
-| Stop, keep data | `./scripts/compose-down.sh` | ✅ |
-| Stop and wipe data | `./scripts/compose-down-clean.sh` | ❌ (prompts; `CONFIRM=yes` to skip) |
-| Start prod | `STACK=prod ./scripts/compose-up.sh` | n/a |
-| With observability | `WITH_OBSERVABILITY=1 ./scripts/compose-up.sh` | n/a |
-| With error tracking | `WITH_GLITCHTIP=1 ./scripts/compose-up.sh` | n/a |
-| With queue dashboard | `WITH_BULLMQ=1 ./scripts/compose-up.sh` | n/a |
-| With image-update bot | `WITH_WUD=1 ./scripts/compose-up.sh` | n/a |
-| With local email catcher | `WITH_MAILPIT=1 ./scripts/compose-up.sh` (dev only) | n/a |
-| Service status | `docker compose -f compose/docker-compose.yml -f compose/docker-compose.development-labels.yml --profile dev ps` | n/a |
-| Live logs | `docker compose ... logs -f api-dev` | n/a |
-| Live resource use | `docker stats` | n/a |
-| Backup db (offsite) | `BACKUP_DRY_RUN=1 ./scripts/backup-wrapper.example.sh` then drop the flag | ✅ |
+<FaqGroup>
+  <FaqItem title="Start dev stack" open>
+    `./scripts/compose-up.sh`. Data: n/a.
+  </FaqItem>
+  <FaqItem title="Stop, keep data">
+    `./scripts/compose-down.sh`. Data preserved.
+  </FaqItem>
+  <FaqItem title="Stop and wipe data">
+    `./scripts/compose-down-clean.sh`. Data not preserved (prompts; `CONFIRM=yes` to skip confirmation).
+  </FaqItem>
+  <FaqItem title="Start prod">
+    `STACK=prod ./scripts/compose-up.sh`. Data: n/a.
+  </FaqItem>
+  <FaqItem title="With observability">
+    `WITH_OBSERVABILITY=1 ./scripts/compose-up.sh`. Data: n/a.
+  </FaqItem>
+  <FaqItem title="With error tracking">
+    `WITH_GLITCHTIP=1 ./scripts/compose-up.sh`. Data: n/a.
+  </FaqItem>
+  <FaqItem title="With queue dashboard">
+    `WITH_BULLMQ=1 ./scripts/compose-up.sh`. Data: n/a.
+  </FaqItem>
+  <FaqItem title="With image-update bot">
+    `WITH_WUD=1 ./scripts/compose-up.sh`. Data: n/a.
+  </FaqItem>
+  <FaqItem title="With local email catcher">
+    `WITH_MAILPIT=1 ./scripts/compose-up.sh` (dev only). Data: n/a.
+  </FaqItem>
+  <FaqItem title="Service status">
+    `docker compose -f compose/docker-compose.yml -f compose/docker-compose.development-labels.yml --profile dev ps`. Data: n/a.
+  </FaqItem>
+  <FaqItem title="Live logs">
+    `docker compose ... logs -f api-dev`. Data: n/a.
+  </FaqItem>
+  <FaqItem title="Live resource use">
+    `docker stats`. Data: n/a.
+  </FaqItem>
+  <FaqItem title="Backup db (offsite)">
+    `BACKUP_DRY_RUN=1 ./scripts/backup-wrapper.example.sh` then drop the flag. Data preserved.
+  </FaqItem>
+</FaqGroup>
 
 Flags compose: `WITH_OBSERVABILITY=1 WITH_GLITCHTIP=1 ./scripts/compose-up.sh`.
 
 ## api-template
 
-| Task | Command |
-|---|---|
-| Run in watch mode | `bun run dev` |
-| Production bundle | `bun run build` |
-| Run production bundle | `bun run start` |
-| Typecheck + lint + knip | `bun run check` |
-| Lint only | `bun run lint` |
-| Auto-fix lint | `bun run lint:fix` |
-| Dead-code detection | `bun run knip` |
-| Unit + integration tests | `bun run test` |
-| Full merge gate | `bun run validate` |
-| Generate migration | `bun run db:generate` |
-| Apply migrations | `bun run db:migrate` |
-| Push schema (dev) | `bun run db:push --force` |
-| Seed superuser (if `SUPERUSER_EMAIL` + `_PASSWORD` set) | `bun run db:seed` |
-| Drizzle studio | `bun run db:studio` |
-| Scaffold a new resource | `bun run new:resource <name>` |
-| Build email templates | `bun run build:templates` |
-| Watch email templates | `bun run build:templates:watch` |
+<FaqGroup>
+  <FaqItem title="Run in watch mode" open>
+    `bun run dev`
+  </FaqItem>
+  <FaqItem title="Production bundle">
+    `bun run build`
+  </FaqItem>
+  <FaqItem title="Run production bundle">
+    `bun run start`
+  </FaqItem>
+  <FaqItem title="Typecheck + lint + knip">
+    `bun run check`
+  </FaqItem>
+  <FaqItem title="Lint only">
+    `bun run lint`
+  </FaqItem>
+  <FaqItem title="Auto-fix lint">
+    `bun run lint:fix`
+  </FaqItem>
+  <FaqItem title="Dead-code detection">
+    `bun run knip`
+  </FaqItem>
+  <FaqItem title="Unit + integration tests">
+    `bun run test`
+  </FaqItem>
+  <FaqItem title="Full merge gate">
+    `bun run validate`
+  </FaqItem>
+  <FaqItem title="Generate migration">
+    `bun run db:generate`
+  </FaqItem>
+  <FaqItem title="Apply migrations">
+    `bun run db:migrate`
+  </FaqItem>
+  <FaqItem title="Push schema (dev)">
+    `bun run db:push --force`
+  </FaqItem>
+  <FaqItem title="Seed superuser (if SUPERUSER_EMAIL + _PASSWORD set)">
+    `bun run db:seed`
+  </FaqItem>
+  <FaqItem title="Drizzle studio">
+    `bun run db:studio`
+  </FaqItem>
+  <FaqItem title="Scaffold a new resource">
+    `bun run new:resource <name>`
+  </FaqItem>
+  <FaqItem title="Build email templates">
+    `bun run build:templates`
+  </FaqItem>
+  <FaqItem title="Watch email templates">
+    `bun run build:templates:watch`
+  </FaqItem>
+</FaqGroup>
 
 ## ui-template
 
-| Task | Command |
-|---|---|
-| Dev server (port 3001) | `pnpm dev` |
-| Production build | `pnpm build` |
-| Production preview | `pnpm preview` |
-| Typecheck | `pnpm typecheck` |
-| Lint + format + typecheck + knip | `pnpm check` |
-| Auto-fix lint | `pnpm lint:fix` |
-| Dead-code detection | `pnpm knip` |
-| Unit + component tests | `pnpm test` |
-| Coverage | `pnpm test:ci` |
-| e2e (Playwright) | `pnpm e2e` |
-| e2e visual baselines | `pnpm e2e:visual:update` |
-| Bundle size budget | `pnpm size:check` |
-| Bundle analyzer | `pnpm analyze` |
-| Lighthouse | `pnpm lighthouse` |
-| Full merge gate | `pnpm validate` |
-| Regenerate API schema | `pnpm generate:api` |
-| Scaffold a component | `pnpm new:component <Name>` |
-| Scaffold a feature | `pnpm new:feature <name>` |
-| Storybook | `pnpm storybook` |
+<FaqGroup>
+  <FaqItem title="Dev server (port 3001)" open>
+    `pnpm dev`
+  </FaqItem>
+  <FaqItem title="Production build">
+    `pnpm build`
+  </FaqItem>
+  <FaqItem title="Production preview">
+    `pnpm preview`
+  </FaqItem>
+  <FaqItem title="Typecheck">
+    `pnpm typecheck`
+  </FaqItem>
+  <FaqItem title="Lint + format + typecheck + knip">
+    `pnpm check`
+  </FaqItem>
+  <FaqItem title="Auto-fix lint">
+    `pnpm lint:fix`
+  </FaqItem>
+  <FaqItem title="Dead-code detection">
+    `pnpm knip`
+  </FaqItem>
+  <FaqItem title="Unit + component tests">
+    `pnpm test`
+  </FaqItem>
+  <FaqItem title="Coverage">
+    `pnpm test:ci`
+  </FaqItem>
+  <FaqItem title="e2e (Playwright)">
+    `pnpm e2e`
+  </FaqItem>
+  <FaqItem title="e2e visual baselines">
+    `pnpm e2e:visual:update`
+  </FaqItem>
+  <FaqItem title="Bundle size budget">
+    `pnpm size:check`
+  </FaqItem>
+  <FaqItem title="Bundle analyzer">
+    `pnpm analyze`
+  </FaqItem>
+  <FaqItem title="Lighthouse">
+    `pnpm lighthouse`
+  </FaqItem>
+  <FaqItem title="Full merge gate">
+    `pnpm validate`
+  </FaqItem>
+  <FaqItem title="Regenerate API schema">
+    `pnpm generate:api`
+  </FaqItem>
+  <FaqItem title="Scaffold a component">
+    `pnpm new:component <Name>`
+  </FaqItem>
+  <FaqItem title="Scaffold a feature">
+    `pnpm new:feature <name>`
+  </FaqItem>
+  <FaqItem title="Storybook">
+    `pnpm storybook`
+  </FaqItem>
+</FaqGroup>
 
 ## Inside the dev containers (rare)
 

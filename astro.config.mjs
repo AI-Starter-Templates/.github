@@ -16,7 +16,7 @@ export default defineConfig({
     starlight({
       title: "BoringStack",
       description:
-        "SaaS starters with the boring parts already thought through. Auth, billing, an API contract, and a deploy story you can run locally, not a slideshow.",
+        "Postgres, HTTP, React, and Compose wired into a SaaS spine you can run locally. Fast Bun and Vite feedback, lint as the contract for humans and agents, OpenAPI between API and UI.",
       logo: {
         src: "./src/assets/logo.svg",
         replacesTitle: false,
@@ -109,11 +109,19 @@ export default defineConfig({
         {
           label: "Architecture",
           items: [
-            { label: "Repository layout", link: "/architecture/three-repos/" },
             {
-              label: "Why not a monorepo",
-              link: "/architecture/why-not-monorepo/",
+              label: "Why BoringStack",
+              link: "/architecture/why-boringstack/",
             },
+            {
+              label: "Separation of concerns",
+              link: "/architecture/separation-of-concerns/",
+            },
+            {
+              label: "Background work",
+              link: "/architecture/background-work/",
+            },
+            { label: "Repository layout", link: "/architecture/three-repos/" },
             { label: "Stack at a glance", link: "/architecture/stack/" },
             {
               label: "Lint as the contract",

@@ -1,0 +1,16 @@
+---
+interface Props {
+  /** Visible question or heading (maps to `<summary>`). */
+  title: string;
+  /** Open this item on first paint. */
+  open?: boolean;
+}
+
+const { title, open = false } = Astro.props;
+---
+<details class="faq-item" open={open || undefined}>
+  <summary>{title}</summary>
+  <div class="faq-item__body">
+    <slot />
+  </div>
+</details>

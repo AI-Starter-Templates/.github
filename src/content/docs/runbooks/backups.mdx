@@ -4,6 +4,8 @@ description: Postgres → rclone off-site, with retention. Runs from cron; resto
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
 The infra template ships `scripts/backup-wrapper.example.sh`: `pg_dump` → gzip → `rclone copy` to a remote of your choice, with retention. Designed to be safe to run from cron; idempotent, logs to stdout, exits non-zero on failure.
 
@@ -23,26 +25,48 @@ Plain bash. ~80 lines. Read it before pointing at production.
 
 ## Design choices
 
-| Decision | Reason |
-|---|---|
-| rclone, not vendor-specific tools | One config talks to S3, B2, Storj, Wasabi, even your own host via SFTP |
-| Gzip locally before upload | Saves bandwidth and storage; pg_dump compresses well |
-| `pg_dump`, not file-level snapshots | Logical dumps survive Postgres version upgrades; file-level doesn't |
-| Retention enforced remotely | The remote is the source of truth for what exists |
-| `BACKUP_DRY_RUN=1` mode | First run prints the plan; promotes to real once you trust it |
-| Exits non-zero on any failure | Cron mail capture surfaces failures automatically |
+<FaqGroup>
+  <FaqItem title="rclone, not vendor-specific tools" open>
+    One config talks to S3, B2, Storj, Wasabi, even your own host via SFTP.
+  </FaqItem>
+  <FaqItem title="Gzip locally before upload">
+    Saves bandwidth and storage; pg_dump compresses well.
+  </FaqItem>
+  <FaqItem title="pg_dump, not file-level snapshots">
+    Logical dumps survive Postgres version upgrades; file-level does not.
+  </FaqItem>
+  <FaqItem title="Retention enforced remotely">
+    The remote is the source of truth for what exists.
+  </FaqItem>
+  <FaqItem title="BACKUP_DRY_RUN=1 mode">
+    First run prints the plan; promote to real once you trust it.
+  </FaqItem>
+  <FaqItem title="Exits non-zero on any failure">
+    Cron mail capture surfaces failures automatically.
+  </FaqItem>
+</FaqGroup>
 
 ## What to configure
 
 In `compose/.env` (the script sources it):
 
-| Var | Purpose |
-|---|---|
-| `POSTGRES_USER`, `POSTGRES_DB` | What to dump |
-| `RCLONE_REMOTE_NAME` | The rclone remote alias (configured separately via `rclone config`) |
-| `RCLONE_REMOTE_PATH` | Path within the remote |
-| `BACKUP_RETENTION_DAYS` | Default 30 |
-| `BACKUP_DRY_RUN=1` | Print what would happen; skip side effects |
+<FaqGroup>
+  <FaqItem title="POSTGRES_USER and POSTGRES_DB" open>
+    What to dump.
+  </FaqItem>
+  <FaqItem title="RCLONE_REMOTE_NAME">
+    The rclone remote alias (configured separately via `rclone config`).
+  </FaqItem>
+  <FaqItem title="RCLONE_REMOTE_PATH">
+    Path within the remote.
+  </FaqItem>
+  <FaqItem title="BACKUP_RETENTION_DAYS">
+    Default 30.
+  </FaqItem>
+  <FaqItem title="BACKUP_DRY_RUN=1">
+    Print what would happen; skip side effects.
+  </FaqItem>
+</FaqGroup>
 
 ## Setting it up
 
@@ -58,10 +82,14 @@ In `compose/.env` (the script sources it):
 
 ## Retention math
 
-| Cadence | Default retention | What survives |
-|---|---|---|
-| Daily, 30 days | 30 backups | A month of point-in-time recovery |
-| Daily, with monthly retention | Custom; see below | Years of monthly snapshots, days of recent |
+<FaqGroup>
+  <FaqItem title="Daily, 30 days" open>
+    Default retention 30 backups: a month of point-in-time recovery.
+  </FaqItem>
+  <FaqItem title="Daily, with monthly retention">
+    Custom; see below. Years of monthly snapshots, days of recent.
+  </FaqItem>
+</FaqGroup>
 
 For longer retention (compliance, year-over-year audits), run two crons with different `RCLONE_REMOTE_PATH` values:
 

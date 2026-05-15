@@ -4,6 +4,8 @@ description: WUD (What's-Up-Docker) overlay; get a Discord ping when a base imag
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
 `WITH_WUD=1` brings up [WUD](https://getwud.github.io/wud/): it watches every running container's image and pings a Discord webhook when a newer tag is available. Manual `docker compose pull` + recreate is still the apply step. No surprise restarts.
 
@@ -38,12 +40,20 @@ WUD doesn't mount `docker-compose.yml` read-write. By design. It can't modify yo
 
 ## Design choices
 
-| Decision | Reason |
-|---|---|
-| Notify-only, not auto-pull | Surprise restarts > missed CVE notifications |
-| Discord webhook over email | Lower-friction; survives email filters; team-visible |
-| WUD dashboard at `:3033` as fallback | Works even when Discord is unreachable / not configured |
-| Doesn't auto-edit `docker-compose.yml` | Pinning tags in git is the source of truth |
+<FaqGroup>
+  <FaqItem title="Notify-only, not auto-pull" open>
+    Auto-pull can restart production at bad times; notify-only keeps humans in the loop.
+  </FaqItem>
+  <FaqItem title="Discord webhook over email">
+    Lower friction; survives email filters; team-visible.
+  </FaqItem>
+  <FaqItem title="WUD dashboard at :3033 as fallback">
+    Works even when Discord is unreachable or not configured.
+  </FaqItem>
+  <FaqItem title="Does not auto-edit docker-compose.yml">
+    Pinning tags in git is the source of truth.
+  </FaqItem>
+</FaqGroup>
 
 ## Setup
 

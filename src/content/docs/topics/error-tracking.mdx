@@ -4,6 +4,8 @@ description: One Sentry-compatible wire protocol, two backends. Hosted Sentry or
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
 Both `api-template` and `ui-template` ship a Sentry SDK. The same SDK talks to:
 
@@ -14,13 +16,23 @@ The SDKs don't know which one they're talking to. Choosing is a one-env-var chan
 
 ## Design choices
 
-| Decision | Reason |
-|---|---|
-| Sentry SDK on both sides (not a custom shim) | One vocabulary, one DX, one set of breadcrumbs |
-| GlitchTip as the self-host option | Wire-compatible with Sentry; runs on the same Postgres + Valkey the app already uses |
-| Empty DSN → SDK is a no-op | Dev stays clean; tests don't ship error reports |
-| Replay-on-error on, full-session replays off | Captures the broken flow without storing healthy sessions |
-| Single env var per side: `SENTRY_DSN` (API), `VITE_SENTRY_DSN` (UI) | Same protocol regardless of backend; swap is one redeploy |
+<FaqGroup>
+  <FaqItem title="Sentry SDK on both sides (not a custom shim)" open>
+    One vocabulary, one DX, one set of breadcrumbs.
+  </FaqItem>
+  <FaqItem title="GlitchTip as the self-host option">
+    Wire-compatible with Sentry; runs on the same Postgres + Valkey the app already uses.
+  </FaqItem>
+  <FaqItem title="Empty DSN: SDK is a no-op">
+    Dev stays clean; tests do not ship error reports.
+  </FaqItem>
+  <FaqItem title="Replay-on-error on, full-session replays off">
+    Captures the broken flow without storing healthy sessions.
+  </FaqItem>
+  <FaqItem title="Single env var per side: SENTRY_DSN (API), VITE_SENTRY_DSN (UI)">
+    Same protocol regardless of backend; swap is one redeploy.
+  </FaqItem>
+</FaqGroup>
 
 ## How it's wired
 
@@ -54,10 +66,14 @@ For production hardening (Basic Auth, HTTPS, real SMTP), see the [GlitchTip docs
 
 Change only the DSN:
 
-| Backend | API var | UI var |
-|---|---|---|
-| Sentry | `SENTRY_DSN=https://...@sentry.io/...` | `VITE_SENTRY_DSN=https://...@sentry.io/...` |
-| GlitchTip (self-hosted) | `SENTRY_DSN=https://...@glitchtip.example.com/...` | `VITE_SENTRY_DSN=https://...@glitchtip.example.com/...` |
+<FaqGroup>
+  <FaqItem title="Sentry (hosted)" open>
+    API: `SENTRY_DSN=https://...@sentry.io/...`. UI: `VITE_SENTRY_DSN=https://...@sentry.io/...`.
+  </FaqItem>
+  <FaqItem title="GlitchTip (self-hosted)">
+    API: `SENTRY_DSN=https://...@glitchtip.example.com/...`. UI: `VITE_SENTRY_DSN=https://...@glitchtip.example.com/...`.
+  </FaqItem>
+</FaqGroup>
 
 No SDK changes. The infrastructure is the variable, not the code.
 

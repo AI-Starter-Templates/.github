@@ -4,6 +4,10 @@ description: Clone the sibling repos, run a script, log in. Five minutes from ze
 ---
 
 import { Steps, Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../components/FaqGroup.astro";
+import FaqItem from "../../components/FaqItem.astro";
+
+You are cloning a production spine (auth, contracts, lint rules, deploy wiring), not an empty tutorial repo. [Why BoringStack](/architecture/why-boringstack/) explains what ships in the box.
 
 Local stack up in about five minutes. Postgres, Valkey, API, UI, all in Docker. Sign up via the registration form (or set `SUPERUSER_EMAIL` + `SUPERUSER_PASSWORD` in `compose/.env` first to bootstrap an admin user). The dev stack uses Vite's dev-server to proxy `/api/*` to api-dev, so the browser sees one origin and there are no CORS preflights.
 
@@ -69,13 +73,23 @@ If you set `SUPERUSER_EMAIL` + `SUPERUSER_PASSWORD` in `compose/.env` before boo
 
 ## What's running
 
-| Service | Host port | What it does |
-| --- | --- | --- |
-| `postgres` | 5432 | App database, schemas `auth`, `billing`, `audit`, `app` |
-| `valkey` | 6379 | Cache + BullMQ queues |
-| `api-migrate` | (one-shot) | `db:push` + (optionally) seed the superuser, then exits |
-| `api-dev` | 3000 | Bun + Elysia API, hot reload via bind mount |
-| `ui-dev` | 3001 | Vite dev server, hot reload, proxies `/api/*` to `api-dev` |
+<FaqGroup>
+  <FaqItem title="postgres (port 5432)" open>
+    App database; schemas `auth`, `billing`, `audit`, `app`.
+  </FaqItem>
+  <FaqItem title="valkey (port 6379)">
+    Cache and BullMQ queues.
+  </FaqItem>
+  <FaqItem title="api-migrate (one-shot)">
+    `db:push` and optional superuser seed, then exits.
+  </FaqItem>
+  <FaqItem title="api-dev (port 3000)">
+    Bun + Elysia API with hot reload via bind mount.
+  </FaqItem>
+  <FaqItem title="ui-dev (port 3001)">
+    Vite dev server; proxies `/api/*` to `api-dev`.
+  </FaqItem>
+</FaqGroup>
 
 Traefik runs only in the prod profile. In prod it terminates TLS and path-routes `/api/*` + `/health` to the api container, everything else to ui, on one domain.
 
@@ -88,7 +102,11 @@ Traefik runs only in the prod profile. In prod it terminates TLS and path-routes
 
 ## Stop the stack
 
-| Task | Command | Data preserved? |
-| --- | --- | --- |
-| Stop, keep data | `./scripts/compose-down.sh` | Yes |
-| Stop and wipe data | `./scripts/compose-down-clean.sh` | No (prompts; `CONFIRM=yes` to skip) |
+<FaqGroup>
+  <FaqItem title="Stop, keep data" open>
+    `./scripts/compose-down.sh`. Volumes stay on disk.
+  </FaqItem>
+  <FaqItem title="Stop and wipe data">
+    `./scripts/compose-down-clean.sh`. Prompts before delete; `CONFIRM=yes` to skip the prompt.
+  </FaqItem>
+</FaqGroup>

@@ -4,6 +4,8 @@ description: Prometheus + Grafana + Loki + Promtail overlay. Pre-provisioned das
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
 `WITH_OBSERVABILITY=1` adds a full metrics-and-logs stack to the infra. It runs on the same host as the app; no SaaS, no per-event billing.
 
@@ -35,27 +37,55 @@ flowchart LR
 
 ## Design choices
 
-| Decision | Reason |
-|---|---|
-| Self-hosted, not SaaS | Zero per-event cost; data stays on your infra |
-| Prometheus + Loki, not OpenTelemetry collector | Two well-known projects beat one unfamiliar abstraction |
-| Promtail labels logs per container | "Show me api-prod errors in the last hour" is one filter, not a regex |
-| Grafana auto-provisions datasources | Stack boots usable; no manual wiring after `up -d` |
-| Alertmanager included but not wired by default | Pager strategy is project-specific; the plumbing's there when you need it |
-| Bundled exporters: node, postgres, valkey | The metrics you'll actually consult during an incident |
+<FaqGroup>
+  <FaqItem title="Self-hosted, not SaaS" open>
+    Zero per-event cost; data stays on your infra.
+  </FaqItem>
+  <FaqItem title="Prometheus + Loki, not OpenTelemetry collector">
+    Two well-known projects beat one unfamiliar abstraction.
+  </FaqItem>
+  <FaqItem title="Promtail labels logs per container">
+    "Show me api-prod errors in the last hour" is one filter, not a regex.
+  </FaqItem>
+  <FaqItem title="Grafana auto-provisions datasources">
+    Stack boots usable; no manual wiring after `up -d`.
+  </FaqItem>
+  <FaqItem title="Alertmanager included but not wired by default">
+    Pager strategy is project-specific; the plumbing is there when you need it.
+  </FaqItem>
+  <FaqItem title="Bundled exporters: node, postgres, valkey">
+    The metrics you will actually consult during an incident.
+  </FaqItem>
+</FaqGroup>
 
 ## What you get out of the box
 
-| Component | Where | Default |
-|---|---|---|
-| Grafana | `:3010` (host) | admin / change-me (override via env) |
-| Prometheus | internal | Configurable retention (see `compose/prometheus/prometheus.yml`) |
-| Loki | internal | Per-container labels; configurable retention |
-| Promtail | sidecar | Scrapes `/var/lib/docker/containers/*.log` |
-| node-exporter | host metrics | CPU, memory, disk, network |
-| postgres-exporter | Postgres metrics | Connections, transactions, table sizes |
-| valkey-exporter | Valkey metrics | Hit ratio, evictions, memory |
-| Alertmanager | internal | Routes defined in `alertmanager/` |
+<FaqGroup>
+  <FaqItem title="Grafana" open>
+    Host `:3010`. Default admin / change-me (override via env).
+  </FaqItem>
+  <FaqItem title="Prometheus">
+    Internal. Configurable retention (see `compose/prometheus/prometheus.yml`).
+  </FaqItem>
+  <FaqItem title="Loki">
+    Internal. Per-container labels; configurable retention.
+  </FaqItem>
+  <FaqItem title="Promtail">
+    Sidecar. Scrapes `/var/lib/docker/containers/*.log`.
+  </FaqItem>
+  <FaqItem title="node-exporter">
+    Host metrics: CPU, memory, disk, network.
+  </FaqItem>
+  <FaqItem title="postgres-exporter">
+    Postgres metrics: connections, transactions, table sizes.
+  </FaqItem>
+  <FaqItem title="valkey-exporter">
+    Valkey metrics: hit ratio, evictions, memory.
+  </FaqItem>
+  <FaqItem title="Alertmanager">
+    Internal. Routes defined in `alertmanager/`.
+  </FaqItem>
+</FaqGroup>
 
 Drop dashboard JSON exports into `compose/grafana/dashboards/` and Grafana auto-loads them within 30s. Datasources and the dashboard provider are already wired in `compose/grafana/provisioning/`.
 

@@ -4,6 +4,10 @@ description: Why BoringStack ships as independent sibling repositories, what run
 ---
 
 import { Aside, FileTree } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
+
+[Why BoringStack](/architecture/why-boringstack/) covers the problems the templates solve. This page is the map: sibling repos for API, UI, and infra, each with its own CI and Docker image, composed locally through the infra repo's compose file.
 
 BoringStack is a set of sibling repos. The runtime is composed from `api-template`, `ui-template`, and `infra-docker-compose-template`. The `infra-bootstrap-tofu-template` repo is optional and only used to provision a VPS.
 
@@ -43,28 +47,36 @@ boringstack/                 ← parent dir; can have any name
 
 ## What lives where
 
-| Concern | Repo |
-|---|---|
-| HTTP routes, auth, OAuth, password hashing | api-template |
-| Email send + provider abstraction | api-template |
-| BullMQ jobs, queue workers | api-template |
-| Audit log writes | api-template |
-| Drizzle schema + migrations | api-template |
-| Pages, components, queries, stores, routes | ui-template |
-| OpenAPI client (generated from API's `/swagger/json`) | ui-template |
-| i18n (en, de), shadcn/ui primitives | ui-template |
-| Storybook, Playwright e2e | ui-template |
-| docker-compose YAMLs, profile overlays | infra-docker-compose-template |
-| Prometheus / Grafana / Loki / Promtail configs | infra-docker-compose-template |
-| Traefik labels, ACME, security middlewares | infra-docker-compose-template |
-| Backup script, runbooks | infra-docker-compose-template |
-| Hetzner provisioning, Cloudflare DNS, cloud-init | infra-bootstrap-tofu-template |
+<FaqGroup>
+  <FaqItem title="api-template" open>
+    - HTTP routes, auth, OAuth, password hashing
+    - Email send and provider abstraction
+    - BullMQ jobs and queue workers
+    - Audit log writes
+    - Drizzle schema and migrations
+  </FaqItem>
+  <FaqItem title="ui-template">
+    - Pages, components, queries, stores, routes
+    - OpenAPI client (from `/swagger/json`)
+    - i18n (en, de), shadcn/ui primitives
+    - Storybook, Playwright e2e
+  </FaqItem>
+  <FaqItem title="infra-docker-compose-template">
+    - docker-compose YAMLs and profile overlays
+    - Prometheus, Grafana, Loki, Promtail configs
+    - Traefik labels, ACME, security middlewares
+    - Backup scripts and runbooks
+  </FaqItem>
+  <FaqItem title="infra-bootstrap-tofu-template (optional)">
+    - Hetzner provisioning, Cloudflare DNS, cloud-init
+  </FaqItem>
+</FaqGroup>
 
 ## The contract between API and UI
 
 The API exposes its OpenAPI document at `/swagger/json`. The UI ships a `pnpm generate:api` script that reads that document and rewrites `src/lib/api/schema.d.ts`. The UI's typed `apiClient` (built on `openapi-fetch`) refuses, at compile time, to call a path that isn't in the schema or pass a body that doesn't match.
 
-So when the API gains, renames, or removes a route, the UI either fails to typecheck or generates the new contract on the next `pnpm generate:api`. There is no "I thought the field was `userName` not `username`" class of bug. TypeScript catches it before runtime.
+So when the API gains, renames, or removes a route, the UI either fails to typecheck or generates the new contract on the next `pnpm generate:api`. TypeScript catches field-name mismatches before runtime.
 
 See [OpenAPI client](/ui/openapi-client/) for the full flow.
 
@@ -76,6 +88,7 @@ The api-template's `.env.example` and the infra's `api.*.env.example` overlap de
 
 In prod the `build:` reference is a fallback. The default `image:` reference pulls a pre-built image from `ghcr.io/${IMAGE_OWNER}/${API_IMAGE_NAME}:${API_IMAGE_TAG}`, published by the api/ui repos' release workflows. See [Deployment](/topics/deployment/).
 
-## Why not a monorepo?
+## Related
 
-[See "Why not a monorepo"](/architecture/why-not-monorepo/) for the long version. Short version: independent deploy lifecycles, separate dependency surfaces, and you should be able to fork just the API for a project that doesn't need a SPA.
+- [Separation of concerns](/architecture/separation-of-concerns/)
+- [Why BoringStack](/architecture/why-boringstack/)

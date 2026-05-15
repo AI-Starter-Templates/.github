@@ -4,6 +4,8 @@ description: Vitest for units, Testing Library for components, Playwright for en
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
 Three test layers, each earning its keep:
 
@@ -18,23 +20,43 @@ flowchart LR
 
 ## Design choices
 
-| Decision | Reason |
-|---|---|
-| Three layers, not one | Unit tests can't catch routing bugs; e2e can't catch every hook edge case |
-| No MSW | Hand-written mocks drift from the real backend; HTTP-shaped tests run e2e instead |
-| e2e runs against the real stack (`./dev.sh up -d`) | Catches API-shape drift and integration regressions for free |
-| Playwright with Chromium + WebKit | Safari behavior bugs surface in CI, not from a user report |
-| Visual snapshots per-platform | macOS vs Linux font rendering differs; baselines committed per OS |
-| Coverage excludes `*.stories.tsx`, `*.types.ts`, `*.constants.ts` | Numbers only count files you can meaningfully test |
+<FaqGroup>
+  <FaqItem title="Three layers, not one" open>
+    Unit tests cannot catch routing bugs; e2e cannot catch every hook edge case.
+  </FaqItem>
+  <FaqItem title="No MSW">
+    Hand-written mocks drift from the real backend; HTTP-shaped tests run e2e instead.
+  </FaqItem>
+  <FaqItem title="e2e runs against the real stack (./dev.sh up -d)">
+    Catches API-shape drift and integration regressions for free.
+  </FaqItem>
+  <FaqItem title="Playwright with Chromium + WebKit">
+    Safari behavior bugs surface in CI, not from a user report.
+  </FaqItem>
+  <FaqItem title="Visual snapshots per-platform">
+    macOS vs Linux font rendering differs; baselines committed per OS.
+  </FaqItem>
+  <FaqItem title="Coverage excludes *.stories.tsx, *.types.ts, *.constants.ts">
+    Numbers only count files you can meaningfully test.
+  </FaqItem>
+</FaqGroup>
 
 ## What lives where
 
-| Test type | Location | Run |
-|---|---|---|
-| Unit / component | `src/**/*.test.ts` colocated with source | `pnpm test` |
-| e2e | `e2e/*.spec.ts` | `pnpm e2e` (needs dev stack up) |
-| Visual baselines | `e2e/visual.spec.ts-snapshots/` | `pnpm e2e:visual:update` to refresh |
-| Coverage | n/a | `pnpm test:ci` |
+<FaqGroup>
+  <FaqItem title="Unit / component" open>
+    Location: `src/**/*.test.ts` colocated with source. Run: `pnpm test`.
+  </FaqItem>
+  <FaqItem title="e2e">
+    Location: `e2e/*.spec.ts`. Run: `pnpm e2e` (needs dev stack up).
+  </FaqItem>
+  <FaqItem title="Visual baselines">
+    Location: `e2e/visual.spec.ts-snapshots/`. Run: `pnpm e2e:visual:update` to refresh.
+  </FaqItem>
+  <FaqItem title="Coverage">
+    Run via `pnpm test:ci`.
+  </FaqItem>
+</FaqGroup>
 
 ## Why no mock layer
 

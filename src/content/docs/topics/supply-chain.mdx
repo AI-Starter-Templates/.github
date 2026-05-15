@@ -4,6 +4,8 @@ description: Every BoringStack repo refuses to install npm package versions youn
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
 npm supply-chain attacks usually run on the same clock: a maintainer's account gets hijacked, a malicious version is published, the community notices and yanks within hours to a couple of days. The window where the malicious version is live but undetected is short.
 
@@ -11,21 +13,37 @@ Every BoringStack repo applies a **seven-day minimum release age**: package vers
 
 ## How it works per package manager
 
-| Repo | Package manager | Setting |
-|---|---|---|
-| `api-template` | Bun | `bunfig.toml`: `[install] minimumReleaseAge = 604800` (seconds) |
-| `ui-template` | pnpm | `.npmrc`: `minimum-release-age=10080` (minutes) |
-| `.github` (docs) | pnpm | `.npmrc`: `minimum-release-age=10080` |
-| `infra-docker-compose-template` | (no JS deps) | n/a |
-| `infra-bootstrap-tofu-template` | (no JS deps) | n/a |
+<FaqGroup>
+  <FaqItem title="api-template (Bun)" open>
+    `bunfig.toml`: `[install] minimumReleaseAge = 604800` (seconds).
+  </FaqItem>
+  <FaqItem title="ui-template (pnpm)">
+    `.npmrc`: `minimum-release-age=10080` (minutes).
+  </FaqItem>
+  <FaqItem title=".github docs (pnpm)">
+    `.npmrc`: `minimum-release-age=10080`.
+  </FaqItem>
+  <FaqItem title="infra-docker-compose-template">
+    No JS deps; n/a.
+  </FaqItem>
+  <FaqItem title="infra-bootstrap-tofu-template">
+    No JS deps; n/a.
+  </FaqItem>
+</FaqGroup>
 
 ## Trade-offs
 
-| Cost | Mitigation |
-|---|---|
-| First-time installs may fail when the version range resolves to a brand-new release | Pin to a specific older version or wait |
-| Critical security patches are delayed seven days | Override per-package via `minimumReleaseAgeExclude` (pnpm) when a real CVE drops |
-| Slightly behind the bleeding edge | This is the point |
+<FaqGroup>
+  <FaqItem title="First-time installs may fail when the range resolves to a brand-new release" open>
+    Pin to a specific older version or wait.
+  </FaqItem>
+  <FaqItem title="Critical security patches are delayed seven days">
+    Override per-package via `minimumReleaseAgeExclude` (pnpm) when a real CVE drops.
+  </FaqItem>
+  <FaqItem title="Slightly behind the bleeding edge">
+    This is the point.
+  </FaqItem>
+</FaqGroup>
 
 ## Overriding for a specific package
 

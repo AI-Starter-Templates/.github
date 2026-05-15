@@ -4,6 +4,8 @@ description: One pluggable interface, five providers (Cloudflare default, Resend
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
 Email has three independently swappable layers:
 
@@ -31,13 +33,23 @@ Two retry layers stack when queues are on: the inner `retryWithBackoff` handles 
 
 ## Design choices
 
-| Decision | Reason |
-|---|---|
-| Single `IEmailService` interface | Adding Postmark or SES later is one file |
-| `noop` provider as fallback when keys are empty | Dev boots without credentials; tests stay deterministic |
-| Templates precompiled to JSON at build | No Handlebars parser in the hot path; no template-injection from user data |
-| `sendTemplate()` queue-aware, `sendTemplateNow()` inline | Workers (already inside a retry envelope) skip the queue; request handlers go through it |
-| Address masking in logs | Email addresses never reach the log pipeline raw |
+<FaqGroup>
+  <FaqItem title="Single IEmailService interface" open>
+    Adding Postmark or SES later is one file.
+  </FaqItem>
+  <FaqItem title="noop provider as fallback when keys are empty">
+    Dev boots without credentials; tests stay deterministic.
+  </FaqItem>
+  <FaqItem title="Templates precompiled to JSON at build">
+    No Handlebars parser in the hot path; no template-injection from user data.
+  </FaqItem>
+  <FaqItem title="sendTemplate() queue-aware, sendTemplateNow() inline">
+    Workers (already inside a retry envelope) skip the queue; request handlers go through it.
+  </FaqItem>
+  <FaqItem title="Address masking in logs">
+    Email addresses never reach the log pipeline raw.
+  </FaqItem>
+</FaqGroup>
 
 ## The provider contract
 

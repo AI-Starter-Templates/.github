@@ -4,10 +4,12 @@ description: Boring deployment. Single-host VPS, Docker, the templates forked, G
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
-No Kubernetes, no platform, no app-specific CI runner. A VPS, the templates forked, one env file, one `tofu apply` (or one `compose up -d`). HTTPS provisions itself. The perimeter is locked by Cloudflare + a Hetzner firewall.
+BoringStack ships a production path on a VPS you control: Docker Compose, GHCR images, Traefik TLS, Cloudflare at the edge. [Why BoringStack](/architecture/why-boringstack/) ties that to the rest of the templates.
 
-Every layer that isn't there is a layer you don't have to operate.
+Fork the templates, fill `compose/.env`, then `compose up -d` on the server, or use [OpenTofu](/topics/provisioning-with-tofu/) for first boot on Hetzner. HTTPS provisions via ACME. The perimeter uses Cloudflare plus a Hetzner cloud firewall.
 
 ## The mental model
 
@@ -15,15 +17,29 @@ Push to `main` on `api-template` or `ui-template`. The release workflow builds a
 
 ## Design choices
 
-| Decision | Reason |
-|---|---|
-| Single-host first | One VPS handles real traffic for years; horizontal scaling is a later problem |
-| Pre-built images from GHCR, not on-box builds | Reproducible deploys; cold pushes take 2 min instead of waiting for npm install |
-| WUD notify-only, not auto-pull | Surprise restarts are worse than missed CVE notifications |
-| Traefik + ACME, not a cloud LB | TLS is automatic and free; the LB isn't a bill line item |
-| Same-origin path routing on the apex | One TLS cert, no CORS, no `api.` subdomain |
-| Cloudflare-only ingress on 80/443 | Random scans bounce off the firewall; only Cloudflare can hit your origin |
-| `Dockerfile.prod` is multi-stage non-root | Smallest possible runtime, no shell in the prod image |
+<FaqGroup>
+  <FaqItem title="Single-host first" open>
+    One VPS carries real traffic for years; scale out when you need it.
+  </FaqItem>
+  <FaqItem title="Pre-built images from GHCR">
+    Reproducible deploys; the VPS pulls images instead of running `npm install` on box.
+  </FaqItem>
+  <FaqItem title="WUD notify-only">
+    You choose when to pull; no surprise restarts on a new tag.
+  </FaqItem>
+  <FaqItem title="Traefik + ACME">
+    TLS on the origin without a separate load-balancer bill.
+  </FaqItem>
+  <FaqItem title="Same-origin path routing on the apex">
+    One cert for `/` and `/api/*`; no `api.` subdomain.
+  </FaqItem>
+  <FaqItem title="Cloudflare-only ingress on 80/443">
+    Only Cloudflare reaches the origin; port scans hit a closed firewall.
+  </FaqItem>
+  <FaqItem title="Multi-stage non-root `Dockerfile.prod`">
+    Small runtime image without a shell in prod.
+  </FaqItem>
+</FaqGroup>
 
 ## First-time deploy
 
@@ -62,11 +78,17 @@ For changes to the infra YAML or env vars, `git pull` the infra repo on the VPS 
 
 ## Image update strategy
 
-| Strategy | When | How |
-|---|---|---|
-| WUD notify + manual pull | Default | `WITH_WUD=1`, Discord ping or dashboard at `:3033`, then the two commands above |
-| Hands-off auto-pull | Lower-stakes envs only | Not in the template; swap to Watchtower or enable WUD's docker-compose trigger |
-| Pin to a specific tag | Production hardening | Set `API_IMAGE_TAG=sha-abc1234` or `:0.3.0` in `compose/.env`, never auto-update |
+<FaqGroup>
+  <FaqItem title="WUD notify + manual pull (default)" open>
+  `WITH_WUD=1`, Discord ping or dashboard at `:3033`, then pull and restart on the VPS when you are ready.
+  </FaqItem>
+  <FaqItem title="Hands-off auto-pull">
+  Lower-stakes envs only. Swap to Watchtower or enable WUD's docker-compose trigger if you want unattended pulls.
+  </FaqItem>
+  <FaqItem title="Pin to a specific tag">
+  Set `API_IMAGE_TAG=sha-abc1234` or `:0.3.0` in `compose/.env` and update deliberately.
+  </FaqItem>
+</FaqGroup>
 
 The default ships notify-only because surprise restarts in production are a worse failure mode than a missed CVE notification. See [Image updates](/runbooks/image-updates/).
 
@@ -94,12 +116,20 @@ When single-host runs out of room, Postgres is almost always the bottleneck. In 
 
 ## Provider notes
 
-| Provider | Pros | Watch out for |
-|---|---|---|
-| Hetzner Cloud | Cheap, EU-friendly, fast network | New accounts get fraud-checked; allow 1–2 days |
-| OVH | Cheap, IPv4 included | Web console is rough; use the API |
-| DigitalOcean | Polished UX, good docs | Cheaper alternatives for the same specs |
-| Your own metal | Cheapest at scale | You're now the datacenter operator |
+<FaqGroup>
+  <FaqItem title="Hetzner Cloud" open>
+    EU-friendly pricing and network. New accounts may sit in fraud review for a day or two.
+  </FaqItem>
+  <FaqItem title="OVH">
+    Low cost with IPv4 included. Prefer the API over the web console for automation.
+  </FaqItem>
+  <FaqItem title="DigitalOcean">
+    Polished UX and docs. Compare specs against Hetzner/OVH for your workload.
+  </FaqItem>
+  <FaqItem title="Your own metal">
+    Lowest cost at scale; you operate the hardware and networking.
+  </FaqItem>
+</FaqGroup>
 
 Cloudflare in front is standard regardless of provider; that's what makes the firewall + IP allowlist work.
 

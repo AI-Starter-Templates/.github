@@ -4,19 +4,33 @@ description: react-i18next with type-safe keys, a single namespace by default, a
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
 The ui-template uses [react-i18next](https://react.i18next.com) for translation. Keys are type-safe (typos fail the build) and hardcoded strings in JSX are a lint error, so a forgotten translation can't ship.
 
 ## Design choices
 
-| Decision | Reason |
-|---|---|
-| Single `common` namespace by default | Keep it simple; split into more namespaces only when one balloons past ~200 keys |
-| Locales detected from the browser, fallback to first in `VITE_LOCALES` | Friendly default for international visitors; predictable for tests |
-| English + German out of the box | Two locales prove the pipeline; pick any two you actually need and replace |
-| Catalog files are plain JSON | Trivial to diff, translate, and review |
-| No Suspense for translations | Avoids a flash of fallback UI during i18n init |
-| Hardcoded JSX strings rejected by lint | Forgotten translations can't ship; the linter catches the JSX literal |
+<FaqGroup>
+  <FaqItem title="Single common namespace by default" open>
+    Keep it simple; split into more namespaces only when one balloons past ~200 keys.
+  </FaqItem>
+  <FaqItem title="Locales detected from the browser, fallback to first in VITE_LOCALES">
+    Friendly default for international visitors; predictable for tests.
+  </FaqItem>
+  <FaqItem title="English + German out of the box">
+    Two locales prove the pipeline; pick any two you actually need and replace.
+  </FaqItem>
+  <FaqItem title="Catalog files are plain JSON">
+    Trivial to diff, translate, and review.
+  </FaqItem>
+  <FaqItem title="No Suspense for translations">
+    Avoids a flash of fallback UI during i18n init.
+  </FaqItem>
+  <FaqItem title="Hardcoded JSX strings rejected by lint">
+    Forgotten translations cannot ship; the linter catches the JSX literal.
+  </FaqItem>
+</FaqGroup>
 
 ## How it's wired
 

@@ -4,6 +4,10 @@ description: Bun + Elysia + Drizzle + Postgres + Valkey + BullMQ. The architectu
 ---
 
 import { Aside, FileTree } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
+
+The API layer owns security, data, and background work. [Why BoringStack](/architecture/why-boringstack/) and [Separation of concerns](/architecture/separation-of-concerns/) describe how that fits the rest of the stack.
 
 A production-shaped HTTP API: auth, sessions, OAuth, email, queues, audit log, Stripe billing, structured logging, env validator that refuses to boot if anything is missing. Architectural rules (routes vs services vs types, env access, queues) keep adding features cheap as the codebase grows.
 
@@ -23,13 +27,23 @@ A feature is three files with three jobs. Lint plugins forbid them from leaking 
 
 ## Design choices
 
-| Decision | Reason |
-|---|---|
-| Per-feature folders, not horizontal layers | Adding a feature is one folder, not edits across `routes/`, `services/`, `models/` |
-| Routes/services/types separation enforced by lint | The rule survives refactors and new authors |
-| Frozen `env` object, no `process.env` outside the validator | Misconfigured boots fail fast; runtime can't introduce new env dependencies |
-| Pluggable infra (email provider, AI provider, cache, queues) | Each can be swapped with a one-env-var change; dev runs without keys |
-| Drizzle, not Prisma | Real SQL shape; no shadow database; migrations are plain SQL files |
+<FaqGroup>
+  <FaqItem title="Per-feature folders" open>
+    Adding a feature is one folder instead of edits across `routes/`, `services/`, and `models/`.
+  </FaqItem>
+  <FaqItem title="Routes / services / types enforced by lint">
+    The split survives refactors and new authors.
+  </FaqItem>
+  <FaqItem title="Frozen `env` object">
+    `process.env` only in the validator; misconfigured boots fail fast.
+  </FaqItem>
+  <FaqItem title="Pluggable infra">
+    Email, AI, cache, and queues swap with an env var; dev runs without vendor keys.
+  </FaqItem>
+  <FaqItem title="Drizzle ORM">
+    SQL-shaped schema and plain SQL migration files.
+  </FaqItem>
+</FaqGroup>
 
 ## File layout
 
@@ -69,7 +83,7 @@ Each lives in `src/lib/` or `src/config/` and has its own page:
 
 ## Lint as the contract
 
-The architecture is held in place by a family of [custom ESLint plugins](/architecture/lint-as-contract/). Agents skip `AGENTS.md`; lint still enforces the rules. `bun run validate` is the merge gate.
+The architecture is held in place by a family of [custom ESLint plugins](/architecture/lint-as-contract/). `bun run validate` is the merge gate.
 
 ## Source
 

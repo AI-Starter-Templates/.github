@@ -3,19 +3,36 @@ title: Architecture rules
 description: "The UI-specific lint rules that hold the component anatomy in place: hook placement, className discipline, file-naming, prop ordering."
 ---
 
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
+
 The ui-template enforces its architecture through ESLint, not vibes. The UI-specific work is [`eslint-plugin-react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture); the rules below are what it catches, grouped by intent. It composes with the shared plugins (resource-architecture, module-boundaries, structured-logging, env-access, test-conventions) that both repos use; full inventory at [Lint as the contract](/architecture/lint-as-contract/).
 
 ## What it enforces
 
-| Concern | What's caught |
-|---|---|
-| Component anatomy | `useState` / `useEffect` / other hooks inside `.tsx` files; logic belongs in `.hooks.ts` |
-| Single semantic module | A `.tsx` file holding constants, utils, or types; each belongs in its own file (`.constants.ts`, `.utils.ts`, `.types.ts`) |
-| `className` discipline | Long inline class strings without `cn(...)`; classes pulled out so conditional logic is readable |
-| File-naming | PascalCase for components, kebab-case for non-components, suffix matches purpose (`.hooks.ts`, `.queries.ts`, `.store.ts`) |
-| Prop ordering | Required props first, then optional, then handlers; predictable readout in JSX call sites |
-| View object boundary | Components don't import TanStack Query / Zustand / `import.meta.env` directly; they read the view object their hook returns |
-| Queries layer | `useQuery` only inside `*.queries.ts`; component hooks consume the resulting query hooks, never call TanStack Query directly |
+<FaqGroup>
+  <FaqItem title="Component anatomy" open>
+    No hooks in `.tsx`; logic belongs in `.hooks.ts`.
+  </FaqItem>
+  <FaqItem title="Single semantic module">
+    Constants, utils, and types each get their own file (`.constants.ts`, `.utils.ts`, `.types.ts`).
+  </FaqItem>
+  <FaqItem title="className discipline">
+    Use `cn(...)`; pull long class strings out for readable conditionals.
+  </FaqItem>
+  <FaqItem title="File naming">
+    PascalCase components; kebab-case otherwise; suffix matches role (`.hooks.ts`, `.queries.ts`, `.store.ts`).
+  </FaqItem>
+  <FaqItem title="Prop ordering">
+    Required props, optional props, then handlers.
+  </FaqItem>
+  <FaqItem title="View object boundary">
+    Components read the hook's view object; no direct TanStack Query, Zustand, or `import.meta.env`.
+  </FaqItem>
+  <FaqItem title="Queries layer">
+    `useQuery` only in `*.queries.ts`; component hooks call those query hooks.
+  </FaqItem>
+</FaqGroup>
 
 Each rule has a fix-it suggestion where mechanical; the rest fail the lint gate and need a real edit.
 

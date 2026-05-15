@@ -4,6 +4,8 @@ description: BullMQ on Valkey (Redis-protocol) for background jobs. One QueueMan
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
 Background work uses [BullMQ](https://docs.bullmq.io) over the same Valkey the cache lives on. The mental model:
 
@@ -35,25 +37,45 @@ sequenceDiagram
 
 ## Design choices
 
-| Decision | Reason |
-|---|---|
-| One `QueueManager` per process | Centralized lifecycle, shutdown, admin stats; new queues can't accidentally skip the retry config |
-| Per-queue directory with five small files | Constants + queue + worker + setup + types stay together; producer & consumer can't disagree on names |
-| Inline fallback when `QUEUES_ENABLED=false` | Dev and tests boot without Valkey or a separate worker process |
-| `removeOnComplete: { age: 1h, count: 100 }` | Bounded Valkey usage without losing recent successes for the dashboard |
-| `removeOnFail: false` | Failed jobs stick around for inspection; manual purge if needed |
+<FaqGroup>
+  <FaqItem title="One QueueManager per process" open>
+    Centralized lifecycle, shutdown, admin stats; new queues cannot accidentally skip the retry config.
+  </FaqItem>
+  <FaqItem title="Per-queue directory with five small files">
+    Constants + queue + worker + setup + types stay together; producer and consumer cannot disagree on names.
+  </FaqItem>
+  <FaqItem title="Inline fallback when QUEUES_ENABLED=false">
+    Dev and tests boot without Valkey or a separate worker process.
+  </FaqItem>
+  <FaqItem title="removeOnComplete: { age: 1h, count: 100 }">
+    Bounded Valkey usage without losing recent successes for the dashboard.
+  </FaqItem>
+  <FaqItem title="removeOnFail: false">
+    Failed jobs stick around for inspection; manual purge if needed.
+  </FaqItem>
+</FaqGroup>
 
 ## The shape of a queue
 
 Every queue is a small directory under `src/queues/<name>/`:
 
-| File | Holds |
-|---|---|
-| `<name>.constants.ts` | Queue name, job name, retry defaults; one place so producer + consumer can't drift |
-| `<name>.types.ts` | The job-data type. Strict: BullMQ serializes to JSON; type-drift here means 3 AM debugging |
-| `<name>.queue.ts` | BullMQ `Queue` factory |
-| `<name>.worker.ts` | BullMQ `Worker` + structured-logged event handlers |
-| `<name>.setup.ts` | Wires queue + worker together at boot |
+<FaqGroup>
+  <FaqItem title="name.constants.ts" open>
+    Queue name, job name, retry defaults; one place so producer + consumer cannot drift.
+  </FaqItem>
+  <FaqItem title="name.types.ts">
+    The job-data type. Strict: BullMQ serializes to JSON; type-drift here means 3 AM debugging.
+  </FaqItem>
+  <FaqItem title="name.queue.ts">
+    BullMQ `Queue` factory.
+  </FaqItem>
+  <FaqItem title="name.worker.ts">
+    BullMQ `Worker` + structured-logged event handlers.
+  </FaqItem>
+  <FaqItem title="name.setup.ts">
+    Wires queue + worker together at boot.
+  </FaqItem>
+</FaqGroup>
 
 The reference implementation is `email-delivery`; it's the simplest worker that exists (render a template, hand off to the email provider), so it's a good copy-target.
 

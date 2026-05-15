@@ -4,121 +4,237 @@ description: One place to look up "what does FOO_BAR do, and where does it live?
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
-Each repo has its own `.env.example` that's the **source of truth** for vars it consumes. This page is an index; it tells you which repo owns a given var, why it exists, and which `.env.example` to read for the full reference (defaults, comments, prod-only flags).
+Each repo has its own `.env.example` that is the **source of truth** for vars it consumes. This page is an index; it tells you which repo owns a given var, why it exists, and which `.env.example` to read for the full reference (defaults, comments, prod-only flags).
 
 ## Which file to edit
 
-| Layer | File | Consumed by |
-|---|---|---|
-| **api-template** | `.env` in `api-template/` | The Bun process directly when running outside Docker |
-| **ui-template** | `.env.local` in `ui-template/` | Vite at build/dev time (`VITE_*` only) |
-| **infra (dev)** | `compose/.env` in `infra-docker-compose-template/` | Compose: injected into the api and ui dev containers |
-| **infra (prod)** | `compose/.env` + `compose/api.prod.env` | Compose: prod profile uses separate api env file |
+<FaqGroup>
+  <FaqItem title="api-template: .env in api-template/" open>
+    Consumed by the Bun process directly when running outside Docker.
+  </FaqItem>
+  <FaqItem title="ui-template: .env.local in ui-template/">
+    Vite at build and dev time (`VITE_*` only).
+  </FaqItem>
+  <FaqItem title="infra (dev): compose/.env in infra-docker-compose-template/">
+    Compose: injected into the api and ui dev containers.
+  </FaqItem>
+  <FaqItem title="infra (prod): compose/.env + compose/api.prod.env">
+    Compose: prod profile uses a separate api env file.
+  </FaqItem>
+</FaqGroup>
 
-For Docker-Compose-driven setups (the default), **`compose/.env` is the single file you edit.** It overrides defaults baked into `docker-compose.yml` and gets injected into the right containers via `env_file:` references.
+For Docker Compose-driven setups (the default), **`compose/.env` is the single file you edit.** It overrides defaults baked into `docker-compose.yml` and gets injected into the right containers via `env_file:` references.
 
 ## Categories
 
 ### Process + observability
 
-| Var | Repo | Required? | Notes |
-|---|---|---|---|
-| `NODE_ENV` | api | yes | `development` / `production` / `test`; gates prod-only invariants |
-| `PORT` | api | no | Default 3000 |
-| `LOG_LEVEL` | api | no | `debug` / `info` / `warn` / `error` |
-| `SENTRY_DSN` | api | no | Empty → SDK is a no-op |
-| `SENTRY_TRACES_SAMPLE_RATE` | api | no | 0..1, default 0.1 |
-| `VITE_SENTRY_DSN` | ui | no | Same wire as Sentry/GlitchTip |
+<FaqGroup>
+  <FaqItem title="NODE_ENV" open>
+    **Repo:** api. **Required:** yes. Values `development`, `production`, or `test`; gates prod-only invariants.
+  </FaqItem>
+  <FaqItem title="PORT">
+    **Repo:** api. **Required:** no. Default 3000.
+  </FaqItem>
+  <FaqItem title="LOG_LEVEL">
+    **Repo:** api. **Required:** no. One of `debug`, `info`, `warn`, `error`.
+  </FaqItem>
+  <FaqItem title="SENTRY_DSN">
+    **Repo:** api. **Required:** no. Empty means the SDK is a no-op.
+  </FaqItem>
+  <FaqItem title="SENTRY_TRACES_SAMPLE_RATE">
+    **Repo:** api. **Required:** no. Range 0 to 1, default 0.1.
+  </FaqItem>
+  <FaqItem title="VITE_SENTRY_DSN">
+    **Repo:** ui. **Required:** no. Same wire protocol as Sentry or GlitchTip.
+  </FaqItem>
+</FaqGroup>
 
 ### Database + cache
 
-| Var | Repo | Required? | Notes |
-|---|---|---|---|
-| `DATABASE_URL` | api | yes | Postgres connection string |
-| `VALKEY_HOST` / `VALKEY_PORT` | api | yes for queues/cache | Defaults `localhost` / 6379 |
-| `VALKEY_PASSWORD` | api | required in prod when Valkey-using features on | |
-| `VALKEY_DB` | api | no | Default 0 |
-| `CACHE_ENABLED` / `CACHE_PROVIDER` | api | no | `false` → noop; `memory` / `valkey` |
-| `QUEUES_ENABLED` | api | no | When `false`, dispatch falls back to inline |
+<FaqGroup>
+  <FaqItem title="DATABASE_URL" open>
+    **Repo:** api. **Required:** yes. Postgres connection string.
+  </FaqItem>
+  <FaqItem title="VALKEY_HOST / VALKEY_PORT">
+    **Repo:** api. **Required:** yes when queues or cache use Valkey. Defaults `localhost` and 6379.
+  </FaqItem>
+  <FaqItem title="VALKEY_PASSWORD">
+    **Repo:** api. **Required:** in production when any Valkey-using feature is on.
+  </FaqItem>
+  <FaqItem title="VALKEY_DB">
+    **Repo:** api. **Required:** no. Default 0.
+  </FaqItem>
+  <FaqItem title="CACHE_ENABLED / CACHE_PROVIDER">
+    **Repo:** api. **Required:** no. `false` uses noop; providers include `memory` and `valkey`.
+  </FaqItem>
+  <FaqItem title="QUEUES_ENABLED">
+    **Repo:** api. **Required:** no. When `false`, dispatch falls back to inline execution.
+  </FaqItem>
+</FaqGroup>
 
 ### Auth + session
 
-| Var | Repo | Required? | Notes |
-|---|---|---|---|
-| `JWT_SECRET` | api | yes (≥ 32 chars) | Signs auth cookie; rotation invalidates all sessions |
-| `FRONTEND_URL` | api | yes | OAuth success redirect target |
-| `ALLOWED_ORIGINS` | api | no (default empty) | CSV. Empty = same-origin deployment (default), CORS not mounted. When set, must be HTTPS with no wildcards. |
-| `SUPERUSER_EMAIL` / `SUPERUSER_PASSWORD` | api | no (default empty) | Optional first-boot superuser. Both set → `db:seed` creates a user with `admin` role on first run. Empty → no-op; register via the UI instead. |
-| `GOOGLE_OAUTH_CLIENT_ID` / `_SECRET` | api | when Google enabled | |
-| `GITHUB_OAUTH_CLIENT_ID` / `_SECRET` | api | when GitHub enabled | |
-| `LINKEDIN_OAUTH_CLIENT_ID` / `_SECRET` | api | when LinkedIn enabled | |
+<FaqGroup>
+  <FaqItem title="JWT_SECRET" open>
+    **Repo:** api. **Required:** yes (32+ chars). Signs the auth cookie; rotation invalidates all sessions.
+  </FaqItem>
+  <FaqItem title="FRONTEND_URL">
+    **Repo:** api. **Required:** yes. OAuth success redirect target.
+  </FaqItem>
+  <FaqItem title="ALLOWED_ORIGINS">
+    **Repo:** api. **Required:** no (default empty). CSV. Empty means same-origin deployment (default); CORS is not mounted. When set, every origin must be HTTPS with no wildcards.
+  </FaqItem>
+  <FaqItem title="SUPERUSER_EMAIL / SUPERUSER_PASSWORD">
+    **Repo:** api. **Required:** no (default empty). Optional first-boot superuser. Both set means `db:seed` creates an `admin` user on first run. Empty means no-op; register via the UI instead.
+  </FaqItem>
+  <FaqItem title="GOOGLE_OAUTH_CLIENT_ID / GOOGLE_OAUTH_CLIENT_SECRET">
+    **Repo:** api. **Required:** when Google OAuth is enabled.
+  </FaqItem>
+  <FaqItem title="GITHUB_OAUTH_CLIENT_ID / GITHUB_OAUTH_CLIENT_SECRET">
+    **Repo:** api. **Required:** when GitHub OAuth is enabled.
+  </FaqItem>
+  <FaqItem title="LINKEDIN_OAUTH_CLIENT_ID / LINKEDIN_OAUTH_CLIENT_SECRET">
+    **Repo:** api. **Required:** when LinkedIn OAuth is enabled.
+  </FaqItem>
+</FaqGroup>
 
 ### Email
 
-| Var | Repo | Required? | Notes |
-|---|---|---|---|
-| `EMAIL_PROVIDER` | api | always | `cloudflare` (default) / `resend` / `sendgrid` / `smtp` |
-| `EMAIL_FROM` | api | always | Sender on a verified domain |
-| `CLOUDFLARE_ACCOUNT_ID` | api | when cloudflare | |
-| `CLOUDFLARE_EMAIL_API_TOKEN` | api | when cloudflare | Scoped `Email Sending: Edit` |
-| `RESEND_API_KEY` | api | when resend | |
-| `SENDGRID_API_KEY` | api | when sendgrid | |
-| `SMTP_HOST` | api | when smtp | `mailpit` against the dev overlay; any RFC-5321 server in prod |
-| `SMTP_PORT` | api | when smtp | Default 25; Mailpit listens on 1025 |
-| `SMTP_USER` / `SMTP_PASS` | api | optional | Auth, when the server requires it |
+<FaqGroup>
+  <FaqItem title="EMAIL_PROVIDER" open>
+    **Repo:** api. **Required:** always set. One of `cloudflare` (default), `resend`, `sendgrid`, or `smtp`.
+  </FaqItem>
+  <FaqItem title="EMAIL_FROM">
+    **Repo:** api. **Required:** always. Sender on a verified domain.
+  </FaqItem>
+  <FaqItem title="CLOUDFLARE_ACCOUNT_ID">
+    **Repo:** api. **Required:** when provider is cloudflare.
+  </FaqItem>
+  <FaqItem title="CLOUDFLARE_EMAIL_API_TOKEN">
+    **Repo:** api. **Required:** when provider is cloudflare. Scope `Email Sending: Edit`.
+  </FaqItem>
+  <FaqItem title="RESEND_API_KEY">
+    **Repo:** api. **Required:** when provider is resend.
+  </FaqItem>
+  <FaqItem title="SENDGRID_API_KEY">
+    **Repo:** api. **Required:** when provider is sendgrid.
+  </FaqItem>
+  <FaqItem title="SMTP_HOST">
+    **Repo:** api. **Required:** when provider is smtp. Use `mailpit` against the dev overlay; any RFC 5321 server in prod.
+  </FaqItem>
+  <FaqItem title="SMTP_PORT">
+    **Repo:** api. **Required:** when provider is smtp. Default 25; Mailpit listens on 1025.
+  </FaqItem>
+  <FaqItem title="SMTP_USER / SMTP_PASS">
+    **Repo:** api. **Required:** optional. Auth when the server requires it.
+  </FaqItem>
+</FaqGroup>
 
 ### Billing
 
-| Var | Repo | Required? | Notes |
-|---|---|---|---|
-| `BILLING_ENABLED` | api | no | When `true`, Stripe keys required |
-| `STRIPE_SECRET_KEY` | api | when billing on | |
-| `STRIPE_WEBHOOK_SECRET` | api | when billing on | |
-| `STRIPE_PRICE_ID_FREE` / `_PRO` | api | when billing on | |
+<FaqGroup>
+  <FaqItem title="BILLING_ENABLED" open>
+    **Repo:** api. **Required:** no. When `true`, Stripe keys are required.
+  </FaqItem>
+  <FaqItem title="STRIPE_SECRET_KEY">
+    **Repo:** api. **Required:** when billing is on.
+  </FaqItem>
+  <FaqItem title="STRIPE_WEBHOOK_SECRET">
+    **Repo:** api. **Required:** when billing is on.
+  </FaqItem>
+  <FaqItem title="STRIPE_PRICE_ID_FREE / STRIPE_PRICE_ID_PRO">
+    **Repo:** api. **Required:** when billing is on.
+  </FaqItem>
+</FaqGroup>
 
 ### AI
 
-| Var | Repo | Required? | Notes |
-|---|---|---|---|
-| `AI_ENABLED` | api | no | |
-| `AI_PROVIDER` | api | when AI on | `openai` / `anthropic` / `noop` |
-| `OPENAI_API_KEY` | api | when AI=openai | |
-| `OPENAI_BASE_URL` | api | no | Point at OpenAI-compatible (OpenRouter, Ollama, vLLM) |
-| `ANTHROPIC_API_KEY` | api | when AI=anthropic | |
+<FaqGroup>
+  <FaqItem title="AI_ENABLED" open>
+    **Repo:** api. **Required:** no.
+  </FaqItem>
+  <FaqItem title="AI_PROVIDER">
+    **Repo:** api. **Required:** when AI is on. One of `openai`, `anthropic`, or `noop`.
+  </FaqItem>
+  <FaqItem title="OPENAI_API_KEY">
+    **Repo:** api. **Required:** when AI provider is openai.
+  </FaqItem>
+  <FaqItem title="OPENAI_BASE_URL">
+    **Repo:** api. **Required:** no. Point at OpenAI-compatible APIs (OpenRouter, Ollama, vLLM).
+  </FaqItem>
+  <FaqItem title="ANTHROPIC_API_KEY">
+    **Repo:** api. **Required:** when AI provider is anthropic.
+  </FaqItem>
+</FaqGroup>
 
 ### UI build-time
 
-| Var | Repo | Required? | Notes |
-|---|---|---|---|
-| `VITE_API_URL` | ui | no (default empty) | API base URL. Empty = same-origin (`/api/*` relative). Set to a full HTTPS URL only for cross-origin deployments. |
-| `VITE_LOCALES` | ui | no | CSV of locale codes; first is fallback |
-| `VITE_GOOGLE_CLIENT_ID` | ui | no | Display gate for the Google button |
+<FaqGroup>
+  <FaqItem title="VITE_API_URL" open>
+    **Repo:** ui. **Required:** no (default empty). API base URL. Empty means same-origin (`/api/*` relative). Set a full HTTPS URL only for cross-origin deployments.
+  </FaqItem>
+  <FaqItem title="VITE_LOCALES">
+    **Repo:** ui. **Required:** no. CSV of locale codes; first entry is the fallback.
+  </FaqItem>
+  <FaqItem title="VITE_GOOGLE_CLIENT_ID">
+    **Repo:** ui. **Required:** no. Display gate for the Google button.
+  </FaqItem>
+</FaqGroup>
 
 ### Infra (compose-only)
 
-| Var | Repo | Required? | Notes |
-|---|---|---|---|
-| `STACK` | infra | yes | `dev` / `prod` |
-| `POSTGRES_USER` / `_PASSWORD` / `_DB` | infra | yes | Postgres bootstrap credentials |
-| `PUBLIC_UI_HOST` | infra | yes in prod | Apex DNS name for Traefik. Same-origin path routing serves both UI and `/api/*` from this single host. |
-| `ACME_EMAIL` | infra | yes in prod | Let's Encrypt contact |
-| `GRAFANA_ADMIN_USER` / `_PASSWORD` | infra | when observability on | |
-| `*_LIMITS_CPUS` / `_MEMORY` | infra | no | Per-service resource caps; see [Resource limits](/infra/resource-limits/) |
-| `WITH_OBSERVABILITY` / `WITH_GLITCHTIP` / `WITH_BULLMQ` / `WITH_WUD` | infra | no | Overlay toggles |
-| `RCLONE_REMOTE_NAME` / `RCLONE_REMOTE_PATH` | infra | when backups configured | |
-| `BACKUP_RETENTION_DAYS` | infra | no | Default 30 |
-| `BACKUP_DRY_RUN` | infra | no | `1` → script logs but doesn't act |
+<FaqGroup>
+  <FaqItem title="STACK" open>
+    **Repo:** infra. **Required:** yes. `dev` or `prod`.
+  </FaqItem>
+  <FaqItem title="POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB">
+    **Repo:** infra. **Required:** yes. Postgres bootstrap credentials.
+  </FaqItem>
+  <FaqItem title="PUBLIC_UI_HOST">
+    **Repo:** infra. **Required:** yes in prod. Apex DNS name for Traefik. Same-origin path routing serves both UI and `/api/*` from this single host.
+  </FaqItem>
+  <FaqItem title="ACME_EMAIL">
+    **Repo:** infra. **Required:** yes in prod. Let's Encrypt contact address.
+  </FaqItem>
+  <FaqItem title="GRAFANA_ADMIN_USER / GRAFANA_ADMIN_PASSWORD">
+    **Repo:** infra. **Required:** when observability overlay is on.
+  </FaqItem>
+  <FaqItem title="*_LIMITS_CPUS / *_LIMITS_MEMORY (and reservations)">
+    **Repo:** infra. **Required:** no. Per-service resource caps; see [Resource limits](/infra/resource-limits/).
+  </FaqItem>
+  <FaqItem title="WITH_OBSERVABILITY / WITH_GLITCHTIP / WITH_BULLMQ / WITH_WUD">
+    **Repo:** infra. **Required:** no. Overlay toggles.
+  </FaqItem>
+  <FaqItem title="RCLONE_REMOTE_NAME / RCLONE_REMOTE_PATH">
+    **Repo:** infra. **Required:** when backups are configured.
+  </FaqItem>
+  <FaqItem title="BACKUP_RETENTION_DAYS">
+    **Repo:** infra. **Required:** no. Default 30.
+  </FaqItem>
+  <FaqItem title="BACKUP_DRY_RUN">
+    **Repo:** infra. **Required:** no. `1` means the script logs but does not act.
+  </FaqItem>
+</FaqGroup>
 
 ## Authoritative references
 
-The tables here are an **index**. For defaults, comments, and the per-var reasoning:
+The sections above are an **index**. For defaults, comments, and per-var reasoning:
 
-| Repo | File |
-|---|---|
-| api-template | [`.env.example`](https://github.com/AI-Starter-Templates/api-template/blob/main/.env.example) |
-| ui-template | [`.env.example`](https://github.com/AI-Starter-Templates/ui-template/blob/main/.env.example) |
-| infra | [`compose/.env.example`](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/compose/.env.example) |
+<FaqGroup>
+  <FaqItem title="api-template" open>
+    [`.env.example`](https://github.com/AI-Starter-Templates/api-template/blob/main/.env.example)
+  </FaqItem>
+  <FaqItem title="ui-template">
+    [`.env.example`](https://github.com/AI-Starter-Templates/ui-template/blob/main/.env.example)
+  </FaqItem>
+  <FaqItem title="infra">
+    [`compose/.env.example`](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/compose/.env.example)
+  </FaqItem>
+</FaqGroup>
 
 ## Related
 

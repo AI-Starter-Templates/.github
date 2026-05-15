@@ -4,6 +4,8 @@ description: A typed API client generated from the api-template's OpenAPI schema
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
 The UI never hand-writes `fetch(...)`. It calls a generated, typed client that knows every path, every request body, and every response shape the API exposes. When the API changes, you regenerate; if the UI now calls a path that no longer exists, TypeScript tells you before the user does.
 
@@ -25,13 +27,23 @@ flowchart LR
 
 ## Design choices
 
-| Decision | Reason |
-|---|---|
-| Generated, never hand-edited | Drift between server and client is a compile error, not a runtime 500 |
-| One client module (`apiClient`); direct `fetch`/`axios` is a lint error | Single place for base URL, headers, error mapping, refresh logic |
-| Throws `ApiError` on non-2xx | TanStack Query's `error` is typed and structured; no string parsing |
-| Silent refresh on 401 with a single in-flight guard | Parallel queries don't trigger N refresh storms |
-| Refresh exempts `/auth/refresh` + `/auth/login` themselves | No infinite loops when the refresh itself fails |
+<FaqGroup>
+  <FaqItem title="Generated, never hand-edited" open>
+    Drift between server and client is a compile error, not a runtime 500.
+  </FaqItem>
+  <FaqItem title="One client module (apiClient); direct fetch/axios is a lint error">
+    Single place for base URL, headers, error mapping, refresh logic.
+  </FaqItem>
+  <FaqItem title="Throws ApiError on non-2xx">
+    TanStack Query `error` is typed and structured; no string parsing.
+  </FaqItem>
+  <FaqItem title="Silent refresh on 401 with a single in-flight guard">
+    Parallel queries do not trigger N refresh storms.
+  </FaqItem>
+  <FaqItem title="Refresh exempts /auth/refresh + /auth/login themselves">
+    No infinite loops when the refresh itself fails.
+  </FaqItem>
+</FaqGroup>
 
 ## Using it
 
@@ -65,11 +77,17 @@ This is the entire reason hand-rolled fetch wrappers are banned in the codebase:
 
 ## Regenerating
 
-| When | Command |
-|---|---|
-| API spec changed (most common) | `pnpm generate:api` against the running dev API |
-| Working from a committed spec | Point `generate:api` at a saved `.json` |
-| CI consistency check | `pnpm generate:api && git diff --exit-code src/lib/api/schema.d.ts` |
+<FaqGroup>
+  <FaqItem title="API spec changed (most common)" open>
+    Run `pnpm generate:api` against the running dev API.
+  </FaqItem>
+  <FaqItem title="Working from a committed spec">
+    Point `generate:api` at a saved `.json`.
+  </FaqItem>
+  <FaqItem title="CI consistency check">
+    Run `pnpm generate:api && git diff --exit-code src/lib/api/schema.d.ts`.
+  </FaqItem>
+</FaqGroup>
 
 The CI check fails if a developer changed the API but forgot to regenerate; drift gets caught at PR time, not at runtime.
 

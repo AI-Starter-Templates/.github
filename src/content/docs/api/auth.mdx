@@ -4,6 +4,8 @@ description: Session-cookie auth with bcrypt-hashed passwords and a server-side 
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
 Two flows share one session model:
 
@@ -30,14 +32,26 @@ sequenceDiagram
 
 ## Design choices
 
-| Decision | Reason |
-|---|---|
-| JWT in `HttpOnly` cookie (not localStorage) | XSS can't steal the token |
-| `SameSite=strict` in prod, `lax` in dev | CSRF protection without breaking same-origin dev |
-| Short JWT TTL (7 days), no server-side revocation list | Cheap and stateless; rotate `JWT_SECRET` to mass-invalidate |
-| Two tables: `users` ↔ `user_auth_providers` | One user can hold a password and N OAuth links; no `nullable` password column |
-| OAuth state in Valkey, not in a cookie | State must survive the cross-origin redirect; cookies on the IdP's domain don't work |
-| Read-and-delete state consumption | Replay attacks fail by construction |
+<FaqGroup>
+  <FaqItem title="JWT in HttpOnly cookie (not localStorage)" open>
+    XSS cannot steal the token.
+  </FaqItem>
+  <FaqItem title="SameSite=strict in prod, lax in dev">
+    CSRF protection without breaking same-origin dev.
+  </FaqItem>
+  <FaqItem title="Short JWT TTL (7 days), no server-side revocation list">
+    Cheap and stateless; rotate `JWT_SECRET` to mass-invalidate.
+  </FaqItem>
+  <FaqItem title="Two tables: users and user_auth_providers">
+    One user can hold a password and N OAuth links; no nullable password column.
+  </FaqItem>
+  <FaqItem title="OAuth state in Valkey, not in a cookie">
+    State must survive the cross-origin redirect; cookies on the IdP domain do not work.
+  </FaqItem>
+  <FaqItem title="Read-and-delete state consumption">
+    Replay attacks fail by construction.
+  </FaqItem>
+</FaqGroup>
 
 ## The OAuth round-trip
 

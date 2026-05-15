@@ -4,6 +4,8 @@ description: Every service has CPU and memory caps driven by env vars. Defaults 
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
 Every container in the stack has `deploy.resources.limits` and `deploy.resources.reservations` set from env vars. The defaults target a 4-vCPU / 8 GB VPS, the cheapest tier on Hetzner / OVH / DigitalOcean that's usable in production. Bigger box? Bump the knobs.
 
@@ -13,13 +15,23 @@ A misbehaving worker that consumes all memory shouldn't take Postgres down with 
 
 ## Design choices
 
-| Decision | Reason |
-|---|---|
-| Limits + reservations on every service | Failures stay isolated; the host stays responsive |
-| Knobs in `compose/.env`, not hardcoded | Right-sizing is a config change, not a code change |
-| Defaults target 4 vCPU / 8 GB | Cheapest production-viable VPS tier; everything else scales up from there |
-| Reservations < limits (~1:4 ratio) | Reserves the minimum to boot; allows bursts up to the limit |
-| `bun` and Node services share roughly the same shape | Avoids per-runtime tuning until measurements say otherwise |
+<FaqGroup>
+  <FaqItem title="Limits + reservations on every service" open>
+    Failures stay isolated; the host stays responsive.
+  </FaqItem>
+  <FaqItem title="Knobs in compose/.env, not hardcoded">
+    Right-sizing is a config change, not a code change.
+  </FaqItem>
+  <FaqItem title="Defaults target 4 vCPU / 8 GB">
+    Cheapest production-viable VPS tier; everything else scales up from there.
+  </FaqItem>
+  <FaqItem title="Reservations less than limits (~1:4 ratio)">
+    Reserves the minimum to boot; allows bursts up to the limit.
+  </FaqItem>
+  <FaqItem title="bun and Node services share roughly the same shape">
+    Avoids per-runtime tuning until measurements say otherwise.
+  </FaqItem>
+</FaqGroup>
 
 ## The shape of a knob
 
@@ -36,14 +48,26 @@ Same pattern for `VALKEY_`, `TRAEFIK_`, `API_DEV_`, `UI_DEV_`, `API_`, `UI_`, an
 
 ## Default sizing (4 vCPU / 8 GB)
 
-| Service | Limit CPU | Limit RAM | Notes |
-|---|---|---|---|
-| Postgres | 1.0 | 512 MB | Heaviest of the data plane; bump first |
-| Valkey | 0.5 | 256 MB | Plenty for cache + queues at small scale |
-| Traefik | 0.5 | 256 MB | Steady-state usage is low |
-| API (dev/prod) | 1.5 | 1 GB | Generous for Bun + Drizzle; covers burst on cold caches |
-| UI (dev) | 1.5 | 1 GB | Vite dev server eats memory during HMR |
-| UI (prod, nginx) | 0.25 | 128 MB | Static file serving is cheap |
+<FaqGroup>
+  <FaqItem title="Postgres" open>
+    Limit CPU 1.0, limit RAM 512 MB. Heaviest of the data plane; bump first.
+  </FaqItem>
+  <FaqItem title="Valkey">
+    Limit CPU 0.5, limit RAM 256 MB. Plenty for cache + queues at small scale.
+  </FaqItem>
+  <FaqItem title="Traefik">
+    Limit CPU 0.5, limit RAM 256 MB. Steady-state usage is low.
+  </FaqItem>
+  <FaqItem title="API (dev/prod)">
+    Limit CPU 1.5, limit RAM 1 GB. Generous for Bun + Drizzle; covers burst on cold caches.
+  </FaqItem>
+  <FaqItem title="UI (dev)">
+    Limit CPU 1.5, limit RAM 1 GB. Vite dev server uses memory during HMR.
+  </FaqItem>
+  <FaqItem title="UI (prod, nginx)">
+    Limit CPU 0.25, limit RAM 128 MB. Static file serving is cheap.
+  </FaqItem>
+</FaqGroup>
 
 Sum of limits exceeds host capacity on purpose: containers don't all peak simultaneously. Reservations are sized so nothing can starve.
 
@@ -51,11 +75,17 @@ Sum of limits exceeds host capacity on purpose: containers don't all peak simult
 
 Rough scaling guide:
 
-| Host | Postgres bump | Workers / API replicas |
-|---|---|---|
-| 4 vCPU / 8 GB | Default | One of each |
-| 8 vCPU / 16 GB | `POSTGRES_LIMITS_MEMORY=2G`, `POSTGRES_LIMITS_CPUS=2.0` | Consider horizontal API replication |
-| 16+ vCPU / 32+ GB | Postgres deserves its own host | Multiple API + worker replicas; revisit Valkey Cluster |
+<FaqGroup>
+  <FaqItem title="4 vCPU / 8 GB host" open>
+    Postgres at default. One of each worker/API replica.
+  </FaqItem>
+  <FaqItem title="8 vCPU / 16 GB host">
+    `POSTGRES_LIMITS_MEMORY=2G`, `POSTGRES_LIMITS_CPUS=2.0`. Consider horizontal API replication.
+  </FaqItem>
+  <FaqItem title="16+ vCPU / 32+ GB host">
+    Postgres deserves its own host. Multiple API + worker replicas; revisit Valkey Cluster.
+  </FaqItem>
+</FaqGroup>
 
 Above the 16 vCPU mark, the single-host model itself becomes the bottleneck; that's the right time to look at the planned Kubernetes path.
 

@@ -3,17 +3,29 @@ title: Cloudflare Email Service
 description: Why we default to Cloudflare's transactional email API. The cheapest deliverability path that exists at non-trivial volume.
 ---
 
-import { Aside } from "@astrojs/starlight/components";
+import { Aside, Tabs, TabItem } from "@astrojs/starlight/components";
 
 The api-template ships [Cloudflare Email Service](https://developers.cloudflare.com/email-service/) as the default outbound mail provider. Bundled into Workers Paid with no documented per-message charge, it is usually the cheapest transactional path at non-trivial volume among the providers wired into this template. Check current pricing at each vendor before committing.
 
 ## Why it's the default
 
-|                  | Cloudflare Email Service                              | Resend                 | SendGrid           |
-| ---------------- | ----------------------------------------------------- | ---------------------- | ------------------ |
-| Cost shape       | Flat fee for Workers Paid; no per-message charge      | Free tier, then per-message | Free tier, then per-message |
-| Setup            | Cloudflare-managed DNS auto-provisions SPF/DKIM/DMARC | Manual DNS records     | Manual DNS records |
-| Vendor lock-in   | Cloudflare account required                           | None                   | None               |
+<Tabs>
+  <TabItem label="Cloudflare Email">
+    **Cost:** flat Workers Paid fee; no per-message charge in current docs.  
+    **Setup:** SPF/DKIM/DMARC when DNS is on Cloudflare.  
+    **Account:** requires Cloudflare.
+  </TabItem>
+  <TabItem label="Resend">
+    **Cost:** free tier, then per message.  
+    **Setup:** manual DNS records.  
+    **Account:** vendor-neutral API key.
+  </TabItem>
+  <TabItem label="SendGrid">
+    **Cost:** free tier, then per message.  
+    **Setup:** manual DNS records.  
+    **Account:** vendor-neutral API key.
+  </TabItem>
+</Tabs>
 
 Pricing tiers, free-tier limits, and per-message rates all evolve. See [Cloudflare](https://developers.cloudflare.com/email-service/) · [Resend](https://resend.com/pricing) · [SendGrid](https://sendgrid.com/en-us/pricing) for current numbers.
 

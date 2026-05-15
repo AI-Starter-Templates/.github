@@ -4,6 +4,8 @@ description: TypeBox for shape, hand-written predicates for cross-field rules. B
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
 
 `env` is deploy-time configuration, not runtime state. The validator runs once at boot, freezes the result, and exposes a typed `env` object. Anything that needs to change at runtime belongs in a service.
 
@@ -28,14 +30,26 @@ The two-pass split matters: running invariants on an already-shape-validated obj
 
 ## Design choices
 
-| Decision | Reason |
-|---|---|
-| TypeBox `t.Object({...})` for shape | Same library Elysia uses; nothing new to learn |
-| Hand-written predicates for cross-field rules | Cross-field rules ("if A then B is required") don't fit a schema language cleanly |
-| All errors aggregated, not fail-on-first | Fewer redeploys to discover the next missing var |
-| Frozen `env` with derived `isProduction` / `isDevelopment` / `isTest` | Reads like `env.isProduction`, not `env.NODE_ENV === "production"` |
-| Empty-string defaults for optional integration keys | Shape passes when feature is off; invariants enforce "if feature on, key non-empty" |
-| `nonEmpty(value, testFallback)` for a few vars | Tests boot without per-test env setup; never applied in production |
+<FaqGroup>
+  <FaqItem title="TypeBox t.Object({...}) for shape" open>
+    Same library Elysia uses; nothing new to learn.
+  </FaqItem>
+  <FaqItem title="Hand-written predicates for cross-field rules">
+    Cross-field rules ("if A then B is required") do not fit a schema language cleanly.
+  </FaqItem>
+  <FaqItem title="All errors aggregated, not fail-on-first">
+    Fewer redeploys to discover the next missing var.
+  </FaqItem>
+  <FaqItem title="Frozen env with derived isProduction / isDevelopment / isTest">
+    Reads like `env.isProduction`, not `env.NODE_ENV === "production"`.
+  </FaqItem>
+  <FaqItem title="Empty-string defaults for optional integration keys">
+    Shape passes when feature is off; invariants enforce "if feature on, key non-empty".
+  </FaqItem>
+  <FaqItem title="nonEmpty(value, testFallback) for a few vars">
+    Tests boot without per-test env setup; never applied in production.
+  </FaqItem>
+</FaqGroup>
 
 ## Shape vs. invariant
 
@@ -59,13 +73,23 @@ Predicates each return `string[]` and fan into one aggregated check, so every pr
 
 ## Current invariant set
 
-| Triggers when | Requires |
-|---|---|
-| `NODE_ENV=production` + `ALLOWED_ORIGINS` non-empty | Every origin starts with `https://` and contains no wildcards. Empty `ALLOWED_ORIGINS` is valid (same-origin deployment, CORS not mounted). |
-| `NODE_ENV=production` | Matching email-provider key(s) non-empty (Cloudflare needs both account ID + token; smtp needs `SMTP_HOST`) |
-| `AI_ENABLED=true` | `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` depending on provider |
-| `BILLING_ENABLED=true` | `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` |
-| `NODE_ENV=production` + any Valkey-using feature | `VALKEY_PASSWORD` non-empty |
+<FaqGroup>
+  <FaqItem title="NODE_ENV=production + ALLOWED_ORIGINS non-empty" open>
+    Every origin starts with `https://` and contains no wildcards. Empty `ALLOWED_ORIGINS` is valid (same-origin deployment, CORS not mounted).
+  </FaqItem>
+  <FaqItem title="NODE_ENV=production">
+    Matching email-provider key(s) non-empty (Cloudflare needs both account ID + token; smtp needs `SMTP_HOST`).
+  </FaqItem>
+  <FaqItem title="AI_ENABLED=true">
+    `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` depending on provider.
+  </FaqItem>
+  <FaqItem title="BILLING_ENABLED=true">
+    `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`.
+  </FaqItem>
+  <FaqItem title="NODE_ENV=production + any Valkey-using feature">
+    `VALKEY_PASSWORD` non-empty.
+  </FaqItem>
+</FaqGroup>
 
 `NODE_ENV=test` skips most of these so integration tests don't need real provider credentials.
 
