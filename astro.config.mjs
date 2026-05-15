@@ -163,6 +163,7 @@ export default defineConfig({
               link: "/ui/architecture-rules/",
             },
             { label: "OpenAPI client", link: "/ui/openapi-client/" },
+            { label: "Notifications", link: "/ui/notifications/" },
             { label: "i18n", link: "/ui/i18n/" },
             { label: "Testing", link: "/ui/testing/" },
           ],
