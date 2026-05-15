@@ -13,7 +13,10 @@ export default defineConfig({
       theme: "default",
       autoTheme: true,
       mermaidConfig: {
-        // Sketch / hand-drawn strokes (Rough.js). Pairs with dark|default from autoTheme.
+        // Rough.js sketch strokes. Applies to flowchart and other diagram types that
+        // wire `look` into their renderer. sequenceDiagram (and several others) still
+        // render in the classic vector style in Mermaid 11.14 — only `neo` is special-
+        // cased there. Broader handDrawn coverage is tracked upstream (e.g. PR #7130).
         look: "handDrawn",
         handDrawnSeed: 42,
         themeVariables: {

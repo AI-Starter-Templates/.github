@@ -80,11 +80,17 @@ Custom ESLint plugins make those patterns stick. Every rule that matters is mach
   <FaqItem title="react-component-architecture" open>
     [`eslint-plugin-react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture): component anatomy, hooks, `className` discipline, file naming, prop ordering.
   </FaqItem>
+  <FaqItem title="tanstack-query-cache">
+    [`eslint-plugin-tanstack-query-cache`](https://github.com/agjs/eslint-plugin-tanstack-query-cache): on `*.queries.ts`, when keys are built as `[...PREFIX, …]`, cache writes must use matcher-style APIs (`setQueriesData`, `cancelQueries` with `exact: false` / `predicate`, etc.) instead of `setQueryData` / `getQueryData` on the bare prefix alone — otherwise only one entry updates while hooks still read the spread key.
+  </FaqItem>
+  <FaqItem title="i18n-keys">
+    [`eslint-plugin-i18n-keys`](https://github.com/agjs/eslint-plugin-i18n-keys): **static** string keys in `t("…")` / `i18n.t("…")` must exist in the canonical English catalog (`src/lib/i18n/locales/en/common.json` in the template). Catches typos and orphan keys at lint time.
+  </FaqItem>
 </FaqGroup>
 
 ## How they're wired
 
-Each repo's `eslint.config.ts` imports these plugins from `node_modules/` (they're installed as devDependencies, not vendored). The plugins ship their own `recommended` configs; we extend those and turn most rules to `error` rather than `warn` so the merge gate has real teeth.
+Each template's flat ESLint config (`eslint.config.mjs` in ui-template, `eslint.config.js` in api-template) imports these plugins from `node_modules/`. They are **devDependencies**, pinned with `github:agjs/<repo>#<commit>` (same supply-chain posture as the rest of the custom plugins). The plugins ship their own `recommended` configs where applicable; we extend those and keep severities at `error` so the merge gate has real teeth. Where `lint:meta` is wired (`pnpm lint:meta` / `bun run lint:meta`), it adds extra contract checks on top of ESLint (for example: no `warn` in config, forbidden overlapping dependency pairs).
 
 ```bash
 # In each repo
