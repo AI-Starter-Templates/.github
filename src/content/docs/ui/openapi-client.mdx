@@ -32,7 +32,7 @@ flowchart LR
     Drift between server and client is a compile error, not a runtime 500.
   </FaqItem>
   <FaqItem title="One client module (apiClient); direct fetch/axios is a lint error">
-    Single place for base URL, headers, error mapping, refresh logic.
+    Single place for base URL, cookie credentials, error mapping, refresh logic.
   </FaqItem>
   <FaqItem title="Throws ApiError on non-2xx">
     TanStack Query `error` is typed and structured; no string parsing.
@@ -70,6 +70,8 @@ useQuery({
 ```
 
 ## The middleware layer
+
+`openapi-fetch` is configured with `credentials: "include"`, so the browser sends `auth_token` and `refresh_token` cookies automatically. The UI never reads a JWT, stores a bearer token, or adds an `Authorization` header.
 
 `openapi-fetch` accepts middleware. The template ships one: on a 401, kick off a single `/auth/refresh` (with a module-level promise guarding against parallel triggers), then retry the original request. Refresh exempts itself + `/auth/login` so a failed refresh never recurses. If the refresh fails, the original 401 propagates and `ProtectedRoute` redirects to `/login`.
 

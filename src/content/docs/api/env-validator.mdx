@@ -57,6 +57,7 @@ A shape rule expresses "this field must be a positive int between 1 and 65535." 
 
 ```ts
 PORT: t.Integer({ minimum: 1, maximum: 65535, default: 3000 }),
+PUBLIC_API_URL: t.String({ minLength: 1 }),
 JWT_SECRET: t.String({ minLength: 32 }),
 EMAIL_PROVIDER: t.Union([t.Literal("cloudflare"), t.Literal("resend"), t.Literal("sendgrid"), t.Literal("smtp")]),
 ```
@@ -80,14 +81,20 @@ Predicates each return `string[]` and fan into one aggregated check, so every pr
   <FaqItem title="NODE_ENV=production">
     Matching email-provider key(s) non-empty (Cloudflare needs both account ID + token; smtp needs `SMTP_HOST`).
   </FaqItem>
+  <FaqItem title="FRONTEND_URL / PUBLIC_API_URL / NOTIFICATION_SETTINGS_URL">
+    URL fields must be valid `http` or `https` URLs. `NOTIFICATION_SETTINGS_URL` is checked only when non-empty.
+  </FaqItem>
+  <FaqItem title="OAuth provider credentials">
+    Google, GitHub, and LinkedIn credentials must be supplied as client-id/client-secret pairs. Half-configured providers fail boot.
+  </FaqItem>
   <FaqItem title="AI_ENABLED=true">
     `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` depending on provider.
   </FaqItem>
   <FaqItem title="BILLING_ENABLED=true">
-    `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`.
+    `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_FREE`, and `STRIPE_PRICE_ID_PRO`.
   </FaqItem>
   <FaqItem title="NODE_ENV=production + any Valkey-using feature">
-    `VALKEY_PASSWORD` non-empty.
+    `VALKEY_PASSWORD` non-empty when queues, Valkey cache, notification SSE, or OAuth is configured.
   </FaqItem>
 </FaqGroup>
 
@@ -100,9 +107,11 @@ Invalid environment configuration:
   - JWT_SECRET: Expected string length greater or equal to 32
   - STRIPE_SECRET_KEY required when BILLING_ENABLED=true
   - STRIPE_WEBHOOK_SECRET required when BILLING_ENABLED=true
+  - STRIPE_PRICE_ID_FREE required when BILLING_ENABLED=true
+  - Google OAuth requires both client id and client secret
 ```
 
-Three problems, one redeploy to fix all of them.
+Several problems, one redeploy to fix all of them.
 
 ## Adding a new env var
 

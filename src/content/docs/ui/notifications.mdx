@@ -7,7 +7,7 @@ import { Aside, FileTree } from "@astrojs/starlight/components";
 import FaqGroup from "../../../components/FaqGroup.astro";
 import FaqItem from "../../../components/FaqItem.astro";
 
-The UI consumes the [API notifications subsystem](/api/notifications/). The feed lives in a TanStack Query infinite list, mutations are optimistic with rollback, a single SSE `EventSource` keeps the cache live while the user is authenticated, and a Sonner toast fires on every arrival. The bell + popover mount inside the new `AppShell`, so every authenticated route gets them for free.
+The UI consumes the [API notifications subsystem](/api/notifications/). The feed lives in a TanStack Query infinite list, mutations are optimistic with rollback, and an optional SSE `EventSource` keeps the cache live while the user is authenticated. The bell + popover mount inside the new `AppShell`, so every authenticated route gets them for free.
 
 The backend ships pre-rendered `{ title, body, ctaUrl, ctaLabel }` strings. The UI renders them as plain content, no per-event-type switches.
 
@@ -72,7 +72,7 @@ useUpdateNotificationPreferences()
 
 ## Realtime
 
-`useNotificationStream` is mounted once in `AppShell.hooks.ts`. It opens a credentialed `EventSource` against `${VITE_API_URL}/api/v1/notifications/stream` as soon as the user is loaded, and closes it on unmount.
+`useNotificationStream` is mounted once in `AppShell.hooks.ts`. It opens a credentialed `EventSource` against `${VITE_API_URL}/api/v1/notifications/stream` as soon as the user is loaded, and closes it on unmount. The backend endpoint is available only when `NOTIFICATIONS_SSE_ENABLED=true`; otherwise notifications still work through the paginated feed and mutations, just without live push.
 
 ```ts
 mergeStreamNotificationIntoCache(qc, notification);

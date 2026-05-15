@@ -1,18 +1,23 @@
 ---
 title: Authentication
-description: Session-cookie auth with bcrypt-hashed passwords and a server-side OAuth flow. State + PKCE survive the redirect in Valkey.
+description: HttpOnly cookie auth with short-lived JWT access cookies, DB-backed refresh sessions, bcrypt-hashed passwords, and server-side OAuth.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 import FaqGroup from "../../../components/FaqGroup.astro";
 import FaqItem from "../../../components/FaqItem.astro";
 
-Two flows share one session model:
+Two login flows share one browser contract:
 
 - Password: register / login / verify-email / forgot-password / reset-password.
 - OAuth: Google, GitHub, LinkedIn. Server-side; the SPA never holds a client secret.
 
-Both end the same way: an `HttpOnly` cookie carrying a short-lived JWT.
+Both end the same way:
+
+- `auth_token`: a 15-minute stateless JWT in an `HttpOnly` cookie. The frontend never reads or stores it.
+- `refresh_token`: a 30-day opaque `HttpOnly` cookie. The API stores only its HMAC hash in `auth.sessions`, rotates it on every refresh, and can revoke it on logout or password reset.
+
+So the model is intentionally hybrid: fast stateless access checks, stateful refresh sessions for revocation and safer long-lived login.
 
 ## How a request gets authenticated
 
@@ -28,19 +33,47 @@ sequenceDiagram
   API-->>B: response
 ```
 
-`createAuthMiddleware` is the seam. Mount it on a route group and every handler in that group gets a typed `user` on its context. Token errors are categorized so the SPA can react cleanly (expired ≠ malformed ≠ missing).
+`createAuthMiddleware` mounts this on protected route groups. Every handler in that group gets a typed `user` on its context. Token errors are categorized so the SPA can react cleanly (expired != malformed != missing).
+
+## How refresh works
+
+```mermaid
+sequenceDiagram
+  participant B as Browser
+  participant API as API (Elysia)
+  participant DB as Postgres
+  B->>API: POST /auth/refresh with refresh_token cookie
+  API->>API: HMAC(refresh_token)
+  API->>DB: UPDATE auth.sessions SET token_hash=<new>, expires_at=<new> WHERE token_hash=<old> AND expires_at > now()
+  alt matching live session
+    DB-->>API: userId
+    API->>DB: SELECT users WHERE id = userId
+    API-->>B: set new auth_token + rotated refresh_token
+  else missing / expired / replayed token
+    DB-->>API: no row
+    API-->>B: 401
+  end
+```
+
+Refresh-token rotation means a replayed old refresh token no longer matches a row. Logout deletes the current refresh session. Password reset deletes all refresh sessions for that user.
 
 ## Design choices
 
 <FaqGroup>
   <FaqItem title="JWT in HttpOnly cookie (not localStorage)" open>
-    XSS cannot steal the token.
+    XSS cannot read the access token because it is never exposed to JavaScript.
   </FaqItem>
   <FaqItem title="SameSite=strict in prod, lax in dev">
     CSRF protection without breaking same-origin dev.
   </FaqItem>
-  <FaqItem title="Short JWT TTL (7 days), no server-side revocation list">
-    Cheap and stateless; rotate `JWT_SECRET` to mass-invalidate.
+  <FaqItem title="Short access JWT (15 minutes)">
+    Normal API requests stay cheap: verify the cookie signature and expiry, then load the user row.
+  </FaqItem>
+  <FaqItem title="Stateful refresh sessions">
+    Long-lived login lives in `auth.sessions`, keyed by a hash of an opaque token. The API can revoke one session or all sessions for a user.
+  </FaqItem>
+  <FaqItem title="Frontend never stores tokens">
+    The SPA relies on browser-managed cookies and the generated OpenAPI client. Auth responses return `user`, not a bearer token.
   </FaqItem>
   <FaqItem title="Two tables: users and user_auth_providers">
     One user can hold a password and N OAuth links; no nullable password column.
@@ -70,7 +103,8 @@ sequenceDiagram
   Note over API,Valkey: null → replay/expired/forged → 401
   API->>IdP: exchange code + codeVerifier
   IdP-->>API: profile
-  API->>API: find-or-create user, sign JWT, set cookie
+  API->>API: find-or-create user, create refresh session, sign access JWT
+  API-->>SPA: set auth_token + refresh_token cookies
   API-->>SPA: 302 ${FRONTEND_URL}/oauth/success
 ```
 
@@ -86,7 +120,18 @@ new Elysia()
   .get("/me", ({ user }) => ({ user })); // user: IUser, type-safe
 ```
 
-Unauthenticated callers get a categorized 401 (`tokenExpired`, `invalidToken`, `missingCookie`) so the SPA can refresh-and-retry or redirect to login.
+Unauthenticated callers get a categorized 401 (`tokenExpired`, `invalidToken`, `missingCookie`). The UI client tries one guarded `/auth/refresh` when it sees a 401, then retries the original request. If refresh fails, `ProtectedRoute` redirects to login.
+
+## Session storage
+
+The `auth.sessions` table stores:
+
+- `user_id`
+- `token_hash` (HMAC-SHA256 of the opaque refresh token, never the raw token)
+- `expires_at`
+- timestamps
+
+Email-verification and password-reset tokens follow the same rule: raw token only goes to the user, hash goes to Postgres.
 
 ## Adding an OAuth provider
 
@@ -104,8 +149,9 @@ The lint plugins refuse to merge a provider that skips the state-consume or PKCE
 See [Lint as the contract](/architecture/lint-as-contract/) for why these matter.
 
 <Aside type="caution" title="Rotating JWT_SECRET">
-  Rotating `JWT_SECRET` invalidates every outstanding cookie. That's the
-  right behavior after a suspected leak; don't rotate casually.
+  Rotating `JWT_SECRET` invalidates access cookies and makes existing refresh
+  token hashes impossible to match. That's the right behavior after a suspected
+  leak; don't rotate casually.
 </Aside>
 
 ## Source

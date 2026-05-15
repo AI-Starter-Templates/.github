@@ -75,7 +75,8 @@ The template ships no example domain feature on purpose. The shipped `auth`, `us
 
 Each lives in `src/lib/` or `src/config/` and has its own page:
 
-- [Authentication](/api/auth/). Cookie sessions, server-side OAuth.
+- [Authentication](/api/auth/). Short-lived access JWT cookies plus DB-backed refresh sessions.
+- [Billing](/api/billing/). Stripe Checkout, Customer Portal, raw-body webhooks, and DB-backed idempotency.
 - [Email](/api/email/). Pluggable provider, precompiled templates, queue-aware dispatch.
 - [Queues](/api/queues/). BullMQ with a `QueueManager`, inline fallback when disabled.
 - [Audit log](/api/audit-log/). Fire-and-forget append-only event log.

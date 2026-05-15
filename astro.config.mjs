@@ -29,10 +29,6 @@ export default defineConfig({
       title: "BoringStack",
       description:
         "Postgres, HTTP, React, and Compose wired into a SaaS spine you can run locally. Fast Bun and Vite feedback, lint as the contract for humans and agents, OpenAPI between API and UI.",
-      logo: {
-        src: "./src/assets/logo.svg",
-        replacesTitle: false,
-      },
       favicon: "/favicon.svg",
       customCss: ["./src/styles/custom.css"],
       head: [
@@ -147,6 +143,7 @@ export default defineConfig({
           items: [
             { label: "Overview", link: "/api/overview/" },
             { label: "Authentication", link: "/api/auth/" },
+            { label: "Billing", link: "/api/billing/" },
             { label: "Email", link: "/api/email/" },
             { label: "Queues", link: "/api/queues/" },
             { label: "Audit log", link: "/api/audit-log/" },

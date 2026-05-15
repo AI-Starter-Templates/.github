@@ -59,11 +59,17 @@ For Docker Compose-driven setups (the default), **`compose/.env` is the single f
   <FaqItem title="DATABASE_URL" open>
     **Repo:** api. **Required:** yes. Postgres connection string.
   </FaqItem>
+  <FaqItem title="DATABASE_SSL_REJECT_UNAUTHORIZED">
+    **Repo:** api. **Required:** no. Default `true`. Keep it true in production so Postgres TLS is verified instead of merely encrypted.
+  </FaqItem>
+  <FaqItem title="DATABASE_SSL_CA">
+    **Repo:** api. **Required:** no. Optional PEM CA bundle for production Postgres providers that use a private CA.
+  </FaqItem>
   <FaqItem title="VALKEY_HOST / VALKEY_PORT">
     **Repo:** api. **Required:** yes when queues or cache use Valkey. Defaults `localhost` and 6379.
   </FaqItem>
   <FaqItem title="VALKEY_PASSWORD">
-    **Repo:** api. **Required:** in production when any Valkey-using feature is on.
+    **Repo:** api. **Required:** in production when queues, Valkey cache, notification SSE, or OAuth is on.
   </FaqItem>
   <FaqItem title="VALKEY_DB">
     **Repo:** api. **Required:** no. Default 0.
@@ -74,16 +80,22 @@ For Docker Compose-driven setups (the default), **`compose/.env` is the single f
   <FaqItem title="QUEUES_ENABLED">
     **Repo:** api. **Required:** no. When `false`, dispatch falls back to inline execution.
   </FaqItem>
+  <FaqItem title="NOTIFICATIONS_SSE_ENABLED">
+    **Repo:** api. **Required:** no. Enables the live notification stream. `true` requires Valkey because API instances coordinate through pub/sub.
+  </FaqItem>
 </FaqGroup>
 
 ### Auth + session
 
 <FaqGroup>
   <FaqItem title="JWT_SECRET" open>
-    **Repo:** api. **Required:** yes (32+ chars). Signs the auth cookie; rotation invalidates all sessions.
+    **Repo:** api. **Required:** yes (32+ chars). Signs the 15-minute access cookie and hashes refresh tokens. Rotation forces every user to sign in again.
   </FaqItem>
   <FaqItem title="FRONTEND_URL">
-    **Repo:** api. **Required:** yes. OAuth success redirect target.
+    **Repo:** api. **Required:** yes. App origin used for OAuth success redirects and Stripe return-url allowlisting.
+  </FaqItem>
+  <FaqItem title="PUBLIC_API_URL">
+    **Repo:** api. **Required:** yes. Public URL used to build OAuth callback URLs. Same-origin default is the frontend origin; cross-origin setups use the API origin.
   </FaqItem>
   <FaqItem title="ALLOWED_ORIGINS">
     **Repo:** api. **Required:** no (default empty). CSV. Empty means same-origin deployment (default); CORS is not mounted. When set, every origin must be HTTPS with no wildcards.
@@ -132,6 +144,9 @@ For Docker Compose-driven setups (the default), **`compose/.env` is the single f
   <FaqItem title="SMTP_USER / SMTP_PASS">
     **Repo:** api. **Required:** optional. Auth when the server requires it.
   </FaqItem>
+  <FaqItem title="NOTIFICATION_SETTINGS_URL">
+    **Repo:** api. **Required:** no. Optional http(s) link rendered in notification email footers.
+  </FaqItem>
 </FaqGroup>
 
 ### Billing
@@ -147,7 +162,7 @@ For Docker Compose-driven setups (the default), **`compose/.env` is the single f
     **Repo:** api. **Required:** when billing is on.
   </FaqItem>
   <FaqItem title="STRIPE_PRICE_ID_FREE / STRIPE_PRICE_ID_PRO">
-    **Repo:** api. **Required:** when billing is on.
+    **Repo:** api. **Required:** when billing is on. Used to upsert the template's Free and Pro plans at runtime.
   </FaqItem>
 </FaqGroup>
 

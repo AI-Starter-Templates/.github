@@ -46,8 +46,8 @@ The `void` prefix at call sites is load-bearing: it tells the reader (and the li
 
 Convention: `<area>.<verb>`. Examples:
 
-- `auth.login_success`, `auth.password_reset_completed`
-- `billing.checkout_session_created`
+- `auth.login_success`, `auth.session_created`, `auth.session_revoked`, `auth.password_reset_completed`
+- `billing.checkout_session_created`, `billing.portal_session_created`
 - `user.profile_updated`
 
 A `<area>.<verb>` shape means admin queries can group cleanly:

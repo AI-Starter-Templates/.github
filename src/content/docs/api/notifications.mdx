@@ -48,7 +48,7 @@ sequenceDiagram
     `runNotificationDispatch` runs identically in the worker and the inline fallback, so dev and tests don't need a worker process.
   </FaqItem>
   <FaqItem title="Channels are pluggable">
-    In-app, email, and SSE ship in v1. New channels (web-push, SMS, custom) implement `INotificationChannel` and register at boot via `channelRegistry.register(channel)`.
+    In-app and email ship by default. SSE is opt-in with `NOTIFICATIONS_SSE_ENABLED=true`. New channels (web-push, SMS, custom) implement `INotificationChannel` and register at boot via `channelRegistry.register(channel)`.
   </FaqItem>
   <FaqItem title="Events are typed via TypeBox">
     Author handlers receive a `payload` typed by the event's schema. The dispatcher validates with `Value.Check` before enqueuing; the worker re-validates before any handler runs.
@@ -134,7 +134,7 @@ The `payload` is TypeScript-checked at the call site against `commentRepliedEven
 
 | Endpoint | Purpose |
 | --- | --- |
-| `GET /api/v1/notifications` | List the current user's notifications (paginated, optional `status` filter). |
+| `GET /api/v1/notifications` | List the current user's notifications with stable cursor pagination and an optional `status` filter. |
 | `PATCH /api/v1/notifications/:id` | Mark read / archived. |
 | `POST /api/v1/notifications/mark-all-read` | Bulk mark every unread row read. |
 | `GET /api/v1/notifications/preferences` | List per-event-type, per-channel toggles. |
@@ -143,7 +143,7 @@ The `payload` is TypeScript-checked at the call site against `commentRepliedEven
 
 ## Realtime: SSE + Valkey pub/sub
 
-The SSE endpoint subscribes to `notifications:user:<userId>` on Valkey. When the SSE channel implementation publishes after persistence, the message is forwarded to every connected client of that user, including clients on different API instances.
+SSE is disabled unless `NOTIFICATIONS_SSE_ENABLED=true`. When enabled, the SSE endpoint subscribes to `notifications:user:<userId>` on Valkey. When the SSE channel implementation publishes after persistence, the message is forwarded to every connected client of that user, including clients on different API instances.
 
 ```mermaid
 flowchart LR
@@ -152,7 +152,26 @@ flowchart LR
   apiB -->|data:| browser["Browser EventSource"]
 ```
 
-The SSE handler hooks the request's `AbortSignal`: when the tab closes, the generator's `finally` block disconnects the Valkey subscriber. No connection leak.
+The SSE handler hooks the request's `AbortSignal`: when the tab closes, the generator's `finally` block disconnects the Valkey subscriber. No connection leak. If SSE is disabled, the endpoint returns 404 so the feature cannot accidentally look half-on.
+
+Messages use a stable JSON envelope:
+
+```json
+{
+  "type": "notification.created",
+  "notification": {
+    "id": "...",
+    "eventType": "comment.replied",
+    "title": "Someone replied",
+    "body": "...",
+    "ctaUrl": "/comments/...",
+    "ctaLabel": "View reply",
+    "status": "unread",
+    "readAt": null,
+    "createdAt": "2026-05-15T12:00:00.000Z"
+  }
+}
+```
 
 ## Out of scope (v1)
 
