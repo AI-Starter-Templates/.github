@@ -51,9 +51,9 @@ A feature is three files with three jobs. Lint plugins forbid them from leaking 
 - src/
   - index.ts            Entrypoint: env, Sentry, queues, listen
   - config/             App composition, env, logger, queue bootstrap
-  - api/                Feature folders (auth, users, dashboard, billing, admin, health)
+  - api/                Feature folders (auth, users, dashboard, billing, admin, health, notifications)
   - clients/postgres/   Drizzle client + per-domain schema modules
-  - lib/                Shared utilities (auth, email, audit-log, ai, cache, errors)
+  - lib/                Shared utilities (auth, email, audit-log, ai, cache, errors, notifications)
   - middleware/         Per-route Elysia plugins
   - queues/             BullMQ queue/worker pairs
   - templates/email/    Handlebars sources, compiled to JSON at build
@@ -69,7 +69,7 @@ A feature folder always looks like (for a hypothetical `posts` resource):
   - posts.schemas.ts       (optional) TypeBox request/response
 </FileTree>
 
-The template ships no example domain feature on purpose. The shipped `auth`, `users`, `billing`, `dashboard`, `admin`, `health` modules are framework. Add your own resources with `bun run new:resource <name>`; the scaffolder writes the four-file anatomy and wires it into `config/routes.ts` so you can't forget a step.
+The template ships no example domain feature on purpose. The shipped `auth`, `users`, `billing`, `dashboard`, `admin`, `health`, `notifications` modules are framework. Add your own resources with `bun run new:resource <name>`; the scaffolder writes the four-file anatomy and wires it into `config/routes.ts` so you can't forget a step.
 
 ## Cross-cutting concerns
 

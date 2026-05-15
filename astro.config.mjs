@@ -12,6 +12,18 @@ export default defineConfig({
     mermaid({
       theme: "default",
       autoTheme: true,
+      mermaidConfig: {
+        // Sketch / hand-drawn strokes (Rough.js). Pairs with dark|default from autoTheme.
+        look: "handDrawn",
+        handDrawnSeed: 42,
+        themeVariables: {
+          // Starlight owns the page surface. Mermaid dark theme defaults use #333
+          // (canvas) and secondBkg-derived fills for subgraph clusters; both read as
+          // a separate "card" on the docs background.
+          background: "transparent",
+          clusterBkg: "transparent",
+        },
+      },
     }),
     starlight({
       title: "BoringStack",
@@ -138,6 +150,7 @@ export default defineConfig({
             { label: "Email", link: "/api/email/" },
             { label: "Queues", link: "/api/queues/" },
             { label: "Audit log", link: "/api/audit-log/" },
+            { label: "Notifications", link: "/api/notifications/" },
             { label: "Env validator", link: "/api/env-validator/" },
           ],
         },

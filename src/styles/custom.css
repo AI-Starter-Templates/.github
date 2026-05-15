@@ -1,10 +1,37 @@
 /* Mermaid diagrams: readable inline, click-to-zoom in a native dialog */
 
+/* Starlight styles all <pre> as code frames; astro-mermaid also tints processed
+   blocks. Remove chrome so diagrams sit flush on the page (see astro-mermaid
+   injected rules for pre.mermaid[data-processed]). */
+.sl-markdown-content pre.mermaid,
+.sl-markdown-content pre.mermaid[data-processed],
+html[data-theme="dark"] .sl-markdown-content pre.mermaid[data-processed],
+html[data-theme="light"] .sl-markdown-content pre.mermaid[data-processed] {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
 .mermaid {
   display: flex;
   justify-content: center;
   padding: 1rem 0;
   cursor: zoom-in;
+  background-color: transparent;
+}
+
+/* ThemeVariables clear most fills; keep a belt for any leftover canvas rect */
+pre.mermaid svg rect.background,
+.mermaid-zoom-dialog svg rect.background {
+  fill: transparent !important;
+}
+
+/* Subgraph cluster panels: no fill (stroke still from Mermaid theme) */
+pre.mermaid svg.flowchart .cluster rect,
+.mermaid-zoom-dialog svg.flowchart .cluster rect {
+  fill: transparent !important;
 }
 
 .mermaid svg {
