@@ -41,6 +41,47 @@ Push to `main` on `api-template` or `ui-template`. The release workflow builds a
   </FaqItem>
 </FaqGroup>
 
+## First-time wiring
+
+Three things need configuring before the first deploy. The release workflows handle everything else from your renamed fork URLs.
+
+### 1. Publish images to GHCR
+
+The `release.yml` workflows on `api-template` and `ui-template` run on push to `main` and on `v*.*.*` tags. They use `${{ github.event.repository.name }}`, so they publish to `ghcr.io/<your-owner>/<your-renamed-repo>:latest` automatically. The default `GITHUB_TOKEN` has `packages: write` via the workflow grant, so the first push from a freshly-forked repo works without secret setup.
+
+After the first publish, **make the GHCR package public** so the VPS can pull without credentials:
+
+1. Go to `https://github.com/<your-owner>/<your-renamed-repo>/pkgs/container/<your-renamed-repo>`.
+2. Package settings → Change visibility → Public.
+
+Without this, downstream consumers (your VPS) need a pull credential.
+
+### 2. Point the prod compose stack at your images
+
+In your `infra-docker-compose-template` fork's `compose/.env`:
+
+```bash
+IMAGE_OWNER=acme
+API_IMAGE_NAME=acme-api    # only if you renamed the api repo
+UI_IMAGE_NAME=acme-ui      # only if you renamed the ui repo
+```
+
+Kept canonical names? Only `IMAGE_OWNER` needs to change.
+
+### 3. (Optional) Wire OpenTofu bootstrap
+
+If using the OpenTofu path, `terraform.tfvars` in your `infra-bootstrap-tofu-template` fork:
+
+```hcl
+api_repo   = "https://github.com/acme/acme-api"
+ui_repo    = "https://github.com/acme/acme-ui"
+infra_repo = "https://github.com/acme/acme-infra"
+domain     = "acme.com"
+# ... other vars per terraform.tfvars.example
+```
+
+The module derives `IMAGE_OWNER`, `API_IMAGE_NAME`, and `UI_IMAGE_NAME` from those URLs and renders them into `compose/.env` on the VPS. You don't set them twice.
+
 ## First-time deploy
 
 The preferred path is [Provisioning with OpenTofu](/topics/provisioning-with-tofu/): one `tofu apply` provisions the VPS, configures Cloudflare DNS + zone settings, and runs cloud-init which clones the infra repo, drops a rendered `compose/.env`, and pulls the GHCR images.

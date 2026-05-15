@@ -1,15 +1,20 @@
 ---
 title: Quickstart
-description: Clone the sibling repos, run a script, log in. Five minutes from zero to a working full-stack.
+description: Click "Use this template" on four repos, boot the local stack, sign in. About five minutes from zero to a working full-stack on your laptop.
 ---
 
 import { Steps, Aside } from "@astrojs/starlight/components";
 import FaqGroup from "../../components/FaqGroup.astro";
 import FaqItem from "../../components/FaqItem.astro";
 
-You are cloning a production spine (auth, contracts, lint rules, deploy wiring), not an empty tutorial repo. [Why BoringStack](/architecture/why-boringstack/) explains what ships in the box.
+## TL;DR
 
-Local stack up in about five minutes. Postgres, Valkey, API, UI, all in Docker. Sign up via the registration form (or set `SUPERUSER_EMAIL` + `SUPERUSER_PASSWORD` in `compose/.env` first to bootstrap an admin user). The dev stack uses Vite's dev-server to proxy `/api/*` to api-dev, so the browser sees one origin and there are no CORS preflights.
+1. Click **"Use this template"** on the four BoringStack repos under your org.
+2. Clone your four forks as siblings under one parent directory.
+3. `cd <infra-fork>/compose && cp .env.example .env && ./dev.sh up -d`
+4. Open `http://localhost:3001` and sign up.
+
+You now have Postgres, Valkey, the API, and the UI running locally with hot reload. The toolchain follows your repo names: GHCR workflows, the prod compose stack, and the OpenTofu bootstrap derive image names and owners from your fork URLs automatically. You only configure your renames when you go to prod (see [Going to production](#going-to-production)).
 
 ## Prerequisites
 
@@ -17,35 +22,56 @@ Local stack up in about five minutes. Postgres, Valkey, API, UI, all in Docker. 
 - About 4 GB of free RAM.
 - No local Node or Bun needed; everything runs in containers.
 
-## Clone the siblings
+## Step 1. Use this template
 
-The templates live as siblings under one parent. Click "Use this template" on each GitHub repo (see the [after-fork checklist](/topics/use-this-template/)), or clone the upstream. The `api-template`, `ui-template`, and `infra-docker-compose-template` boot the local stack. The `infra-bootstrap-tofu-template` is only needed later when you provision a VPS, but clone it now so the layout is complete:
+BoringStack ships as four GitHub template repos. Click **"Use this template" → "Create a new repository"** on each:
 
-```bash
-mkdir boringstack && cd boringstack
+- [`api-template`](https://github.com/AI-Starter-Templates/api-template) → e.g. `acme-api`
+- [`ui-template`](https://github.com/AI-Starter-Templates/ui-template) → e.g. `acme-ui`
+- [`infra-docker-compose-template`](https://github.com/AI-Starter-Templates/infra-docker-compose-template) → e.g. `acme-infra`
+- [`infra-bootstrap-tofu-template`](https://github.com/AI-Starter-Templates/infra-bootstrap-tofu-template) → e.g. `acme-bootstrap`
 
-git clone https://github.com/AI-Starter-Templates/api-template
-git clone https://github.com/AI-Starter-Templates/ui-template
-git clone https://github.com/AI-Starter-Templates/infra-docker-compose-template
-git clone https://github.com/AI-Starter-Templates/infra-bootstrap-tofu-template
-```
+Keep the canonical names if you want. Nothing breaks either way.
 
-Compose build contexts use `../../api-template` and `../../ui-template`, so the directory names matter.
-
-<Aside type="tip" title="Optional: setup.sh">
-  The workspace root ships a `setup.sh` that bootstraps `compose/.env`,
-  generates a `GLITCHTIP_SECRET_KEY`, and (with `--up`) boots the stack.
-  Skip if you prefer doing the steps by hand.
+<Aside type="note">
+The docs site source (`.github` repo) is **not** a template. It's BoringStack-specific content. Skip it.
 </Aside>
 
-## Boot
+## Step 2. Clone your forks as siblings
+
+The compose build contexts use relative paths (`../../api-template`, `../../ui-template`). Whatever you named your forks, lay them out as siblings under one parent:
+
+```bash
+mkdir acme && cd acme
+
+git clone https://github.com/<you>/acme-api
+git clone https://github.com/<you>/acme-ui
+git clone https://github.com/<you>/acme-infra
+git clone https://github.com/<you>/acme-bootstrap
+```
+
+```
+acme/
+├── acme-api/         (your fork of api-template)
+├── acme-ui/          (your fork of ui-template)
+├── acme-infra/       (your fork of infra-docker-compose-template)
+└── acme-bootstrap/   (your fork of infra-bootstrap-tofu-template)
+```
+
+If you renamed `api-template` or `ui-template`, either match the cloned directory name to what `compose/docker-compose.yml` expects, or edit the `build: context:` lines once.
+
+<Aside type="tip" title="Optional: setup.sh">
+The workspace root ships a `setup.sh` that bootstraps `compose/.env`, generates a `GLITCHTIP_SECRET_KEY`, and (with `--up`) boots the stack. Skip if you prefer doing the steps by hand.
+</Aside>
+
+## Step 3. Boot the local stack
 
 <Steps>
 
 1. Seed the env:
 
    ```bash
-   cd infra-docker-compose-template/compose
+   cd acme-infra/compose
    cp .env.example .env
    ```
 
@@ -65,7 +91,7 @@ Compose build contexts use `../../api-template` and `../../ui-template`, so the 
 
 </Steps>
 
-## Sign in
+## Step 4. Sign in
 
 Open **http://localhost:3001**.
 
@@ -75,7 +101,7 @@ If you set `SUPERUSER_EMAIL` + `SUPERUSER_PASSWORD` in `compose/.env` before boo
 
 <FaqGroup>
   <FaqItem title="postgres (port 5432)" open>
-    App database; schemas `auth`, `billing`, `audit`, `app`.
+    App database; schemas `auth`, `billing`, `audit`, `app`, `notifications`.
   </FaqItem>
   <FaqItem title="valkey (port 6379)">
     Cache and BullMQ queues.
@@ -98,7 +124,6 @@ Traefik runs only in the prod profile. In prod it terminates TLS and path-routes
 - Observability: `WITH_OBSERVABILITY=1 ./dev.sh up -d`. [Details](/topics/observability/).
 - Self-hosted error tracking: `WITH_GLITCHTIP=1 ./dev.sh up -d`. [Details](/topics/error-tracking/).
 - Local email testing: `WITH_MAILPIT=1 ./dev.sh up -d`. [Details](/topics/email-in-dev/).
-- Move to production: [Deployment](/topics/deployment/).
 
 ## Stop the stack
 
@@ -110,3 +135,32 @@ Traefik runs only in the prod profile. In prod it terminates TLS and path-routes
     `./scripts/compose-down-clean.sh`. Prompts before delete; `CONFIRM=yes` to skip the prompt.
   </FaqItem>
 </FaqGroup>
+
+## Going to production
+
+A second phase, not part of the 5-minute path. When you're ready to deploy your forks to a VPS:
+
+1. Push to `main` on your api / ui forks. The release workflow builds and publishes `ghcr.io/<your-owner>/<your-repo>:latest` automatically; no secret setup needed for the default `GITHUB_TOKEN`.
+2. After the first publish, make the GHCR package **public** (`github.com/<owner>/<repo>/pkgs/container/<repo>` → Settings → Change visibility) so the VPS can pull without credentials.
+3. Set `IMAGE_OWNER` (and `*_IMAGE_NAME` if you renamed) in your infra fork's `compose/.env`. The OpenTofu bootstrap derives these from your fork URLs in `terraform.tfvars`, so they don't need to be set twice.
+
+See [Deployment](/topics/deployment/) for the full prod path and [Provisioning with OpenTofu](/topics/provisioning-with-tofu/) for first-time VPS provisioning.
+
+## First-deploy checklist
+
+- [ ] Every template repo forked under your org/user
+- [ ] First image published to GHCR (push to `main`, watch the Actions tab)
+- [ ] GHCR package visibility set to Public
+- [ ] `acme-infra/compose/.env`: `IMAGE_OWNER` + `*_IMAGE_NAME` (if renamed)
+- [ ] `acme-bootstrap/terraform.tfvars`: fork URLs + real `domain`
+- [ ] `SUPERUSER_PASSWORD` rotated via the password-reset flow after first login
+- [ ] `JWT_SECRET` regenerated for production
+- [ ] `ACME_EMAIL` set to a real address (not `example.com`)
+
+## Related
+
+- [Why BoringStack](/architecture/why-boringstack/). What ships in the box.
+- [Repository layout](/architecture/three-repos/). Why four repos.
+- [Environment variables](/reference/env-vars/). Every var, what it does.
+- [Deployment](/topics/deployment/). Production runtime path.
+- [Provisioning with OpenTofu](/topics/provisioning-with-tofu/). `tofu apply` to a live VPS.
