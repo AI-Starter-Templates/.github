@@ -112,6 +112,12 @@ For Docker Compose-driven setups (the default), **`compose/.env` is the single f
   <FaqItem title="LINKEDIN_OAUTH_CLIENT_ID / LINKEDIN_OAUTH_CLIENT_SECRET">
     **Repo:** api. **Required:** when LinkedIn OAuth is enabled.
   </FaqItem>
+  <FaqItem title="RATE_LIMIT_MAX / RATE_LIMIT_WINDOW_MS">
+    **Repo:** api. **Required:** no (defaults 100 / 60000ms). Per-IP global rate limit; defence-in-depth alongside Traefik's edge limit.
+  </FaqItem>
+  <FaqItem title="AUTH_RATE_LIMIT_MAX / AUTH_RATE_LIMIT_WINDOW_MS">
+    **Repo:** api. **Required:** no (defaults 10 / 60000ms). Stricter per-IP limit applied to every `/api/v1/auth/*` route. Tightens the global default for the credential-stuffing surface.
+  </FaqItem>
 </FaqGroup>
 
 ### Email
