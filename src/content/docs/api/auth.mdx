@@ -9,15 +9,53 @@ import FaqItem from "../../../components/FaqItem.astro";
 
 Two login flows share one browser contract:
 
-- Password: register / login / verify-email / forgot-password / reset-password.
+- Password: register / verify-email / login / forgot-password / reset-password.
 - OAuth: Google, GitHub, LinkedIn. Server-side; the SPA never holds a client secret.
 
-Both end the same way:
+Both converge at the same point: `accountsService.provisionAfterVerification` — the single place that creates the personal account + owner membership. **No account exists for an unverified email**, so an abandoned signup never leaves orphan tenant rows in the database.
+
+Once verified, a session ends the same way regardless of which flow produced it:
 
 - `auth_token`: a 15-minute stateless JWT in an `HttpOnly` cookie. The frontend never reads or stores it.
 - `refresh_token`: a 30-day opaque `HttpOnly` cookie. The API stores only its HMAC hash in `auth.sessions`, rotates it on every refresh, and can revoke it on logout or password reset.
 
 So the model is intentionally hybrid: fast stateless access checks, stateful refresh sessions for revocation and safer long-lived login.
+
+## Verify-before-account
+
+Password signup splits across two endpoints. `POST /auth/register` writes only the pending user row, the bcrypt hash, and a single-use verification token — no `app.accounts` row, no membership, no session cookies. The response is a `{ message }` envelope so the SPA can render "check your inbox at user@example.com." `POST /auth/verify-email` flips `users.email_verified_at`, atomically calls `provisionAfterVerification`, and *then* issues the auth + refresh cookies. That's where the user gets their account.
+
+```mermaid
+sequenceDiagram
+  participant B as Browser
+  participant API as API (Elysia)
+  participant DB as Postgres
+  participant Mail
+  B->>API: POST /auth/register
+  API->>DB: INSERT users (email_verified_at = NULL)
+  API->>DB: INSERT user_auth_providers (password hash)
+  API->>DB: INSERT email_verification_tokens
+  API->>Mail: send verification link
+  API-->>B: 200 { message: "Verification email sent to user@example.com" }
+  Note over B,API: NO cookies set; user can't log in yet.
+  B->>B: user clicks link in email
+  B->>API: POST /auth/verify-email { token }
+  API->>DB: UPDATE users SET email_verified_at = now()
+  API->>DB: provisionAfterVerification → INSERT accounts + memberships
+  API-->>B: 200 + auth_token + refresh_token (idempotent — a double-click is safe)
+```
+
+The OAuth flow lands at the same `provisionAfterVerification` call. Branches that converge there:
+
+- Brand-new OAuth signup with a provider-verified email → user created, provisioned, session issued.
+- Existing pending password-signup signing in with OAuth → user gets promoted to verified, the OAuth link is added, the account is provisioned. (This branch quietly fixed a pre-VBA bug where pending users could get OAuth-linked but never end up with an account.)
+- Existing already-verified user adding another OAuth provider → link added, `provisionAfterVerification` is idempotent (returns the existing account + membership).
+
+OAuth refuses to issue a session when the IdP says `emailVerified: false`. The transaction rolls back — no user row, no provider link, no half-state. The caller has to verify through the password flow first.
+
+`POST /auth/login` with a still-pending user (correct password, `email_verified_at` is null) returns **403 `EMAIL_NOT_VERIFIED`**. The check fires after the password verify so an attacker who doesn't already know the password can't enumerate which addresses are pending versus unknown. The UI surfaces a resend-verification CTA pinned to the email the user typed.
+
+A daily `cleanStalePendingUsersJob` hard-deletes pending users older than 30 days (configurable). FK cascades drop the auth provider + verification token; `audit.audit_log` survives so the registration attempt remains traceable.
 
 ## How a request gets authenticated
 
@@ -83,6 +121,17 @@ Refresh-token rotation means a replayed old refresh token no longer matches a ro
   </FaqItem>
   <FaqItem title="Read-and-delete state consumption">
     Replay attacks fail by construction.
+  </FaqItem>
+  <FaqItem title="No account exists without a verified email">
+    `/register` writes only the pending user row. The personal account
+    + owner membership get created only at verify-email time (or
+    inline at the OAuth callback when the IdP asserts the email is
+    verified). Abandoned signups don't leave orphan tenant rows.
+  </FaqItem>
+  <FaqItem title="`EMAIL_NOT_VERIFIED` (403) fires only after correct password">
+    Password order on `/login` is: dummy-verify on lookup miss →
+    bcrypt → check `email_verified_at`. An attacker who doesn't know
+    the password can't enumerate pending users.
   </FaqItem>
 </FaqGroup>
 

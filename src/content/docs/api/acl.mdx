@@ -51,9 +51,11 @@ Four roles ship by default, **per-membership** (a user is `owner` of Account A, 
   </FaqItem>
   <FaqItem title="admin">
     Account-level admin. Manages other members + settings. Zero or
-    more per account. Does NOT bypass plan checks — `is_platform_admin`
-    is the only role that does, and every cross-account action it
-    takes writes `authz.platform_admin_bypass` to the audit log.
+    more per account. Does NOT bypass plan checks — the server-side
+    `users.is_platform_admin` flag is the only role that does, and
+    every cross-account action it takes writes
+    `authz.platform_admin_bypass` to the audit log. That flag never
+    leaves the API; see the `/me` aside below.
   </FaqItem>
   <FaqItem title="member">
     Regular authenticated user (default). Read + write the
@@ -126,7 +128,7 @@ The cross-account isolation matrix in `tests/api/widgets/widgets.routes.test.ts`
 
 ```json
 {
-  "user":       { "id": "...", "email": "...", "isPlatformAdmin": false, ... },
+  "user":       { "id": "...", "email": "...", "firstName": "...", "lastName": "...", "emailVerified": true },
   "account":    { "id": "...", "name": "..." },
   "role":       "owner",
   "memberships": [
@@ -142,6 +144,15 @@ The cross-account isolation matrix in `tests/api/widgets/widgets.routes.test.ts`
 ```
 
 Single endpoint, every piece the UI needs to render the right buttons. The `features` block is the *resolved* set — overrides have already been applied.
+
+<Aside type="note" title="`isPlatformAdmin` is NOT in the payload">
+  Platform-admin status is a server-side flag (`users.is_platform_admin`) gating
+  the separate `/admin/*` route mount and `requirePlatformAdmin` middleware.
+  It is deliberately never shipped to the SPA — the product UI has no concept
+  of "this user is also an admin," and `requireAbility` checks rebuild from
+  DB state on every privileged call. If a fork wants admin tooling, build it
+  as a separate app behind its own auth gate.
+</Aside>
 
 ## Source
 
