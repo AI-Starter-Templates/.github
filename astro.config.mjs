@@ -151,6 +151,8 @@ export default defineConfig({
             { label: "Queues", link: "/api/queues/" },
             { label: "Audit log", link: "/api/audit-log/" },
             { label: "Notifications", link: "/api/notifications/" },
+            { label: "ACL & feature resolution", link: "/api/acl/" },
+            { label: "Multi-tenant model", link: "/api/multi-tenant/" },
             { label: "Env validator", link: "/api/env-validator/" },
           ],
         },

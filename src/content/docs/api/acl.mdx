@@ -1,0 +1,158 @@
+---
+title: ACL & feature resolution
+description: CASL ability model, role rules, feature resolution order (override > plan > catalog default), and how account-scoping is enforced end-to-end.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+import FaqGroup from "../../../components/FaqGroup.astro";
+import FaqItem from "../../../components/FaqItem.astro";
+
+ACL is multi-tenant from day one. Solo-user products are the degenerate case: every signup creates a personal `accounts` row, one `account_memberships` row at `role: owner`, and a Free `account_plans` row — all in a single transaction. The account switcher and invitations UI stay hidden until the user holds more than one membership.
+
+## The three axes that feed every authorization check
+
+| Axis | Question it answers | Changes how often | Source |
+| --- | --- | --- | --- |
+| **Role** | What does this user play in this account? | Rarely | `auth.account_memberships.role` |
+| **Entitlement** | What did this account pay for? | Per Stripe webhook | `billing.account_plans` + `app.account_feature_overrides` |
+| **Resource ownership** | Does this row belong to this account? | Per request | CASL condition `{ accountId }` on role rules |
+
+Stripe never knows about feature keys or roles. The app never queries Stripe at request time. The two systems touch only at the webhook boundary.
+
+## The critical invariant
+
+<Aside type="caution" title="Server authorization MUST NEVER depend on serialized client rules">
+  `/me.rules` is a UI-rendering hint only. Every privileged API
+  handler rebuilds the ability server-side from trusted DB state
+  (`account_memberships` + resolved features), or wraps the DB call
+  in `requireAbility(...)`. A modified client cannot escalate by
+  sending crafted rules.
+</Aside>
+
+## Resolution order
+
+For every feature key at request time, resolved **per account**:
+
+1. Active override in `account_feature_overrides` (not expired, not revoked).
+2. `plan_features` row for the account's current `account_plans` row.
+3. Catalog default from `src/lib/acl/acl.constants.ts` (`FEATURES[key].default`).
+
+First match wins. The CASL ability is built from the resolved feature set after that pass. The resolver — `resolveFeatures()` in `src/lib/acl/feature-resolution.ts` — is pure: feed it the plan rows and override rows, get back a typed `ResolvedFeatures` object. Tested in isolation.
+
+## Roles
+
+Four roles ship by default, **per-membership** (a user is `owner` of Account A, `viewer` of Account B):
+
+<FaqGroup>
+  <FaqItem title="owner" open>
+    Account creator, billing-aware. Manages billing, deletes the
+    account, transfers ownership. Exactly one per account (partial
+    unique index `uniq_account_memberships_active_owner` enforces it).
+  </FaqItem>
+  <FaqItem title="admin">
+    Account-level admin. Manages other members + settings. Zero or
+    more per account. Does NOT bypass plan checks — `is_platform_admin`
+    is the only role that does, and every cross-account action it
+    takes writes `authz.platform_admin_bypass` to the audit log.
+  </FaqItem>
+  <FaqItem title="member">
+    Regular authenticated user (default). Read + write the
+    account-scoped resources they own.
+  </FaqItem>
+  <FaqItem title="viewer">
+    Read-only — guest access, support, demos. Never writes.
+  </FaqItem>
+</FaqGroup>
+
+Role rules carry CASL conditions (`{ accountId: membership.accountId }`) so resource ownership is encoded right at the rule, not duplicated in every handler.
+
+## Feature gates
+
+`FEATURE_KEYS` is a code const tuple. Adding a feature is a TypeScript edit + a `pnpm generate:acl-types` round-trip:
+
+```ts
+// src/lib/acl/acl.constants.ts
+export const FEATURE_KEYS = [
+  "can_export",
+  "can_invite_team",
+  "max_seats",
+  "max_widgets",
+] as const;
+
+export const FEATURES = {
+  can_export: { kind: "boolean", default: false },
+  max_seats: { kind: "limit", default: 1 },
+  // ...
+} as const;
+```
+
+Feature gates compose with role rules via CASL's `cannot(...)` rules: a missing feature forbids the action *regardless of role*. Owner is not special here.
+
+## Account-scoping enforcement
+
+Every account-scoped Drizzle table carries a `// @account-scoped accountId` comment above its `pgTable` declaration. The companion ESLint rule (`drizzle-conventions/account-scoped-tables-require-where` — defense-in-depth, deferred from the main ACL pass) refuses to merge any `db.query.<table>.findX` that doesn't include the scope column in `WHERE`.
+
+The cross-account isolation matrix in `tests/api/widgets/widgets.routes.test.ts` is the proof: same user with two accounts, resource IDs unique across accounts, every method (`GET`, `PATCH`, `DELETE`) returns 404 when the resource belongs to the other account.
+
+## Runtime helpers
+
+<FaqGroup>
+  <FaqItem title="resolveActiveMembership(userId, accountId)" open>
+    Per-request DB lookup with a 30s in-process TTL cache. Confirms
+    the JWT-claimed `(user, account)` still maps to an active
+    membership and that the parent account is not soft-deleted.
+  </FaqItem>
+  <FaqItem title="resolveFreshMembership(userId, accountId)">
+    Cache-bypassing variant for the highest-stakes calls: account
+    deletion, ownership transfer, billing-portal creation, member
+    removal, role changes. Always refetches.
+  </FaqItem>
+  <FaqItem title="scopedTo(membership)">
+    Returns `{ accountId }` so account-scoped queries pull their
+    `WHERE` argument from one place.
+  </FaqItem>
+  <FaqItem title="requireAbility(ability, action, subject)">
+    Throws `ApiErrors.forbidden()` with the action+subject in the
+    message when the ability denies. Wraps every privileged DB call.
+  </FaqItem>
+  <FaqItem title="enforceLimit(feature, current, limit)">
+    Throws `ApiErrors.limitExceeded` (status 402) with
+    `{ feature, current, limit }` so the UI can render an inline
+    upgrade CTA. Wrap inside a transaction for race safety.
+  </FaqItem>
+</FaqGroup>
+
+## /me response shape
+
+```json
+{
+  "user":       { "id": "...", "email": "...", "isPlatformAdmin": false, ... },
+  "account":    { "id": "...", "name": "..." },
+  "role":       "owner",
+  "memberships": [
+    { "accountId": "...", "accountName": "...", "role": "owner" }
+  ],
+  "features": {
+    "can_export":      false,
+    "can_invite_team": false,
+    "max_seats":       1,
+    "max_widgets":     5
+  }
+}
+```
+
+Single endpoint, every piece the UI needs to render the right buttons. The `features` block is the *resolved* set — overrides have already been applied.
+
+## Source
+
+- [`src/lib/acl/`](https://github.com/AI-Starter-Templates/api-template/tree/main/src/lib/acl) — types, constants, feature-resolution, ability builder, `scopedTo`, `enforceLimit`.
+- [`src/api/accounts/`](https://github.com/AI-Starter-Templates/api-template/tree/main/src/api/accounts) — `accountsService`, `invitationsService`, routes.
+- [`src/api/admin/`](https://github.com/AI-Starter-Templates/api-template/tree/main/src/api/admin) — `adminBillingService` (grantFeature / revokeFeature / grantPlan).
+- [`src/middleware/require-active-membership.ts`](https://github.com/AI-Starter-Templates/api-template/blob/main/src/middleware/require-active-membership.ts) — runtime membership recheck.
+- [`src/queues/account-maintenance/`](https://github.com/AI-Starter-Templates/api-template/tree/main/src/queues/account-maintenance) — five daily idempotent sweep jobs (expire overrides, expire admin plans, downgrade canceled Stripe plans, hard-delete soft-deleted accounts, clean expired invitations).
+
+## Related
+
+- [Multi-tenant model](/api/multi-tenant/) — accounts, memberships, invitations, owner lifecycle.
+- [Authentication](/api/auth/) — JWT carries `(user_id, account_id)`; account switch issues a fresh JWT.
+- [Billing](/api/billing/) — Stripe webhook → `account_plans` bridge, status → effective-features mapping.
