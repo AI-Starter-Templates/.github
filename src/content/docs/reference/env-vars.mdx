@@ -39,6 +39,9 @@ For Docker Compose-driven setups (the default), **`compose/.env` is the single f
   <FaqItem title="PORT">
     **Repo:** api. **Required:** no. Default 3000.
   </FaqItem>
+  <FaqItem title="APP_NAME">
+    **Repo:** api. **Required:** no (default `API Template`). Public-facing identity used in email From-names, OAuth consent metadata, and the OpenAPI document title.
+  </FaqItem>
   <FaqItem title="LOG_LEVEL">
     **Repo:** api. **Required:** no. One of `debug`, `info`, `warn`, `error`.
   </FaqItem>
@@ -186,6 +189,9 @@ For Docker Compose-driven setups (the default), **`compose/.env` is the single f
   </FaqItem>
   <FaqItem title="OPENAI_BASE_URL">
     **Repo:** api. **Required:** no. Point at OpenAI-compatible APIs (OpenRouter, Ollama, vLLM).
+  </FaqItem>
+  <FaqItem title="OPENAI_DEFAULT_HEADERS">
+    **Repo:** api. **Required:** no. Optional JSON object of extra headers passed on every OpenAI client request. Useful for OpenRouter ranking (`HTTP-Referer`, `X-Title`) or for custom auth on a compatible endpoint. Empty means no extra headers.
   </FaqItem>
   <FaqItem title="ANTHROPIC_API_KEY">
     **Repo:** api. **Required:** when AI provider is anthropic.

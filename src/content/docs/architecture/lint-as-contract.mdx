@@ -29,7 +29,7 @@ Custom ESLint plugins make those patterns stick. Every rule that matters is mach
     [`eslint-plugin-module-boundaries`](https://github.com/agjs/eslint-plugin-module-boundaries): single-semantic-module files. No mixed-concern dumps.
   </FaqItem>
   <FaqItem title="structured-logging">
-    [`eslint-plugin-structured-logging`](https://github.com/agjs/eslint-plugin-structured-logging): Pino discipline. No `console.log`, no string-interpolated log lines, no logging secrets.
+    [`eslint-plugin-structured-logging`](https://github.com/agjs/eslint-plugin-structured-logging): Pino discipline. No `console.log`, no string-interpolated log lines, no logging secrets. The `typed-event-names` rule validates every `logger.{level}({ event })` literal against the canonical `LOG_EVENTS` const tuple so log events stay a closed set.
   </FaqItem>
   <FaqItem title="env-access">
     [`eslint-plugin-env-access`](https://github.com/agjs/eslint-plugin-env-access): `process.env` / `import.meta.env` only inside the env validator; everywhere else uses validated config.
@@ -39,6 +39,25 @@ Custom ESLint plugins make those patterns stick. Every rule that matters is mach
   </FaqItem>
   <FaqItem title="code-flow">
     [`eslint-plugin-code-flow`](https://github.com/agjs/eslint-plugin-code-flow): control-flow discipline. `prefer-early-return` (no needless nesting after a guard); enforces blank-line padding before `throw` and `return` so the exit branch is visually distinct.
+  </FaqItem>
+  <FaqItem title="comment-hygiene">
+    [`eslint-plugin-comment-hygiene`](https://github.com/agjs/eslint-plugin-comment-hygiene): `no-narration-comments` flags AI-generated narration like "Here we…" / "Now we…" / "Let's…"; `no-pr-reference-comments` flags `#123` / `PR 42` / GitHub URLs embedded in code (they belong in the PR description, not the source).
+  </FaqItem>
+</FaqGroup>
+
+### Built-in + third-party rules wired at the same gate
+
+Two non-custom rules earn their place alongside the agjs plugins:
+
+<FaqGroup>
+  <FaqItem title="eslint-comments/no-use" open>
+    [`@eslint-community/eslint-plugin-eslint-comments`](https://github.com/eslint-community/eslint-plugin-eslint-comments): `no-use` is set to `error` with `{ allow: [] }`. Zero inline disables; defence-in-depth on top of the source-text ban that `lint:meta` already enforces.
+  </FaqItem>
+  <FaqItem title="multiline-comment-style: starred-block">
+    Built-in ESLint rule. Any `//`-style block that spans three or more consecutive lines must be a single `/* … */` block. Auto-fixable; keeps WHY-comments visually distinct from inline notes.
+  </FaqItem>
+  <FaqItem title="no-restricted-syntax: ban inline new Date().toISOString()">
+    Built-in ESLint rule with a project-specific selector. Every call site must use the `now()` util from `src/lib/time/now.ts` so timestamps have a single mockable source and a single place to change formatting if the contract ever shifts.
   </FaqItem>
 </FaqGroup>
 
@@ -78,7 +97,7 @@ Custom ESLint plugins make those patterns stick. Every rule that matters is mach
 
 <FaqGroup>
   <FaqItem title="react-component-architecture" open>
-    [`eslint-plugin-react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture): component anatomy, hooks, `className` discipline, file naming, prop ordering.
+    [`eslint-plugin-react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture): component anatomy, hooks, `className` discipline, file naming, prop ordering. The `max-hooks-per-file` rule caps top-level hooks per file (default 4) so god-modules like a 7-hook `*.queries.ts` either get split or fail the gate.
   </FaqItem>
   <FaqItem title="tanstack-query-cache">
     [`eslint-plugin-tanstack-query-cache`](https://github.com/agjs/eslint-plugin-tanstack-query-cache): on `*.queries.ts`, when keys are built as `[...PREFIX, …]`, cache writes must use matcher-style APIs (`setQueriesData`, `cancelQueries` with `exact: false` / `predicate`, etc.) instead of `setQueryData` / `getQueryData` on the bare prefix alone — otherwise only one entry updates while hooks still read the spread key.
@@ -90,7 +109,7 @@ Custom ESLint plugins make those patterns stick. Every rule that matters is mach
 
 ## How they're wired
 
-Each template's flat ESLint config (`eslint.config.mjs` in ui-template, `eslint.config.js` in api-template) imports these plugins from `node_modules/`. They are **devDependencies**, pinned with `github:agjs/<repo>#<commit>` (same supply-chain posture as the rest of the custom plugins). The plugins ship their own `recommended` configs where applicable; we extend those and keep severities at `error` so the merge gate has real teeth. Where `lint:meta` is wired (`pnpm lint:meta` / `bun run lint:meta`), it adds extra contract checks on top of ESLint (for example: no `warn` in config, forbidden overlapping dependency pairs).
+Each template's flat ESLint config (`eslint.config.mjs` in ui-template, `eslint.config.js` in api-template) imports these plugins from `node_modules/`. They are **devDependencies**, pinned with `github:agjs/<repo>#<commit>` (same supply-chain posture as the rest of the custom plugins). The plugins ship their own `recommended` configs where applicable; we extend those and keep severities at `error` so the merge gate has real teeth. Where `lint:meta` is wired (`pnpm lint:meta` / `bun run lint:meta`), it adds extra contract checks on top of ESLint (for example: no `warn` in config, forbidden overlapping dependency pairs, the inline `eslint-disable` source-text ban, and an ENV-cascade drift detector that diffs the api env schema against `.env.example` and the compose env files so a new var can't be added in one place and forgotten in the others). The `lint-meta.ts` script itself has fixture-based tests under `tests/lint-meta/` so a regex bug can't ship silently.
 
 ```bash
 # In each repo
