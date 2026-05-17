@@ -3,7 +3,7 @@ title: BoringStack
 description: Postgres, HTTP, React, and Compose wired into a SaaS spine you can run locally. Fast feedback from Bun and Vite, lint as the contract for humans and agents.
 template: splash
 hero:
-  tagline: "The SaaS spine you extend instead of rebuilding: API, UI, infra, auth, billing, queues, email, deploy, and architecture rules wired from day one."
+  tagline: "The production-ready SaaS starter for software engineers: Lovable-style momentum, real code you own, infra you can run, and COGS kept brutally low."
   actions:
     - text: Quickstart
       link: /quickstart/
@@ -21,12 +21,12 @@ hero:
 
 import { Card, CardGrid } from "@astrojs/starlight/components";
 
-BoringStack is for product engineers who want a real SaaS starting point, not another login-page demo.
+BoringStack's ambition is simple: be the best production-ready starter on the internet for engineers who want to ship a real product, not a demo that collapses the first time security, cost, deploy, or maintenance matters.
 
-- Boot a full local stack in minutes: Postgres, Valkey, Bun API, Vite UI.
-- Start with SaaS-shaped defaults: cookie auth, OAuth, billing hooks, email, queues, audit log, notifications.
-- Keep humans and agents inside the same architecture: ESLint rules fail the diff with errors you can fix.
-- Deploy to a VPS you control: Compose, Traefik, GHCR images, Cloudflare, optional OpenTofu.
+- Product momentum like AI app builders, but for software engineers: fork it, boot it, understand it, own it.
+- Production spine on day one: auth, OAuth, billing hooks, email, queues, audit log, notifications, env validation, deploy.
+- COGS-first architecture: open-source runtime primitives, one VPS path, optional self-hosted observability, no mandatory platform tax.
+- Agent-ready codebase: ESLint rules hold the architecture so human and AI-generated diffs get concrete errors, not vibes.
 
 ```mermaid
 flowchart LR
@@ -42,6 +42,12 @@ flowchart LR
 ```
 
 Read [Why BoringStack](/architecture/why-boringstack/) for the decision guide, then [Quickstart](/quickstart/) when you want to clone.
+
+## Why it exists
+
+AI builders are incredible for proving an idea quickly. The hard part comes next: secrets, auth, webhooks, billing, background jobs, deploys, logs, backups, tenant boundaries, and keeping cloud spend sane. BoringStack starts from that next phase.
+
+The core bias is ownership and low COGS. Postgres, Valkey, Traefik, Docker Compose, Prometheus, Grafana, Loki, GlitchTip, Mailpit, WUD, and OpenTofu are all open-source building blocks you can run yourself. Paid services are integrations, not the foundation.
 
 ## The templates
 
