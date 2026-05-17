@@ -3,14 +3,14 @@ title: BoringStack
 description: Postgres, HTTP, React, and Compose wired into a SaaS spine you can run locally. Fast feedback from Bun and Vite, lint as the contract for humans and agents.
 template: splash
 hero:
-  tagline: Boring means it just works. Postgres, HTTP, React, and Compose, wired together so you ship product instead of reinventing the spine. Developer experience matters. Bun and Vite keep feedback tight, the API and SPA stay separate jobs, and ESLint carries the architecture so humans and agents get errors they can fix, not prose to interpret.
+  tagline: "The SaaS spine you extend instead of rebuilding: API, UI, infra, auth, billing, queues, email, deploy, and architecture rules wired from day one."
   actions:
-    - text: Why BoringStack
-      link: /architecture/why-boringstack/
-      icon: right-arrow
-      variant: primary
     - text: Quickstart
       link: /quickstart/
+      icon: right-arrow
+      variant: primary
+    - text: Why BoringStack
+      link: /architecture/why-boringstack/
       icon: right-arrow
       variant: minimal
     - text: View on GitHub
@@ -21,11 +21,27 @@ hero:
 
 import { Card, CardGrid } from "@astrojs/starlight/components";
 
-Three sibling templates (API, UI, infra) come from codebases that have shipped for years. Each layer does one job. You get Bun on the API, Vite on the UI, and Compose for the spine, plus ESLint rules you can read in the repo instead of guessing from markdown alone.
+BoringStack is for product engineers who want a real SaaS starting point, not another login-page demo.
 
-[Lint as the contract](/architecture/lint-as-contract/) is where the agent story lives: same rules as humans, same `validate` gate.
+- Boot a full local stack in minutes: Postgres, Valkey, Bun API, Vite UI.
+- Start with SaaS-shaped defaults: cookie auth, OAuth, billing hooks, email, queues, audit log, notifications.
+- Keep humans and agents inside the same architecture: ESLint rules fail the diff with errors you can fix.
+- Deploy to a VPS you control: Compose, Traefik, GHCR images, Cloudflare, optional OpenTofu.
 
-Read [Why BoringStack](/architecture/why-boringstack/) for the details, then [Quickstart](/quickstart/) when you want to clone.
+```mermaid
+flowchart LR
+  ui["ui-template<br/>Vite + React"]
+  api["api-template<br/>Bun + Elysia"]
+  infra["infra-docker-compose-template<br/>Postgres + Valkey + Traefik"]
+  tofu["infra-bootstrap-tofu-template<br/>optional VPS bootstrap"]
+
+  ui <-->|OpenAPI| api
+  api --> infra
+  ui --> infra
+  tofu -. provisions .-> infra
+```
+
+Read [Why BoringStack](/architecture/why-boringstack/) for the decision guide, then [Quickstart](/quickstart/) when you want to clone.
 
 ## The templates
 
@@ -45,7 +61,7 @@ Read [Why BoringStack](/architecture/why-boringstack/) for the details, then [Qu
   <Card title="infra-docker-compose-template" icon="setting">
     Postgres · Valkey · Traefik. Opt-in overlays for GlitchTip,
     Prometheus + Grafana + Loki, BullMQ dashboard, WUD, and Mailpit. One
-    `./dev.sh up -d` boots the lot. [Overview →](/infra/overview/)
+    `./scripts/compose-up.sh` boots the lot. [Overview →](/infra/overview/)
   </Card>
   <Card title="infra-bootstrap-tofu-template" icon="seti:terraform">
     Optional fourth template. One `tofu apply` puts a Hetzner VPS behind
@@ -56,6 +72,7 @@ Read [Why BoringStack](/architecture/why-boringstack/) for the details, then [Qu
 
 ## Where next
 
-- New here? Start with the [Quickstart](/quickstart/) — TL;DR + "Use this template" + boot.
+- New here? Start with the [Quickstart](/quickstart/) — fork, clone, boot, sign in.
+- Deciding whether it fits? Read [Why BoringStack](/architecture/why-boringstack/) — fit check, trade-offs, comparison.
 - Deploying to a VPS? [Deployment](/topics/deployment/), [Firewall & TLS](/runbooks/firewall-and-tls/), [Cloudflare Email setup](/runbooks/cloudflare-email-setup/).
 - Looking up an env var or a command? [Environment variables](/reference/env-vars/) · [Commands cheatsheet](/reference/commands/).

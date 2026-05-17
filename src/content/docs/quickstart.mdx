@@ -1,6 +1,6 @@
 ---
 title: Quickstart
-description: Click "Use this template" on four repos, boot the local stack, sign in. About five minutes from zero to a working full-stack on your laptop.
+description: Fork the API, UI, and infra templates, boot the local stack, sign in. About five minutes from zero to a working full-stack on your laptop.
 ---
 
 import { Steps, Aside } from "@astrojs/starlight/components";
@@ -9,12 +9,12 @@ import FaqItem from "../../components/FaqItem.astro";
 
 ## TL;DR
 
-1. Click **"Use this template"** on the four BoringStack repos under your org.
-2. Clone your four forks as siblings under one parent directory.
-3. `cd <infra-fork>/compose && cp .env.example .env && ./dev.sh up -d`
+1. Click **"Use this template"** on the API, UI, and infra repos under your org.
+2. Clone your forks as siblings under one parent directory.
+3. `cd <infra-fork> && cp compose/.env.example compose/.env && ./scripts/compose-up.sh`
 4. Open `http://localhost:3001` and sign up.
 
-You now have Postgres, Valkey, the API, and the UI running locally with hot reload. The toolchain follows your repo names: GHCR workflows, the prod compose stack, and the OpenTofu bootstrap derive image names and owners from your fork URLs automatically. You only configure your renames when you go to prod (see [Going to production](#going-to-production)).
+You now have Postgres, Valkey, the API, and the UI running locally with hot reload. The optional OpenTofu repo is only needed when you want repeatable first-time VPS provisioning.
 
 ## Prerequisites
 
@@ -22,14 +22,15 @@ You now have Postgres, Valkey, the API, and the UI running locally with hot relo
 - About 4 GB of free RAM.
 - No local Node or Bun needed; everything runs in containers.
 
-## Step 1. Use this template
+## Step 1. Use the templates
 
-BoringStack ships as four GitHub template repos. Click **"Use this template" → "Create a new repository"** on each:
+BoringStack's local development path needs three GitHub template repos. Click **"Use this template" → "Create a new repository"** on each:
 
 - [`api-template`](https://github.com/AI-Starter-Templates/api-template) → e.g. `acme-api`
 - [`ui-template`](https://github.com/AI-Starter-Templates/ui-template) → e.g. `acme-ui`
 - [`infra-docker-compose-template`](https://github.com/AI-Starter-Templates/infra-docker-compose-template) → e.g. `acme-infra`
-- [`infra-bootstrap-tofu-template`](https://github.com/AI-Starter-Templates/infra-bootstrap-tofu-template) → e.g. `acme-bootstrap`
+
+Fork [`infra-bootstrap-tofu-template`](https://github.com/AI-Starter-Templates/infra-bootstrap-tofu-template) later if you want `tofu apply` to provision your first VPS.
 
 Keep the canonical names if you want. Nothing breaks either way.
 
@@ -47,6 +48,7 @@ mkdir acme && cd acme
 git clone https://github.com/<you>/acme-api
 git clone https://github.com/<you>/acme-ui
 git clone https://github.com/<you>/acme-infra
+# Optional, for later VPS provisioning:
 git clone https://github.com/<you>/acme-bootstrap
 ```
 
@@ -55,7 +57,7 @@ acme/
 ├── acme-api/         (your fork of api-template)
 ├── acme-ui/          (your fork of ui-template)
 ├── acme-infra/       (your fork of infra-docker-compose-template)
-└── acme-bootstrap/   (your fork of infra-bootstrap-tofu-template)
+└── acme-bootstrap/   (optional fork of infra-bootstrap-tofu-template)
 ```
 
 If you renamed `api-template` or `ui-template`, either match the cloned directory name to what `compose/docker-compose.yml` expects, or edit the `build: context:` lines once.
@@ -71,20 +73,20 @@ The workspace root ships a `setup.sh` that bootstraps `compose/.env`, generates 
 1. Seed the env:
 
    ```bash
-   cd acme-infra/compose
-   cp .env.example .env
+   cd acme-infra
+   cp compose/.env.example compose/.env
    ```
 
 2. Make scripts executable:
 
    ```bash
-   chmod +x dev.sh ../scripts/*.sh
+   chmod +x compose/dev.sh scripts/*.sh
    ```
 
 3. Run:
 
    ```bash
-   ./dev.sh up -d --build
+   ./scripts/compose-up.sh up -d --build
    ```
 
    First boot pulls base images, builds the api/ui dev images, runs migrations. If you set `SUPERUSER_EMAIL` + `SUPERUSER_PASSWORD` in `compose/.env`, an admin user is also created. About 3 minutes on a fast laptop.
@@ -121,9 +123,10 @@ Traefik runs only in the prod profile. In prod it terminates TLS and path-routes
 
 ## Common next steps
 
-- Observability: `WITH_OBSERVABILITY=1 ./dev.sh up -d`. [Details](/topics/observability/).
-- Self-hosted error tracking: `WITH_GLITCHTIP=1 ./dev.sh up -d`. [Details](/topics/error-tracking/).
-- Local email testing: `WITH_MAILPIT=1 ./dev.sh up -d`. [Details](/topics/email-in-dev/).
+- Observability: `WITH_OBSERVABILITY=1 ./scripts/compose-up.sh`. [Details](/topics/observability/).
+- Self-hosted error tracking: `WITH_GLITCHTIP=1 ./scripts/compose-up.sh`. [Details](/topics/error-tracking/).
+- Local email testing: `WITH_MAILPIT=1 ./scripts/compose-up.sh`. [Details](/topics/email-in-dev/).
+- Production deploy: [Deployment](/topics/deployment/) when you are ready for GHCR images, TLS, firewall, and backups.
 
 ## Stop the stack
 
@@ -136,32 +139,10 @@ Traefik runs only in the prod profile. In prod it terminates TLS and path-routes
   </FaqItem>
 </FaqGroup>
 
-## Going to production
-
-A second phase, not part of the 5-minute path. When you're ready to deploy your forks to a VPS:
-
-1. Push to `main` on your api / ui forks. The release workflow builds and publishes `ghcr.io/<your-owner>/<your-repo>:latest` automatically; no secret setup needed for the default `GITHUB_TOKEN`.
-2. After the first publish, make the GHCR package **public** (`github.com/<owner>/<repo>/pkgs/container/<repo>` → Settings → Change visibility) so the VPS can pull without credentials.
-3. Set `IMAGE_OWNER` (and `*_IMAGE_NAME` if you renamed) in your infra fork's `compose/.env`. The OpenTofu bootstrap derives these from your fork URLs in `terraform.tfvars`, so they don't need to be set twice.
-
-See [Deployment](/topics/deployment/) for the full prod path and [Provisioning with OpenTofu](/topics/provisioning-with-tofu/) for first-time VPS provisioning.
-
-## First-deploy checklist
-
-- [ ] Every template repo forked under your org/user
-- [ ] First image published to GHCR (push to `main`, watch the Actions tab)
-- [ ] GHCR package visibility set to Public
-- [ ] `acme-infra/compose/.env`: `IMAGE_OWNER` + `*_IMAGE_NAME` (if renamed)
-- [ ] `acme-bootstrap/terraform.tfvars`: fork URLs + real `domain`
-- [ ] `SUPERUSER_PASSWORD` rotated via the password-reset flow after first login
-- [ ] `JWT_SECRET` regenerated for production
-- [ ] `FRONTEND_URL` and `PUBLIC_API_URL` match the production origin
-- [ ] `ACME_EMAIL` set to a real address (not `example.com`)
-
 ## Related
 
 - [Why BoringStack](/architecture/why-boringstack/). What ships in the box.
-- [Repository layout](/architecture/three-repos/). Why four repos.
+- [Repository layout](/architecture/three-repos/). Why the templates stay separate.
 - [Environment variables](/reference/env-vars/). Every var, what it does.
 - [Deployment](/topics/deployment/). Production runtime path.
 - [Provisioning with OpenTofu](/topics/provisioning-with-tofu/). `tofu apply` to a live VPS.

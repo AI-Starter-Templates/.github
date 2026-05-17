@@ -9,9 +9,17 @@ import FaqItem from "../../../components/FaqItem.astro";
 
 This is the load-bearing piece of [Why BoringStack](/architecture/why-boringstack/): architecture lives in tooling, with prose for context.
 
-Every template ships `AGENTS.md`, `CLAUDE.md`, and `AGENT_CONTRACT.md`. They explain the patterns: where routes go, when to use a service, how to write a Drizzle query, why `process.env` is forbidden outside the env validator.
+## The problem
 
-Custom ESLint plugins make those patterns stick. Every rule that matters is machine-checked. `pnpm validate` / `bun run validate` is the merge gate: if lint fails, the diff does not ship. Prose is the why; lint is what ships.
+Architecture docs rot. New teammates miss local conventions. Agents can generate plausible code in the wrong layer. Reviewers should spend their time on product behavior, not rediscovering that a route now contains business logic or a component reads environment state directly.
+
+BoringStack treats lint as the executable part of the architecture. `AGENTS.md`, `CLAUDE.md`, and `AGENT_CONTRACT.md` explain intent; custom ESLint plugins make the important parts fail the build.
+
+## How it works
+
+Every template ships prose contracts and lint gates together. The prose says where routes go, when to use a service, how to write a Drizzle query, why `process.env` is forbidden outside the env validator. The plugins turn those patterns into parseable, repeatable errors.
+
+`pnpm validate` / `bun run validate` is the merge gate: if lint fails, the diff does not ship. Prose is the why; lint is what ships.
 
 <Aside type="tip" title="The hierarchy">
   Prose docs (`AGENTS.md`) are *aspirational*. Lint rules are *load-bearing*.
@@ -19,7 +27,31 @@ Custom ESLint plugins make those patterns stick. Every rule that matters is mach
   the prose.
 </Aside>
 
-## Shared across api-template + ui-template
+## What gets enforced
+
+<FaqGroup>
+  <FaqItem title="Layer boundaries" open>
+    Routes stay thin, services own business logic, components render view objects, and feature folders keep one semantic concern per file.
+  </FaqItem>
+  <FaqItem title="Data safety">
+    Account-scoped queries require account filters, multi-write paths require transactions, cache keys are namespaced, and Stripe webhooks are idempotent.
+  </FaqItem>
+  <FaqItem title="Security invariants">
+    JWT cookies, OAuth state/PKCE, raw webhook bodies, env access, and secret-safe logging are checked mechanically instead of left to review memory.
+  </FaqItem>
+  <FaqItem title="Operational hygiene">
+    Structured log event names, test placement, dead-code detection, env/schema drift checks, and no inline `eslint-disable` keep the merge gate honest.
+  </FaqItem>
+  <FaqItem title="Agent-friendly feedback">
+    Violations point at the file, rule, and local fix. Humans and agents get the same contract, not a paragraph of architecture advice to interpret.
+  </FaqItem>
+</FaqGroup>
+
+## Plugin inventory
+
+Use this as the reference catalog after the mental model makes sense.
+
+### Shared across api-template + ui-template
 
 <FaqGroup>
   <FaqItem title="resource-architecture" open>
@@ -61,7 +93,7 @@ Two non-custom rules earn their place alongside the agjs plugins:
   </FaqItem>
 </FaqGroup>
 
-## api-template only
+### api-template only
 
 <FaqGroup>
   <FaqItem title="elysia" open>
@@ -93,7 +125,7 @@ Two non-custom rules earn their place alongside the agjs plugins:
   </FaqItem>
 </FaqGroup>
 
-## ui-template only
+### ui-template only
 
 <FaqGroup>
   <FaqItem title="react-component-architecture" open>
@@ -132,3 +164,10 @@ For humans and agents alike, docs explain and lint enforces. Both matter; lint i
 ## Contributing back
 
 The plugins are MIT-licensed and developed in the open. If you find a gap, file an issue or PR against the relevant plugin repo (linked above). Rules that prove themselves in production end up promoted to `recommended` configs.
+
+## Related
+
+- [Why BoringStack](/architecture/why-boringstack/); where this fits the broader product thesis.
+- [Stack at a glance](/architecture/stack/); the dependency inventory.
+- [API template overview](/api/overview/); backend layers these rules protect.
+- [Architecture rules](/ui/architecture-rules/); the UI-specific component anatomy.

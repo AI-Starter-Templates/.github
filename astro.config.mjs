@@ -118,12 +118,13 @@ export default defineConfig({
         { label: "Welcome", link: "/" },
         { label: "Quickstart", link: "/quickstart/" },
         {
+          label: "Why BoringStack",
+          link: "/architecture/why-boringstack/",
+        },
+        { label: "Deployment", link: "/topics/deployment/" },
+        {
           label: "Architecture",
           items: [
-            {
-              label: "Why BoringStack",
-              link: "/architecture/why-boringstack/",
-            },
             {
               label: "Separation of concerns",
               link: "/architecture/separation-of-concerns/",
@@ -189,7 +190,6 @@ export default defineConfig({
             { label: "Cloudflare Email", link: "/topics/cloudflare-email/" },
             { label: "Error tracking", link: "/topics/error-tracking/" },
             { label: "Observability", link: "/topics/observability/" },
-            { label: "Deployment", link: "/topics/deployment/" },
             {
               label: "Provisioning with OpenTofu",
               link: "/topics/provisioning-with-tofu/",

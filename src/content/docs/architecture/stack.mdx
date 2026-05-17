@@ -9,6 +9,17 @@ import FaqItem from "../../../components/FaqItem.astro";
 
 Runtime and dev dependencies, what each does, and why. For what *boring* means (battle-tested pieces that just work), see [Why BoringStack](/architecture/why-boringstack/).
 
+## Summary
+
+| Template | Runtime shape | Main choices | Why it matters |
+| --- | --- | --- | --- |
+| api-template | Bun HTTP API + workers | Elysia, Drizzle, Postgres, Valkey, BullMQ, Pino | Owns security, persistence, background work, and the OpenAPI contract. |
+| ui-template | Vite React SPA | React 19, TanStack Query, Zustand, shadcn/ui, Playwright | Fast UI feedback with a generated client instead of hand-written API calls. |
+| infra-docker-compose | Single-host Compose runtime | Postgres, Valkey, Traefik, optional observability/error-tracking overlays | Boots local dev and production-like VPS deployments with the same primitives. |
+| infra-bootstrap-tofu | Optional first-deploy automation | OpenTofu, Hetzner, Cloudflare, cloud-init | Provisions a VPS and drops the Compose stack in place from your fork URLs. |
+
+## Full inventory
+
 <Tabs>
   <TabItem label="api-template">
     <FaqGroup>
@@ -79,3 +90,9 @@ Runtime and dev dependencies, what each does, and why. For what *boring* means (
 Each app repo ships custom ESLint plugins (all open-sourced) that codify the patterns and stop drift at the lint gate.
 
 [Full inventory with GitHub links →](/architecture/lint-as-contract/)
+
+## Related
+
+- [Why BoringStack](/architecture/why-boringstack/); the decision guide behind these choices.
+- [Repository layout](/architecture/three-repos/); how the templates sit next to each other.
+- [Deployment](/topics/deployment/); how the runtime choices ship.

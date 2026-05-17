@@ -82,6 +82,22 @@ domain     = "acme.com"
 
 The module derives `IMAGE_OWNER`, `API_IMAGE_NAME`, and `UI_IMAGE_NAME` from those URLs and renders them into `compose/.env` on the VPS. You don't set them twice.
 
+## First-deploy checklist
+
+Use this once, after Quickstart and before the first production boot:
+
+- [ ] API, UI, and infra template repos forked under your org/user.
+- [ ] First API and UI images published to GHCR (push to `main`, then watch each Actions tab).
+- [ ] GHCR packages set to **Public**, or the VPS has a pull credential.
+- [ ] `compose/.env` has `IMAGE_OWNER` and any renamed `API_IMAGE_NAME` / `UI_IMAGE_NAME`.
+- [ ] `JWT_SECRET` regenerated for production (`openssl rand -base64 48`).
+- [ ] `FRONTEND_URL`, `PUBLIC_API_URL`, `PUBLIC_UI_HOST`, and `ACME_EMAIL` match the production origin.
+- [ ] `SUPERUSER_PASSWORD` rotated through the password-reset flow after first login.
+- [ ] [Firewall & TLS](/runbooks/firewall-and-tls/) verified: Cloudflare can reach the origin, direct requests cannot.
+- [ ] [Backups](/runbooks/backups/) configured and at least one restore drill run.
+- [ ] [Cloudflare Email setup](/runbooks/cloudflare-email-setup/) completed if Cloudflare is your outbound mail provider.
+- [ ] Optional OpenTofu path: `terraform.tfvars` has fork URLs, real `domain`, and production secrets.
+
 ## First-time deploy
 
 The preferred path is [Provisioning with OpenTofu](/topics/provisioning-with-tofu/): one `tofu apply` provisions the VPS, configures Cloudflare DNS + zone settings, and runs cloud-init which clones the infra repo, drops a rendered `compose/.env`, and pulls the GHCR images.

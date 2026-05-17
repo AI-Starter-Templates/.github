@@ -54,5 +54,5 @@ The build runs Pagefind automatically (Starlight bundles it), so search works on
 ## Notes
 
 - **No CNAME file.** Unlike GitHub Pages, Cloudflare Pages binds the custom domain via the dashboard, not via a `public/CNAME` file. Adding one would just serve `/CNAME` as text.
-- **Sitemap.** Astro's `@astrojs/sitemap` is not installed; Starlight's Pagefind index plus the sidebar is the primary nav. Add `@astrojs/sitemap` if you start running SEO campaigns.
+- **Sitemap.** Starlight generates `sitemap-index.xml` and `sitemap-0.xml` during `pnpm build`. Pagefind plus the sidebar remains the primary human navigation.
 - **Analytics.** Not wired up. If you add Cloudflare Web Analytics later, drop the `<script>` into `astro.config.mjs` via Starlight's `head` option.
