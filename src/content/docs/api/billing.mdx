@@ -20,11 +20,11 @@ sequenceDiagram
   participant DB as Postgres
   participant Stripe
   UI->>API: POST /api/v1/billing/stripe/checkout-session
-  API->>API: verify auth_token cookie
+  API->>API: verify auth_token cookie + resolve active account
   API->>API: allowlist successUrl + cancelUrl against FRONTEND_URL origin
   API->>DB: upsert Free / Pro plans from STRIPE_PRICE_ID_*
-  API->>Stripe: create checkout session
-  API->>DB: update user.stripe_customer_id when first needed
+  API->>Stripe: create checkout session (account.stripe_customer_id)
+  API->>DB: update account.stripe_customer_id when first needed
   API-->>UI: { url }
   UI->>Stripe: redirect browser to hosted checkout
 ```
@@ -59,8 +59,8 @@ The customer portal follows the same pattern: authenticated user, `returnUrl` al
 | Endpoint | Auth | Purpose |
 | --- | --- | --- |
 | `GET /api/v1/billing/plans` | cookie | List configured plans. |
-| `POST /api/v1/billing/stripe/checkout-session` | cookie | Create a Stripe Checkout session for the current user. |
-| `POST /api/v1/billing/stripe/portal-session` | cookie | Create a Stripe Customer Portal session for the current user. |
+| `POST /api/v1/billing/stripe/checkout-session` | cookie | Create a Stripe Checkout session for the active account. |
+| `POST /api/v1/billing/stripe/portal-session` | cookie | Create a Stripe Customer Portal session for the active account. |
 | `POST /api/v1/billing/stripe/webhooks` | Stripe signature | Receive Stripe events using the raw request body. |
 
 ## Webhook flow
@@ -83,11 +83,12 @@ sequenceDiagram
 
 Handled events:
 
-- `checkout.session.completed`: creates or updates `billing.user_plans` for the user and plan in session metadata.
-- `customer.subscription.updated`: maps the active Stripe price id back to a local plan and updates the user plan.
-- `customer.subscription.deleted`: sets `end_date` on the user's plan row.
+- `checkout.session.completed`: creates or updates `billing.account_plans` for the account and plan in session metadata.
+- `customer.subscription.updated`: maps the active Stripe price id back to a local plan and updates the account plan; also tracks `past_due`, `unpaid`, `paused`, `canceled`, `incomplete`, `trialing`, and `active` for the [feature resolver](/api/acl/#status-driven-features).
+- `customer.subscription.deleted`: marks the row revoked so the resolver falls back to the Free plan.
+- `invoice.paid` / `invoice.payment_failed`: status transitions for the active plan row.
 
-Unknown event types are logged at debug level and ignored.
+Unknown event types are logged at debug level and ignored. Late or out-of-order deliveries are tolerated because every status transition is keyed by `(account_id, stripe_event_received_at)`.
 
 ## Required env
 
@@ -120,5 +121,7 @@ Unknown event types are logged at debug level and ignored.
 ## Related
 
 - [Authentication](/api/auth/); customer billing routes use cookie auth.
+- [ACL & feature resolution](/api/acl/); Stripe plan status drives the feature flags surfaced via `/me`.
+- [Multi-tenant model](/api/multi-tenant/); Stripe customer id and active plan live on `accounts`, not `users`.
 - [Audit log](/api/audit-log/); checkout and portal session creation write audit rows.
 - [Env validator](/api/env-validator/); Stripe keys and price IDs are enforced when billing is enabled.

@@ -51,7 +51,7 @@ A feature is three files with three jobs. Lint plugins forbid them from leaking 
 - src/
   - index.ts            Entrypoint: env, Sentry, queues, listen
   - config/             App composition, env, logger, queue bootstrap
-  - api/                Feature folders (auth, users, dashboard, billing, admin, health, notifications)
+  - api/                Feature folders (auth, users, accounts, dashboard, billing, admin, health, notifications, widgets)
   - clients/postgres/   Drizzle client + per-domain schema modules
   - lib/                Shared utilities (auth, email, audit-log, ai, cache, errors, notifications)
   - middleware/         Per-route Elysia plugins
@@ -69,13 +69,15 @@ A feature folder always looks like (for a hypothetical `posts` resource):
   - posts.schemas.ts       (optional) TypeBox request/response
 </FileTree>
 
-The template ships no example domain feature on purpose. The shipped `auth`, `users`, `billing`, `dashboard`, `admin`, `health`, `notifications` modules are framework. Add your own resources with `bun run new:resource <name>`; the scaffolder writes the four-file anatomy and wires it into `config/routes.ts` so you can't forget a step.
+The shipped `auth`, `users`, `accounts`, `billing`, `dashboard`, `admin`, `health`, `notifications` modules are framework. `widgets` is the only example domain feature — kept as the reference for the [account-scoped resource pattern](/api/multi-tenant/) (every read/write filters by `accountId`). Replace it with your own product domain. Add new resources with `bun run new:resource <name>`; the scaffolder writes the four-file anatomy and wires it into `config/routes.ts` so you can't forget a step.
 
 ## Cross-cutting concerns
 
 Each lives in `src/lib/` or `src/config/` and has its own page:
 
 - [Authentication](/api/auth/). Short-lived access JWT cookies plus DB-backed refresh sessions.
+- [Multi-tenant model](/api/multi-tenant/). Accounts are the tenant boundary; users join via memberships with roles.
+- [ACL & feature resolution](/api/acl/). Server-authoritative CASL ability + plan/feature gates derived from Stripe and admin overrides.
 - [Billing](/api/billing/). Stripe Checkout, Customer Portal, raw-body webhooks, and DB-backed idempotency.
 - [Email](/api/email/). Pluggable provider, precompiled templates, queue-aware dispatch.
 - [Queues](/api/queues/). BullMQ with a `QueueManager`, inline fallback when disabled.

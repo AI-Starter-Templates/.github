@@ -38,7 +38,7 @@ Custom ESLint plugins make those patterns stick. Every rule that matters is mach
     [`eslint-plugin-test-conventions`](https://github.com/agjs/eslint-plugin-test-conventions): `tests/` mirrors `src/`; no orphan tests.
   </FaqItem>
   <FaqItem title="code-flow">
-    [`eslint-plugin-code-flow`](https://github.com/agjs/eslint-plugin-code-flow): control-flow discipline. `prefer-early-return` (no needless nesting after a guard); enforces blank-line padding before `throw` and `return` so the exit branch is visually distinct.
+    [`eslint-plugin-code-flow`](https://github.com/agjs/eslint-plugin-code-flow): control-flow discipline. `prefer-early-return` (no needless nesting after a guard) and `no-template-trim-empty-ternary` (bans the inline `${a} ${b}`.trim() === "" ? fallback : ...` anti-pattern — extract to a named util like `buildDisplayName(...)` so the construction is testable in one place); also enforces blank-line padding before `throw` and `return` so the exit branch is visually distinct.
   </FaqItem>
   <FaqItem title="comment-hygiene">
     [`eslint-plugin-comment-hygiene`](https://github.com/agjs/eslint-plugin-comment-hygiene): `no-narration-comments` flags AI-generated narration like "Here we…" / "Now we…" / "Let's…"; `no-pr-reference-comments` flags `#123` / `PR 42` / GitHub URLs embedded in code (they belong in the PR description, not the source).
@@ -65,10 +65,10 @@ Two non-custom rules earn their place alongside the agjs plugins:
 
 <FaqGroup>
   <FaqItem title="elysia" open>
-    [`eslint-plugin-elysia`](https://github.com/agjs/eslint-plugin-elysia): TypeBox on every route, no untyped handlers, plugin registration patterns.
+    [`eslint-plugin-elysia`](https://github.com/agjs/eslint-plugin-elysia): TypeBox on every route, no untyped handlers, plugin registration patterns. `route-must-check-ability` requires every handler that destructures `membership` from context to authorize explicitly — either read `membership.role` or call `requireAbility` / `enforceLimit`.
   </FaqItem>
   <FaqItem title="drizzle-conventions">
-    [`eslint-plugin-drizzle-conventions`](https://github.com/agjs/eslint-plugin-drizzle-conventions): schema and query patterns, index naming, `with` usage.
+    [`eslint-plugin-drizzle-conventions`](https://github.com/agjs/eslint-plugin-drizzle-conventions): schema and query patterns, index naming, `with` usage. `account-scoped-tables-require-where` requires every query against an account-scoped table (`widgets`, `accountMemberships`, `accountInvitations`, `accountFeatureOverrides`, `accountPlans`) to filter by `accountId` — tenant isolation enforced at the query level.
   </FaqItem>
   <FaqItem title="db-transactions">
     [`eslint-plugin-db-transactions`](https://github.com/agjs/eslint-plugin-db-transactions): multi-write paths inside a transaction.
