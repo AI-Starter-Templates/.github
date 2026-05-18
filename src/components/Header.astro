@@ -1,0 +1,152 @@
+---
+import config from "virtual:starlight/user-config";
+
+import LanguageSelect from "virtual:starlight/components/LanguageSelect";
+import Search from "virtual:starlight/components/Search";
+import SocialIcons from "virtual:starlight/components/SocialIcons";
+import ThemeSelect from "virtual:starlight/components/ThemeSelect";
+
+const shouldRenderSearch =
+  config.pagefind ||
+  config.components.Search !== "@astrojs/starlight/components/Search.astro";
+
+const navItems = [
+  { href: "/quickstart/", label: "Quickstart" },
+  { href: "/architecture/why-boringstack/", label: "Why" },
+  { href: "/architecture/stack/", label: "Stack" },
+  { href: "/topics/deployment/", label: "Deploy" },
+  { href: "/reference/commands/", label: "Reference" },
+];
+---
+
+<div class="bs-site-header">
+  <a class="bs-site-brand" href="/" aria-label="BoringStack home">
+    <svg
+      class="bs-site-logo"
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="m7 9 3 3-3 3" />
+      <path d="M13 15h4" />
+    </svg>
+    <span>BoringStack</span>
+  </a>
+
+  <nav class="bs-site-nav" aria-label="Primary">
+    {navItems.map((item) => <a href={item.href}>{item.label}</a>)}
+  </nav>
+
+  <div class="bs-site-search print:hidden">
+    {shouldRenderSearch && <Search />}
+  </div>
+
+  <div class="bs-site-tools sl-hidden md:sl-flex print:hidden">
+    <SocialIcons />
+    <ThemeSelect />
+    <LanguageSelect />
+  </div>
+</div>
+
+<style>
+  @layer starlight.core {
+    .bs-site-header {
+      display: grid;
+      grid-template-columns: auto auto minmax(15rem, 28rem) 1fr;
+      gap: 1.2rem;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+      max-width: 100%;
+      margin-inline: 0;
+    }
+
+    :global(html[data-has-hero]) .bs-site-header {
+      width: min(1360px, calc(100vw - 2rem));
+      margin-inline: auto;
+    }
+
+    .bs-site-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      color: var(--sl-color-white);
+      font-weight: 800;
+      line-height: 1;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .bs-site-logo {
+      width: 30px;
+      height: 30px;
+      color: var(--sl-color-accent);
+      flex: 0 0 auto;
+    }
+
+    .bs-site-nav {
+      display: flex;
+      gap: 0.25rem;
+      align-items: center;
+    }
+
+    .bs-site-nav a {
+      padding: 0.55rem 0.7rem;
+      border-radius: 7px;
+      color: var(--sl-color-gray-2);
+      font-size: 0.92rem;
+      font-weight: 700;
+      line-height: 1;
+      text-decoration: none;
+    }
+
+    .bs-site-nav a:hover {
+      color: var(--sl-color-white);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .bs-site-search {
+      min-width: 0;
+    }
+
+    .bs-site-tools {
+      justify-self: end;
+      justify-content: end;
+      gap: 0.85rem;
+      align-items: center;
+    }
+
+    .bs-site-tools::before {
+      content: "";
+      width: 1px;
+      height: 1.8rem;
+      background: var(--sl-color-gray-5);
+    }
+
+    @media (max-width: 74rem) {
+      .bs-site-header {
+        grid-template-columns: auto minmax(12rem, 1fr) auto;
+      }
+
+      .bs-site-nav {
+        display: none;
+      }
+    }
+
+    @media (max-width: 50rem) {
+      .bs-site-header {
+        grid-template-columns: auto 1fr;
+        gap: 0.75rem;
+      }
+
+      .bs-site-search {
+        justify-self: end;
+      }
+    }
+  }
+</style>

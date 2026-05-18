@@ -1,9 +1,9 @@
 ---
 title: BoringStack
-description: Postgres, HTTP, React, and Compose wired into a SaaS spine you can run locally. Fast feedback from Bun and Vite, lint as the contract for humans and agents.
+description: "A composed SaaS starter made from real production parts: React, Bun, Elysia, Postgres, Valkey, Docker Compose, OpenTofu, and lint rules that keep humans and agents inside the architecture."
 template: splash
 hero:
-  tagline: "The production-ready SaaS starter for software engineers: Lovable-style momentum, real code you own, infra you can run, and COGS kept brutally low."
+  tagline: "A composed SaaS starter made from real production parts: React, Bun, Elysia, Postgres, Valkey, Docker Compose, OpenTofu, and lint rules that keep humans and agents inside the architecture."
   actions:
     - text: Quickstart
       link: /quickstart/
@@ -19,66 +19,145 @@ hero:
       variant: minimal
 ---
 
-import { Card, CardGrid } from "@astrojs/starlight/components";
+<div class="bs-landing">
+  <section class="bs-hero" aria-labelledby="bs-hero-title">
+    <div class="bs-hero-copy">
+      <p class="bs-eyebrow">Four templates. One production spine.</p>
+      <h1 id="bs-hero-title">Build the SaaS parts people usually postpone.</h1>
+      <p class="bs-lede">BoringStack composes React, Bun, Elysia, Postgres, Valkey, Docker Compose, OpenTofu, and architecture lint rules into a stack that already knows about accounts, auth, billing, queues, email, deploys, and local production-like services.</p>
 
-BoringStack's ambition is simple: be the best production-ready starter on the internet for engineers who want to ship a real product, not a demo that collapses the first time security, cost, deploy, or maintenance matters.
+      <div class="bs-actions" aria-label="Primary actions">
+        <a class="bs-button bs-button-primary" href="/quickstart/">Start the stack</a>
+        <a class="bs-button bs-button-secondary" href="/architecture/why-boringstack/">Why BoringStack exists</a>
+      </div>
 
-- Product momentum like AI app builders, but for software engineers: fork it, boot it, understand it, own it.
-- Production spine on day one: auth, OAuth, billing hooks, email, queues, audit log, notifications, env validation, deploy.
-- COGS-first architecture: open-source runtime primitives, one VPS path, optional self-hosted observability, no mandatory platform tax.
-- Agent-ready codebase: ESLint rules hold the architecture so human and AI-generated diffs get concrete errors, not vibes.
+      <div class="bs-versions" aria-label="BoringStack shape">
+        <span><b>3</b> repos</span>
+        <span><b>5 min</b> local boot</span>
+        <span><b>0</b> required platform bill</span>
+      </div>
+    </div>
 
-```mermaid
-flowchart LR
-  ui["ui-template<br/>Vite + React"]
-  api["api-template<br/>Bun + Elysia"]
-  infra["infra-docker-compose-template<br/>Postgres + Valkey + Traefik"]
-  tofu["infra-bootstrap-tofu-template<br/>optional VPS bootstrap"]
+    <div class="bs-hero-code" aria-label="BoringStack local boot preview">
+      <div class="bs-code-tabs" role="tablist" aria-label="BoringStack examples">
+        <button class="is-active" type="button" role="tab" tabindex="0" aria-selected="true" aria-controls="bs-code-boot" id="bs-tab-boot" data-bs-code-tab="boot" onclick="for (const button of this.parentElement.querySelectorAll('[data-bs-code-tab]')) { const active = button === this; button.classList.toggle('is-active', active); button.setAttribute('aria-selected', String(active)); button.tabIndex = active ? 0 : -1; } for (const panel of this.closest('.bs-hero-code').querySelectorAll('[data-bs-code-panel]')) { const active = panel.dataset.bsCodePanel === this.dataset.bsCodeTab; panel.classList.toggle('is-active', active); panel.hidden = !active; }">Boot locally</button>
+        <button type="button" role="tab" tabindex="-1" aria-selected="false" aria-controls="bs-code-api" id="bs-tab-api" data-bs-code-tab="api" onclick="for (const button of this.parentElement.querySelectorAll('[data-bs-code-tab]')) { const active = button === this; button.classList.toggle('is-active', active); button.setAttribute('aria-selected', String(active)); button.tabIndex = active ? 0 : -1; } for (const panel of this.closest('.bs-hero-code').querySelectorAll('[data-bs-code-panel]')) { const active = panel.dataset.bsCodePanel === this.dataset.bsCodeTab; panel.classList.toggle('is-active', active); panel.hidden = !active; }">Typed API</button>
+        <button type="button" role="tab" tabindex="-1" aria-selected="false" aria-controls="bs-code-jobs" id="bs-tab-jobs" data-bs-code-tab="jobs" onclick="for (const button of this.parentElement.querySelectorAll('[data-bs-code-tab]')) { const active = button === this; button.classList.toggle('is-active', active); button.setAttribute('aria-selected', String(active)); button.tabIndex = active ? 0 : -1; } for (const panel of this.closest('.bs-hero-code').querySelectorAll('[data-bs-code-panel]')) { const active = panel.dataset.bsCodePanel === this.dataset.bsCodeTab; panel.classList.toggle('is-active', active); panel.hidden = !active; }">Background jobs</button>
+        <button type="button" role="tab" tabindex="-1" aria-selected="false" aria-controls="bs-code-deploy" id="bs-tab-deploy" data-bs-code-tab="deploy" onclick="for (const button of this.parentElement.querySelectorAll('[data-bs-code-tab]')) { const active = button === this; button.classList.toggle('is-active', active); button.setAttribute('aria-selected', String(active)); button.tabIndex = active ? 0 : -1; } for (const panel of this.closest('.bs-hero-code').querySelectorAll('[data-bs-code-panel]')) { const active = panel.dataset.bsCodePanel === this.dataset.bsCodeTab; panel.classList.toggle('is-active', active); panel.hidden = !active; }">Deploy path</button>
+      </div>
+      <div class="bs-code-window is-active" role="tabpanel" id="bs-code-boot" aria-labelledby="bs-tab-boot" data-bs-code-panel="boot">
+        <span class="line muted"># compose/dev.sh</span>
+        <span class="line"><span class="prompt">$</span> {"./compose/dev.sh up -d --build"}</span>
+        <span class="line spacer" aria-hidden="true"></span>
+        <span class="line"><span class="ok">ok</span> postgres ready on 5432</span>
+        <span class="line"><span class="ok">ok</span> valkey ready on 6379</span>
+        <span class="line"><span class="ok">ok</span> api-dev migrated and serving /openapi.json</span>
+        <span class="line"><span class="ok">ok</span> ui-dev generated client and started Vite</span>
+        <span class="line"><span class="ok">ok</span> mailpit, queues, logs, and metrics are overlays</span>
+        <span class="line spacer" aria-hidden="true"></span>
+        <span class="line muted">{"# open http://localhost:3001 and sign in"}</span>
+      </div>
+      <div class="bs-code-window" role="tabpanel" id="bs-code-api" aria-labelledby="bs-tab-api" data-bs-code-panel="api" hidden>
+        <span class="line muted"># api-template</span>
+        <span class="line"><span class="prompt">$</span> bun run generate:openapi</span>
+        <span class="line spacer" aria-hidden="true"></span>
+        <span class="line"><span class="ok">ok</span> TypeBox routes emitted /openapi.json</span>
+        <span class="line"><span class="ok">ok</span> UI client regenerated from the live schema</span>
+        <span class="line"><span class="ok">ok</span> route contracts fail before drift reaches review</span>
+        <span class="line spacer" aria-hidden="true"></span>
+        <span class="line muted"># server and client move together</span>
+      </div>
+      <div class="bs-code-window" role="tabpanel" id="bs-code-jobs" aria-labelledby="bs-tab-jobs" data-bs-code-panel="jobs" hidden>
+        <span class="line muted"># api-template queues</span>
+        <span class="line"><span class="prompt">$</span> WITH_BULLMQ=1 ./compose/dev.sh up -d</span>
+        <span class="line spacer" aria-hidden="true"></span>
+        <span class="line"><span class="ok">ok</span> Valkey is shared by cache and queue workers</span>
+        <span class="line"><span class="ok">ok</span> idempotent processors guard retry paths</span>
+        <span class="line"><span class="ok">ok</span> bull-board is available in development only</span>
+        <span class="line spacer" aria-hidden="true"></span>
+        <span class="line muted"># delayed work stays visible while you build</span>
+      </div>
+      <div class="bs-code-window" role="tabpanel" id="bs-code-deploy" aria-labelledby="bs-tab-deploy" data-bs-code-panel="deploy" hidden>
+        <span class="line muted"># infra-template</span>
+        <span class="line"><span class="prompt">$</span> {"./compose/prod.sh up -d --pull always"}</span>
+        <span class="line spacer" aria-hidden="true"></span>
+        <span class="line"><span class="ok">ok</span> Traefik routes same-origin API and UI traffic</span>
+        <span class="line"><span class="ok">ok</span> TLS, backups, secrets, and updates live beside code</span>
+        <span class="line"><span class="ok">ok</span> OpenTofu can provision the first VPS when needed</span>
+        <span class="line spacer" aria-hidden="true"></span>
+        <span class="line muted"># local shape and deploy shape stay related</span>
+      </div>
+      <p class="bs-code-caption">API -&gt; OpenAPI -&gt; UI, with Compose underneath and deploy docs beside the code.</p>
+    </div>
+  </section>
 
-  ui <-->|OpenAPI| api
-  api --> infra
-  ui --> infra
-  tofu -. provisions .-> infra
-```
+  <section class="bs-stack-ribbon" aria-label="Composed templates">
+    <a href="/api/overview/">
+      <span>api-template</span>
+      <small>Bun / Elysia / Drizzle / auth / billing</small>
+    </a>
+    <a href="/ui/overview/">
+      <span>ui-template</span>
+      <small>React / Vite / OpenAPI client / Playwright</small>
+    </a>
+    <a href="/infra/overview/">
+      <span>infra-compose</span>
+      <small>Postgres / Valkey / Traefik / observability</small>
+    </a>
+    <a href="/topics/provisioning-with-tofu/">
+      <span>infra-tofu</span>
+      <small>VPS bootstrap / DNS / firewall / first boot</small>
+    </a>
+  </section>
 
-Read [Why BoringStack](/architecture/why-boringstack/) for the decision guide, then [Quickstart](/quickstart/) when you want to clone.
+  <section class="bs-section bs-compose-section" aria-labelledby="bs-compose-title">
+    <div class="bs-section-heading">
+      <p class="bs-eyebrow">The composed-stack bet</p>
+      <h2 id="bs-compose-title">Not a starter kit. A product spine.</h2>
+      <p>Most templates give you a UI and a login form. BoringStack gives you the seams that usually appear after launch: account boundaries, session rotation, idempotent jobs, webhooks, audit trails, deploy scripts, backups, and local services that match production closely enough to matter.</p>
+    </div>
 
-## Why it exists
+    <div class="bs-story-list">
+      <a href="/api/overview/">
+        <span>API</span>
+        <strong>Auth, billing, queues, email, and audit are already wired.</strong>
+        <small>Bun, Elysia, Drizzle, Postgres, Valkey, BullMQ, Stripe hooks, OAuth, and transactional email form the backend skeleton of a real SaaS.</small>
+      </a>
+      <a href="/ui/overview/">
+        <span>UI</span>
+        <strong>The React app is typed against the API, not hand-waved.</strong>
+        <small>Vite, TanStack Query, shadcn/ui, Playwright, i18n, and a generated OpenAPI client keep server and client changes moving together.</small>
+      </a>
+      <a href="/infra/overview/">
+        <span>Infra</span>
+        <strong>Local Compose, production Compose, optional VPS bootstrap.</strong>
+        <small>Postgres, Valkey, Traefik, observability overlays, Mailpit, GlitchTip, WUD, backups, and OpenTofu are arranged as one deployable shape.</small>
+      </a>
+    </div>
+  </section>
 
-AI builders are incredible for proving an idea quickly. The hard part comes next: secrets, auth, webhooks, billing, background jobs, deploys, logs, backups, tenant boundaries, and keeping cloud spend sane. BoringStack starts from that next phase.
-
-The core bias is ownership and low COGS. Postgres, Valkey, Traefik, Docker Compose, Prometheus, Grafana, Loki, GlitchTip, Mailpit, WUD, and OpenTofu are all open-source building blocks you can run yourself. Paid services are integrations, not the foundation.
-
-## The templates
-
-<CardGrid>
-  <Card title="api-template" icon="rocket">
-    Bun · Elysia · Drizzle · Postgres · Valkey · BullMQ. Cookie auth with
-    refresh sessions, OAuth, Stripe billing, email, queues, audit log, and an
-    env validator that fails the boot rather than your customers.
-    [Overview →](/api/overview/)
-  </Card>
-  <Card title="ui-template" icon="laptop">
-    Vite · React 19 · TanStack Query · shadcn/ui · Playwright. Typed OpenAPI
-    client, custom ESLint rules that enforce the architecture, working e2e
-    harness. Drift between server and client is a compile error.
-    [Overview →](/ui/overview/)
-  </Card>
-  <Card title="infra-docker-compose-template" icon="setting">
-    Postgres · Valkey · Traefik. Opt-in overlays for GlitchTip,
-    Prometheus + Grafana + Loki, BullMQ dashboard, WUD, and Mailpit. One
-    `./scripts/compose-up.sh` boots the lot. [Overview →](/infra/overview/)
-  </Card>
-  <Card title="infra-bootstrap-tofu-template" icon="seti:terraform">
-    Optional fourth template. One `tofu apply` puts a Hetzner VPS behind
-    Cloudflare with the docker-compose stack already running.
-    [Walkthrough →](/topics/provisioning-with-tofu/)
-  </Card>
-</CardGrid>
-
-## Where next
-
-- New here? Start with the [Quickstart](/quickstart/): fork, clone, boot, sign in.
-- Deciding whether it fits? Read [Why BoringStack](/architecture/why-boringstack/) for a fit check, trade-offs, and comparison.
-- Deploying to a VPS? [Deployment](/topics/deployment/), [Firewall & TLS](/runbooks/firewall-and-tls/), [Cloudflare Email setup](/runbooks/cloudflare-email-setup/).
-- Looking up an env var or a command? [Environment variables](/reference/env-vars/) · [Commands cheatsheet](/reference/commands/).
+  <section class="bs-section bs-proof-section" aria-labelledby="bs-proof-title">
+    <div class="bs-section-heading">
+      <p class="bs-eyebrow">Why people should try it</p>
+      <h2 id="bs-proof-title">The first clone already feels like a company app.</h2>
+    </div>
+    <div class="bs-proof-grid">
+      <div>
+        <strong>Tenant-aware from the model up</strong>
+        <span>Accounts, memberships, roles, plan features, and active membership checks are part of the spine.</span>
+      </div>
+      <div>
+        <strong>Low-COGS by default</strong>
+        <span>Open-source runtime services first. Paid providers are integrations, not required foundations.</span>
+      </div>
+      <div>
+        <strong>Agent-ready architecture</strong>
+        <span>Custom ESLint plugins turn architectural intent into concrete failures before review.</span>
+      </div>
+      <div>
+        <strong>Deployable shape, not toy shape</strong>
+        <span>TLS, firewall, backups, image updates, secrets, and runbooks live beside the code.</span>
+      </div>
+    </div>
+  </section>
+</div>
