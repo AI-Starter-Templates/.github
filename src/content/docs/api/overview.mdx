@@ -69,7 +69,7 @@ A feature folder always looks like (for a hypothetical `posts` resource):
   - posts.schemas.ts       (optional) TypeBox request/response
 </FileTree>
 
-The shipped `auth`, `users`, `accounts`, `billing`, `dashboard`, `admin`, `health`, `notifications` modules are framework. `widgets` is the only example domain feature — kept as the reference for the [account-scoped resource pattern](/api/multi-tenant/) (every read/write filters by `accountId`). Replace it with your own product domain. Add new resources with `bun run new:resource <name>`; the scaffolder writes the four-file anatomy and wires it into `config/routes.ts` so you can't forget a step.
+The shipped `auth`, `users`, `accounts`, `billing`, `dashboard`, `admin`, `health`, `notifications` modules are framework. `widgets` is the only example domain feature, kept as the reference for the [account-scoped resource pattern](/api/multi-tenant/) (every read/write filters by `accountId`). Replace it with your own product domain. Add new resources with `bun run new:resource <name>`; the scaffolder writes the four-file anatomy and wires it into `config/routes.ts` so you can't forget a step.
 
 ## Cross-cutting concerns
 

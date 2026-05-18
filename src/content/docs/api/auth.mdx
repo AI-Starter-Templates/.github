@@ -12,7 +12,7 @@ Two login flows share one browser contract:
 - Password: register / verify-email / login / forgot-password / reset-password.
 - OAuth: Google, GitHub, LinkedIn. Server-side; the SPA never holds a client secret.
 
-Both converge at the same point: `accountsService.provisionAfterVerification` — the single place that creates the personal account + owner membership. **No account exists for an unverified email**, so an abandoned signup never leaves orphan tenant rows in the database.
+Both converge at the same point: `accountsService.provisionAfterVerification`, the single place that creates the personal account and owner membership. No account exists for an unverified email, so an abandoned signup never leaves orphan tenant rows in the database.
 
 Once verified, a session ends the same way regardless of which flow produced it:
 
@@ -23,7 +23,7 @@ So the model is intentionally hybrid: fast stateless access checks, stateful ref
 
 ## Verify-before-account
 
-Password signup splits across two endpoints. `POST /auth/register` writes only the pending user row, the bcrypt hash, and a single-use verification token — no `app.accounts` row, no membership, no session cookies. The response is a `{ message }` envelope so the SPA can render "check your inbox at user@example.com." `POST /auth/verify-email` flips `users.email_verified_at`, atomically calls `provisionAfterVerification`, and *then* issues the auth + refresh cookies. That's where the user gets their account.
+Password signup splits across two endpoints. `POST /auth/register` writes only the pending user row, the bcrypt hash, and a single-use verification token. No `app.accounts` row, no membership, no session cookies. The response is a `{ message }` envelope so the SPA can render "check your inbox at user@example.com." `POST /auth/verify-email` flips `users.email_verified_at`, atomically calls `provisionAfterVerification`, and *then* issues the auth + refresh cookies. That's where the user gets their account.
 
 ```mermaid
 sequenceDiagram
@@ -47,11 +47,11 @@ sequenceDiagram
 
 The OAuth flow lands at the same `provisionAfterVerification` call. Branches that converge there:
 
-- Brand-new OAuth signup with a provider-verified email → user created, provisioned, session issued.
-- Existing pending password-signup signing in with OAuth → user gets promoted to verified, the OAuth link is added, the account is provisioned. (This branch quietly fixed a pre-VBA bug where pending users could get OAuth-linked but never end up with an account.)
-- Existing already-verified user adding another OAuth provider → link added, `provisionAfterVerification` is idempotent (returns the existing account + membership).
+- Brand-new OAuth signup with a provider-verified email: user created, provisioned, session issued.
+- Existing pending password-signup signing in with OAuth: user gets promoted to verified, the OAuth link is added, the account is provisioned. (This branch quietly fixed a pre-VBA bug where pending users could get OAuth-linked but never end up with an account.)
+- Existing already-verified user adding another OAuth provider: link added; `provisionAfterVerification` is idempotent (returns the existing account and membership).
 
-OAuth refuses to issue a session when the IdP says `emailVerified: false`. The transaction rolls back — no user row, no provider link, no half-state. The caller has to verify through the password flow first.
+OAuth refuses to issue a session when the IdP says `emailVerified: false`. The transaction rolls back with no user row, no provider link, and no half-state. The caller has to verify through the password flow first.
 
 `POST /auth/login` with a still-pending user (correct password, `email_verified_at` is null) returns **403 `EMAIL_NOT_VERIFIED`**. The check fires after the password verify so an attacker who doesn't already know the password can't enumerate which addresses are pending versus unknown. The UI surfaces a resend-verification CTA pinned to the email the user typed.
 
@@ -129,8 +129,8 @@ Refresh-token rotation means a replayed old refresh token no longer matches a ro
     verified). Abandoned signups don't leave orphan tenant rows.
   </FaqItem>
   <FaqItem title="`EMAIL_NOT_VERIFIED` (403) fires only after correct password">
-    Password order on `/login` is: dummy-verify on lookup miss →
-    bcrypt → check `email_verified_at`. An attacker who doesn't know
+    Password order on `/login` is: dummy-verify on lookup miss, then
+    bcrypt, then check `email_verified_at`. An attacker who doesn't know
     the password can't enumerate pending users.
   </FaqItem>
 </FaqGroup>

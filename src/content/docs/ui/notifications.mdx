@@ -55,7 +55,7 @@ sequenceDiagram
     - PreferenceCell/
 </FileTree>
 
-Same anatomy as `features/dashboard/` (queries + utils at the feature root, components in `components/<Name>/` with the 8-file layout). The query surface is split across three files — reads, mutations, preferences — to keep each file under the `max-hooks-per-file` threshold enforced by [`eslint-plugin-react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture).
+Same anatomy as `features/dashboard/` (queries + utils at the feature root, components in `components/<Name>/` with the 8-file layout). The query surface is split across three files (reads, mutations, preferences) to keep each file under the `max-hooks-per-file` threshold enforced by [`eslint-plugin-react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture).
 
 ## Queries
 
