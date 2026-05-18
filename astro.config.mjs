@@ -198,6 +198,10 @@ export default defineConfig({
               label: "Supply-chain protection",
               link: "/topics/supply-chain/",
             },
+            {
+              label: "Security pipeline",
+              link: "/topics/security/",
+            },
           ],
         },
         {
