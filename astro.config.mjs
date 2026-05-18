@@ -237,6 +237,11 @@ export default defineConfig({
               link: "/architecture/lint-as-contract/",
               badge: { text: "agent-critical", variant: "tip" },
             },
+            {
+              label: "Agent docs as an index",
+              link: "/architecture/agent-docs/",
+              badge: { text: "agent-critical", variant: "tip" },
+            },
           ],
         },
         {
