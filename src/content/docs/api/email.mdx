@@ -83,7 +83,7 @@ await sendTemplate({
 });
 ```
 
-The handler should not branch on queue vs inline; that decision lives in env config and in `sendTemplate` / `sendTemplateNow`.
+Do not branch on queue vs inline in the handler; that decision lives in env config and `sendTemplate` / `sendTemplateNow`.
 
 ## Adding a provider
 

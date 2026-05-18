@@ -29,9 +29,9 @@ The api-template ships [Cloudflare Email Service](https://developers.cloudflare.
 
 Pricing tiers, free-tier limits, and per-message rates all evolve. See [Cloudflare](https://developers.cloudflare.com/email-service/) · [Resend](https://resend.com/pricing) · [SendGrid](https://sendgrid.com/en-us/pricing) for current numbers.
 
-If you're already paying for Workers (or willing to), Cloudflare Email is free transactional sending at the margin. That maps to BoringStack's cost-of-goods bias.
+If you're already paying for Workers, Cloudflare Email has no per-message cost. BoringStack defaults to it because marginal cost is zero.
 
-## How it slots in
+## Integration
 
 The api-template's email layer is pluggable: one `IEmailService` interface, five concrete implementations (Cloudflare, Resend, SendGrid, SMTP, noop). The Cloudflare provider POSTs to an account-scoped endpoint on `api.cloudflare.com` with a bearer token. Retries, structured logging, and the shared `retryWithBackoff` wrapper apply equally to all providers; Cloudflare gets the same reliability treatment as Resend. For local template iteration, set `EMAIL_PROVIDER=smtp` with `SMTP_HOST=mailpit` and the [Mailpit overlay](/topics/email-in-dev/) catches everything for inspection.
 
@@ -39,7 +39,7 @@ See [Email](/api/email/) for the abstraction shape and how dispatch works.
 
 ## Dev quickstart
 
-Dev with no Cloudflare keys → the noop provider logs the rendered payload to stdout instead of sending. Zero friction.
+Dev with no Cloudflare keys → the noop provider logs the rendered payload to stdout instead of sending.
 
 To actually send from dev:
 

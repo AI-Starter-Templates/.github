@@ -7,13 +7,13 @@ import { Aside } from "@astrojs/starlight/components";
 import FaqGroup from "../../../components/FaqGroup.astro";
 import FaqItem from "../../../components/FaqItem.astro";
 
-BoringStack ships a production path on a VPS you control: Docker Compose, GHCR images, Traefik TLS, Cloudflare at the edge. [Why BoringStack](/architecture/why-boringstack/) ties that to the rest of the templates.
+BoringStack runs on a VPS you control: Docker Compose, GHCR images, Traefik TLS, Cloudflare at the edge. [Why BoringStack](/architecture/why-boringstack/) ties that to the rest of the templates.
 
 Fork the templates, fill `compose/.env`, then `compose up -d` on the server, or use [OpenTofu](/topics/provisioning-with-tofu/) for first boot on Hetzner. HTTPS provisions via ACME. The perimeter uses Cloudflare plus a Hetzner cloud firewall.
 
 ## The mental model
 
-Push to `main` on `api-template` or `ui-template`. The release workflow builds a Docker image and pushes it to `ghcr.io/<your-owner>/<repo>:latest`. WUD on the VPS notices the new tag and notifies you. You pull and restart with two commands. Traefik handles TLS via Let's Encrypt; Cloudflare proxies all traffic to your single apex domain via same-origin path routing.
+Push to `main` on `api-template` or `ui-template`. The release workflow builds a Docker image and pushes it to `ghcr.io/<your-owner>/<repo>:latest`. WUD on the VPS detects the new tag and notifies you. You pull and restart with two commands. Traefik handles TLS via Let's Encrypt; Cloudflare proxies all traffic to your single apex domain via same-origin path routing.
 
 ## Design choices
 

@@ -7,15 +7,15 @@ import { Aside } from "@astrojs/starlight/components";
 import FaqGroup from "../../../components/FaqGroup.astro";
 import FaqItem from "../../../components/FaqItem.astro";
 
-A fresh BoringStack fork comes locked down. The work the operator usually spends a week wiring up (secret scanning, dep auditing, SAST, signed commits, branch protection, agent skills) is already in place and tested.
+A fresh BoringStack fork includes security infrastructure that typically takes a week to wire up: secret scanning, dep auditing, SAST, signed commits, branch protection, and agent skills are configured and tested.
 
-Three layers run automatically:
+Three automated layers:
 
-1. **CI gates** that block PRs on leaked secrets, vulnerable dependencies, and code patterns that historically cause auth bypass.
-2. **Agent skills** from Trail of Bits and Ghost Security marketplaces, ready for deep passes on demand.
-3. **A project-owned review skill** that orchestrates the above and checks stack-specific invariants the generic tools can't see.
+1. **CI gates** block PRs on leaked secrets, vulnerable dependencies, and code patterns linked to auth bypass.
+2. **Agent skills** from Trail of Bits and Ghost Security marketplaces for on-demand deep analysis.
+3. **A project-owned review skill** orchestrates the above and verifies stack-specific requirements generic tools miss.
 
-All three also run on a Monday-morning cron. If a CVE drops against a transitive dep on a Tuesday, the next Monday at 06:23 UTC the build fails. Nobody has to remember to scan.
+All three run on a Monday-morning cron (06:23 UTC). New CVEs against existing dependencies are caught automatically; no manual rescans needed.
 
 ## Layer 1: CI gates
 

@@ -7,9 +7,9 @@ import { Aside } from "@astrojs/starlight/components";
 import FaqGroup from "../../../components/FaqGroup.astro";
 import FaqItem from "../../../components/FaqItem.astro";
 
-npm supply-chain attacks usually run on the same clock: a maintainer's account gets hijacked, a malicious version is published, the community notices and yanks within hours to a couple of days. The window where the malicious version is live but undetected is short.
+Supply-chain attacks follow a predictable timeline: a maintainer's account is compromised, a malicious version is published, the community detects and yanks it within hours to days. The undetected window is short but exploitable.
 
-Every BoringStack repo applies a **seven-day minimum release age**: package versions younger than seven days won't install. By the time we install, the community has had time to spot a bad release.
+Every BoringStack repo enforces a **seven-day minimum release age**: packages younger than seven days won't install. This allows time for the community to identify malicious releases.
 
 ## How it works per package manager
 
@@ -57,11 +57,11 @@ minimum-release-age-exclude[]=@tailwindcss/oxide*
 
 Glob patterns are supported, useful for platform-variant packages like `@tailwindcss/oxide-*`.
 
-Use sparingly. Each exclusion is a small concession on the original threat model. The default `ui-template` `.npmrc` already excludes a handful of high-churn packages whose latest versions routinely sit inside the seven-day window and would otherwise block every install.
+Use sparingly. Each exclusion weakens the threat model slightly. The default `ui-template` `.npmrc` already excludes several high-churn packages whose latest versions fall within the seven-day window and would block regular installs.
 
 ## Why not just trust npm?
 
-npm's audit signal is real but lagging. By the time `npm audit` reports a malicious version, the attack window already closed. The point of this rule isn't to replace audits or socket.dev or any other tool: it's a cheap, independent layer that buys time for those tools to do their job.
+npm's audit signal lags detection. By the time `npm audit` reports a malicious version, the attack window has closed. This rule does not replace audits or socket.dev—it's a low-cost, independent layer that extends the detection window for those tools.
 
 ## References
 

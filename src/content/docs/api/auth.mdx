@@ -12,7 +12,7 @@ Two login flows share one browser contract:
 - Password: register / verify-email / login / forgot-password / reset-password.
 - OAuth: Google, GitHub, LinkedIn. Server-side; the SPA never holds a client secret.
 
-Both converge at the same point: `accountsService.provisionAfterVerification`, the single place that creates the personal account and owner membership. No account exists for an unverified email, so an abandoned signup never leaves orphan tenant rows in the database.
+Both converge at the same point: `accountsService.provisionAfterVerification`, the single place that creates the personal account and owner membership. Without verification, there is no account, so abandoned signups leave no orphan tenant rows in the database.
 
 Once verified, a session ends the same way regardless of which flow produced it:
 

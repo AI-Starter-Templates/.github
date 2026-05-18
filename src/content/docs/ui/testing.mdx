@@ -70,7 +70,7 @@ Unit and component tests focus on pure logic; anything HTTP-shaped is e2e agains
 
 Component test: render the component, assert on the rendered output. Don't reach into hook internals; hooks have their own test if they're complex enough to need one.
 
-Hook test: `renderHook` from Testing Library; assert on the returned view object (the `IXxxView` shape). Canonical pattern for testing a component's logic without rendering the UI.
+Hook test: `renderHook` from Testing Library; assert on the returned view object (the `IXxxView` shape). Standard pattern for testing a component's logic without rendering the UI.
 
 E2E test: navigate, interact, assert. Use Playwright's page-object pattern under `e2e/pages/` for anything reused across specs. Baseline visual diffs live in `e2e/visual.spec.ts-snapshots/`.
 

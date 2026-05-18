@@ -101,9 +101,9 @@ For longer retention (compliance, year-over-year audits), run two crons with dif
 15 4 1 * * ... RCLONE_REMOTE_PATH=monthly BACKUP_RETENTION_DAYS=99999 ...
 ```
 
-## Restore drill
+## Restore test
 
-A backup you can't restore is not a backup. Run the drill quarterly.
+A backup you can't restore is not a backup. Run the test quarterly.
 
 1. Pick a recent backup. `rclone ls backup:db/`.
 2. Download to a workstation. `rclone copy backup:db/<file>.sql.gz ./`.

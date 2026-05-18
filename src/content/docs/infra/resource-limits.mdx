@@ -11,7 +11,7 @@ Every container in the stack has `deploy.resources.limits` and `deploy.resources
 
 ## Why limits matter
 
-A misbehaving worker that consumes all memory shouldn't take Postgres down with it. Limits draw the boundaries; reservations guarantee a service can boot even when the host is busy. Without limits, one runaway process kills every other service on the host.
+A misbehaving worker consuming all memory shouldn't take Postgres down with it. Limits draw the boundaries; reservations guarantee a service can boot even when the host is busy. Without limits, one runaway process kills every other service on the host.
 
 ## Design choices
 

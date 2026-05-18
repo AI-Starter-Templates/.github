@@ -7,17 +7,15 @@ import { Aside } from "@astrojs/starlight/components";
 import FaqGroup from "../../../components/FaqGroup.astro";
 import FaqItem from "../../../components/FaqItem.astro";
 
-BoringStack's [Deployment](/topics/deployment/) story is boring: SSH into a VPS, install Docker, clone the infra repo, `compose pull && compose up -d`. That works, and some operators prefer it.
+BoringStack's [Deployment](/topics/deployment/) path is manual: SSH into a VPS, install Docker, clone the infra repo, `compose pull && compose up -d`. Some operators prefer this.
 
 The OpenTofu template is the alternative for people who'd rather drive the same outcome from a single declarative apply. Source lives at [AI-Starter-Templates/infra-bootstrap-tofu-template](https://github.com/AI-Starter-Templates/infra-bootstrap-tofu-template).
 
-## The promise
+## What it does
 
-You start with a domain on Cloudflare, a Hetzner account, and a `terraform.tfvars` filled in.
+Starting with a domain on Cloudflare, a Hetzner account, and a filled `terraform.tfvars`:
 
-You run `tofu apply`.
-
-A few minutes later the site is live at `https://<your-domain>`: VPS provisioned, DNS configured, HTTPS valid, optional superuser seeded (when `superuser_email` + `superuser_password` are set in `terraform.tfvars`).
+Run `tofu apply`. Minutes later, the site is live at `https://<your-domain>`: VPS provisioned, DNS configured, HTTPS valid, optional superuser seeded (when `superuser_email` + `superuser_password` are set).
 
 ## What one apply does
 

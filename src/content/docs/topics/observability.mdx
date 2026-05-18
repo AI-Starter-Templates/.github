@@ -9,7 +9,7 @@ import FaqItem from "../../../components/FaqItem.astro";
 
 `WITH_OBSERVABILITY=1` adds a full metrics-and-logs stack to the infra. It runs on the same host as the app; no SaaS, no per-event billing.
 
-The default install is "enough to debug a production incident at 3 AM": app metrics, system metrics, container metrics, and every container's logs queryable in one Grafana.
+The default configuration covers debugging production incidents: app metrics, system metrics, container metrics, and all container logs queryable in one Grafana.
 
 ## How signals flow
 
@@ -54,7 +54,7 @@ flowchart LR
     Pager strategy is project-specific; the plumbing is there when you need it.
   </FaqItem>
   <FaqItem title="Bundled exporters: node, postgres, valkey">
-    The metrics you will actually consult during an incident.
+    Standard metrics for incident response.
   </FaqItem>
 </FaqGroup>
 

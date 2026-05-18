@@ -9,7 +9,7 @@ import FaqItem from "../../../components/FaqItem.astro";
 
 The API layer owns security, data, and background work. [Why BoringStack](/architecture/why-boringstack/) and [Separation of concerns](/architecture/separation-of-concerns/) describe how that fits the rest of the stack.
 
-A production-shaped HTTP API: auth, sessions, OAuth, email, queues, audit log, Stripe billing, structured logging, env validator that refuses to boot if anything is missing. Architectural rules (routes vs services vs types, env access, queues) keep adding features cheap as the codebase grows.
+A production-shaped HTTP API: auth, sessions, OAuth, email, queues, audit log, Stripe billing, structured logging, env validator that refuses to boot if anything is missing. Architectural rules (routes vs services vs types, env access, queues) control costs as the codebase grows.
 
 ## How the layers split
 

@@ -7,7 +7,7 @@ import { Aside } from "@astrojs/starlight/components";
 import FaqGroup from "../../../components/FaqGroup.astro";
 import FaqItem from "../../../components/FaqItem.astro";
 
-ACL is multi-tenant from day one. Solo-user products are the degenerate case: every signup creates a personal `accounts` row, one `account_memberships` row at `role: owner`, and a Free `account_plans` row, all in a single transaction. The account switcher and invitations UI stay hidden until the user holds more than one membership.
+ACL is multi-tenant from day one. Solo-user products are the degenerate case: every signup creates a personal `accounts` row, one `account_memberships` row at `role: owner`, and a Free `account_plans` row, all in a single transaction. The account switcher and invitations UI are hidden until the user holds more than one membership.
 
 ## The three axes that feed every authorization check
 

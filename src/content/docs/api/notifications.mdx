@@ -42,7 +42,7 @@ sequenceDiagram
 
 <FaqGroup>
   <FaqItem title="Fire-and-forget at the call site" open>
-    Mirrors the audit-log ergonomics already in the codebase: `void notifications.send(...)`. Delivery never blocks the originating request.
+    Uses the audit-log pattern already in the codebase: `void notifications.send(...)`. Delivery never blocks the originating request.
   </FaqItem>
   <FaqItem title="Async via BullMQ; same core inline when queues are off">
     `runNotificationDispatch` runs identically in the worker and the inline fallback, so dev and tests don't need a worker process.

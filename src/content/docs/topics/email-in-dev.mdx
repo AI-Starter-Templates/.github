@@ -5,7 +5,7 @@ description: Iterate on transactional email templates and flows locally without 
 
 import { Steps, Aside } from "@astrojs/starlight/components";
 
-Iterate on verify-email, password-reset, welcome, and notification flows without bouncing every change through Cloudflare Email Service, Resend, or SendGrid. BoringStack ships a one-flag opt-in for [Mailpit](https://mailpit.axllent.org/), a local SMTP catcher with a web UI.
+Test verify-email, password-reset, welcome, and notification flows locally without sending through Cloudflare Email Service, Resend, or SendGrid. BoringStack includes [Mailpit](https://mailpit.axllent.org/), a local SMTP catcher with a web UI, available via a one-flag opt-in.
 
 ## Boot Mailpit
 
@@ -48,7 +48,7 @@ Iterate on verify-email, password-reset, welcome, and notification flows without
 
 ## Use this for
 
-- Designing a new email template. Edit the Handlebars source under `api-template/src/templates/email/`, trigger a flow, refresh Mailpit. Sub-second loop.
+- Designing a new email template. Edit the Handlebars source under `api-template/src/templates/email/`, trigger a flow, refresh Mailpit.
 - Debugging delivery locally. Mailpit captures the full SMTP envelope, so you can verify From / Reply-To / List-Unsubscribe before going near a real provider.
 - E2E tests that exercise email. Point the api at Mailpit and assert against the API surface (`http://localhost:8025/api/v1/messages`). No mail leaves the host.
 

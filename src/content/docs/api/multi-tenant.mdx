@@ -43,7 +43,7 @@ sequenceDiagram
   API-->>B: 200 + auth_token JWT (carries user_id + account_id)
 ```
 
-`provisionAfterVerification` is idempotent: a doubled-up verify click or an OAuth-then-password collision can call it twice and only ever sees one active owner membership per user. The `buildPersonalAccountName({ firstName, lastName, email })` util produces the account name; if both names are empty it falls back to the email.
+`provisionAfterVerification` is idempotent: a doubled-up verify click or an OAuth-then-password collision can call it twice, and only one active owner membership per user exists. The `buildPersonalAccountName({ firstName, lastName, email })` util produces the account name; if both names are empty it falls back to the email.
 
 The OAuth callback uses the same provision function inline at the end of the callback transaction, so an OAuth user with a provider-verified email lands fully provisioned in one round-trip. OAuth refuses to issue a session when the IdP says the email is unverified; the transaction rolls back, and the caller has to verify through the password flow first. See [Authentication](/api/auth/#verify-before-account) for the full state machine.
 

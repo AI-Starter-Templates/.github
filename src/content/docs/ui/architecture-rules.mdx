@@ -36,7 +36,7 @@ The ui-template enforces its architecture through ESLint, not vibes. The UI-spec
 
 Each rule has a fix-it suggestion where mechanical; the rest fail the lint gate and need a real edit.
 
-## Why the component anatomy matters
+## Component anatomy benefits
 
 The anatomy makes any component mechanically testable. A `.tsx` with no state is pure JSX: a snapshot test or a single render assertion. A `.hooks.ts` returning a typed view object is testable via `renderHook`, no DOM needed. Together they give you full coverage of behavior without ever simulating a click.
 

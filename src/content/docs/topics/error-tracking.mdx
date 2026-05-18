@@ -18,7 +18,7 @@ The SDKs don't know which one they're talking to. Choosing is a one-env-var chan
 
 <FaqGroup>
   <FaqItem title="Sentry SDK on both sides (not a custom shim)" open>
-    One vocabulary, one DX, one set of breadcrumbs.
+    Same SDK interface and error format across both services.
   </FaqItem>
   <FaqItem title="GlitchTip as the self-host option">
     Wire-compatible with Sentry; runs on the same Postgres + Valkey the app already uses.
@@ -46,7 +46,7 @@ flowchart LR
 
 API side: Sentry initialises once at boot. If `SENTRY_DSN` is empty, init is a no-op. The shared `captureError` helper is wired into unhandled-rejection and uncaught-exception handlers, so anything that escapes the request loop reaches the backend.
 
-UI side: Sentry initialises once at app mount when `VITE_SENTRY_DSN` is set. Replays-on-error capture the broken flow; full-session replays are off so you don't accidentally collect a video of every customer.
+UI side: Sentry initialises once at app mount when `VITE_SENTRY_DSN` is set. Replays-on-error capture the error context; full-session replays are off to avoid capturing video of every session.
 
 ## Self-hosting with GlitchTip
 
