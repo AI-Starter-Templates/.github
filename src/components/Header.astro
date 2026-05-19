@@ -19,10 +19,16 @@ const navItems = [
 ];
 ---
 
-<div class="bs-site-header">
-  <a class="bs-site-brand" href="/" aria-label="BoringStack home">
+<div
+  class="grid h-full w-full max-w-full grid-cols-[auto_auto_minmax(15rem,28rem)_1fr] items-center gap-[1.2rem] [html[data-has-hero]_&]:mx-auto [html[data-has-hero]_&]:w-[min(1360px,calc(100vw-2rem))] max-[74rem]:grid-cols-[auto_minmax(12rem,1fr)_auto] max-[50rem]:grid-cols-[auto_1fr] max-[50rem]:gap-3"
+>
+  <a
+    class="inline-flex items-center gap-2.5 whitespace-nowrap text-[var(--sl-color-white)] no-underline"
+    href="/"
+    aria-label="BoringStack home"
+  >
     <svg
-      class="bs-site-logo"
+      class="h-[30px] w-[30px] shrink-0 text-[var(--sl-color-accent)]"
       aria-hidden="true"
       viewBox="0 0 24 24"
       fill="none"
@@ -35,118 +41,31 @@ const navItems = [
       <path d="m7 9 3 3-3 3" />
       <path d="M13 15h4" />
     </svg>
-    <span>BoringStack</span>
+    <span class="font-extrabold leading-none">BoringStack</span>
   </a>
 
-  <nav class="bs-site-nav" aria-label="Primary">
-    {navItems.map((item) => <a href={item.href}>{item.label}</a>)}
+  <nav class="flex items-center gap-1 max-[74rem]:hidden" aria-label="Primary">
+    {
+      navItems.map((item) => (
+        <a
+          class="rounded-md px-3 py-2 text-[0.92rem] font-bold leading-none text-[var(--sl-color-gray-2)] no-underline transition-colors hover:bg-white/[0.05] hover:text-[var(--sl-color-white)]"
+          href={item.href}
+        >
+          {item.label}
+        </a>
+      ))
+    }
   </nav>
 
-  <div class="bs-site-search print:hidden">
+  <div class="min-w-0 print:hidden max-[50rem]:justify-self-end">
     {shouldRenderSearch && <Search />}
   </div>
 
-  <div class="bs-site-tools sl-hidden md:sl-flex print:hidden">
+  <div
+    class="sl-hidden justify-self-end md:sl-flex print:hidden items-center justify-end gap-3 before:h-7 before:w-px before:bg-[var(--sl-color-gray-5)] before:content-['']"
+  >
     <SocialIcons />
     <ThemeSelect />
     <LanguageSelect />
   </div>
 </div>
-
-<style>
-  @layer starlight.core {
-    .bs-site-header {
-      display: grid;
-      grid-template-columns: auto auto minmax(15rem, 28rem) 1fr;
-      gap: 1.2rem;
-      align-items: center;
-      height: 100%;
-      width: 100%;
-      max-width: 100%;
-      margin-inline: 0;
-    }
-
-    :global(html[data-has-hero]) .bs-site-header {
-      width: min(1360px, calc(100vw - 2rem));
-      margin-inline: auto;
-    }
-
-    .bs-site-brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.65rem;
-      color: var(--sl-color-white);
-      font-weight: 800;
-      line-height: 1;
-      text-decoration: none;
-      white-space: nowrap;
-    }
-
-    .bs-site-logo {
-      width: 30px;
-      height: 30px;
-      color: var(--sl-color-accent);
-      flex: 0 0 auto;
-    }
-
-    .bs-site-nav {
-      display: flex;
-      gap: 0.25rem;
-      align-items: center;
-    }
-
-    .bs-site-nav a {
-      padding: 0.55rem 0.7rem;
-      border-radius: 7px;
-      color: var(--sl-color-gray-2);
-      font-size: 0.92rem;
-      font-weight: 700;
-      line-height: 1;
-      text-decoration: none;
-    }
-
-    .bs-site-nav a:hover {
-      color: var(--sl-color-white);
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .bs-site-search {
-      min-width: 0;
-    }
-
-    .bs-site-tools {
-      justify-self: end;
-      justify-content: end;
-      gap: 0.85rem;
-      align-items: center;
-    }
-
-    .bs-site-tools::before {
-      content: "";
-      width: 1px;
-      height: 1.8rem;
-      background: var(--sl-color-gray-5);
-    }
-
-    @media (max-width: 74rem) {
-      .bs-site-header {
-        grid-template-columns: auto minmax(12rem, 1fr) auto;
-      }
-
-      .bs-site-nav {
-        display: none;
-      }
-    }
-
-    @media (max-width: 50rem) {
-      .bs-site-header {
-        grid-template-columns: auto 1fr;
-        gap: 0.75rem;
-      }
-
-      .bs-site-search {
-        justify-self: end;
-      }
-    }
-  }
-</style>

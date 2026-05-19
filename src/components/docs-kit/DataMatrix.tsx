@@ -13,7 +13,16 @@ interface DataMatrixProps {
   highlightColumn?: number;
 }
 
+const gridColumnClasses: Record<number, string> = {
+  2: "grid-cols-[repeat(2,minmax(11rem,1fr))]",
+  3: "grid-cols-[repeat(3,minmax(11rem,1fr))]",
+  4: "grid-cols-[repeat(4,minmax(11rem,1fr))]",
+  5: "grid-cols-[repeat(5,minmax(11rem,1fr))]",
+};
+
 export default function DataMatrix({ columns, rows, caption, highlightColumn }: DataMatrixProps) {
+  const gridColumns = gridColumnClasses[columns.length] ?? gridColumnClasses[4];
+
   return (
     <figure className="not-content my-8 overflow-hidden rounded-xl border border-transparent bg-[linear-gradient(var(--bs-doc-panel),var(--bs-doc-panel))_padding-box,linear-gradient(135deg,color-mix(in_srgb,var(--sl-color-accent)_54%,transparent),color-mix(in_srgb,var(--bs-doc-cyan)_26%,transparent),color-mix(in_srgb,var(--bs-doc-pink)_22%,transparent))_border-box] shadow-[0_22px_70px_color-mix(in_srgb,var(--bs-doc-glow)_54%,transparent)]">
       {caption ? (
@@ -22,10 +31,7 @@ export default function DataMatrix({ columns, rows, caption, highlightColumn }: 
         </figcaption>
       ) : null}
       <div className="overflow-x-auto">
-        <div
-          className="grid min-w-full"
-          style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(11rem, 1fr))` }}
-        >
+        <div className={clsx("grid min-w-full", gridColumns)}>
           {columns.map((column, index) => (
             <div
               className={clsx(

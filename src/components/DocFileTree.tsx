@@ -11,6 +11,15 @@ interface DocFileTreeProps {
   caption?: string;
 }
 
+const depthPadding = [
+  "pl-[0.35rem]",
+  "pl-[1.45rem]",
+  "pl-[2.55rem]",
+  "pl-[3.65rem]",
+  "pl-[4.75rem]",
+  "pl-[5.85rem]",
+];
+
 function FolderIcon() {
   return (
     <svg aria-hidden="true" className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24">
@@ -48,11 +57,12 @@ function NodeIcon({ node }: { node: DocFileTreeNode }) {
 }
 
 function TreeNode({ node, depth = 0 }: { node: DocFileTreeNode; depth?: number }) {
+  const paddingClass = depthPadding[Math.min(depth, depthPadding.length - 1)];
+
   return (
-    <li className="bs-doc-file-tree__item relative m-0 min-w-0 list-none" style={{ listStyle: "none", margin: 0 }}>
+    <li className="relative m-0 min-w-0 list-none p-0">
       <div
-        className="bs-doc-file-tree__row grid min-w-0 grid-cols-[1.45rem_minmax(0,1fr)] items-baseline gap-2 rounded-md px-1.5 py-0.5 text-[0.93rem] leading-tight transition-colors hover:bg-white/[0.035]"
-        style={{ paddingLeft: `${0.35 + depth * 1.1}rem` }}
+        className={`grid min-w-0 grid-cols-[1.45rem_minmax(0,1fr)] items-baseline gap-2 rounded-md py-0.5 pr-1.5 text-[0.93rem] leading-tight transition-colors hover:bg-white/[0.035] ${paddingClass}`}
       >
         <span className="mt-0.5 flex items-center justify-center text-[color-mix(in_srgb,var(--sl-color-accent)_72%,#e8ddff)]">
           <NodeIcon node={node} />
@@ -70,10 +80,7 @@ function TreeNode({ node, depth = 0 }: { node: DocFileTreeNode; depth?: number }
       </div>
 
       {node.children?.length ? (
-        <ul
-          className="bs-doc-file-tree__children relative m-0 ml-[1.25rem] mt-0.5 grid list-none gap-0"
-          style={{ listStyle: "none", marginBottom: 0 }}
-        >
+        <ul className="relative m-0 ml-[1.15rem] mt-0 grid list-none gap-0 p-0">
           {node.children.map((child) => (
             <TreeNode depth={depth + 1} key={`${node.name}-${child.name}`} node={child} />
           ))}
@@ -85,26 +92,7 @@ function TreeNode({ node, depth = 0 }: { node: DocFileTreeNode; depth?: number }
 
 export default function DocFileTree({ root, nodes, title = "Repository map", caption }: DocFileTreeProps) {
   return (
-    <figure className="bs-doc-file-tree my-8 overflow-hidden rounded-xl border border-transparent bg-[linear-gradient(var(--sl-color-bg),var(--sl-color-bg))_padding-box,linear-gradient(135deg,color-mix(in_srgb,var(--sl-color-accent)_70%,transparent),color-mix(in_srgb,#67e8f9_42%,transparent),color-mix(in_srgb,var(--sl-color-accent)_16%,transparent))_border-box] shadow-[0_22px_70px_color-mix(in_srgb,var(--sl-color-accent)_13%,transparent)]">
-      <style>{`
-        .bs-doc-file-tree ul,
-        .bs-doc-file-tree li {
-          margin: 0 !important;
-          padding-block: 0 !important;
-          list-style: none !important;
-        }
-
-        .bs-doc-file-tree__list {
-          row-gap: 0.32rem;
-          margin-top: 0.6rem !important;
-        }
-
-        .bs-doc-file-tree__children {
-          row-gap: 0.16rem;
-          margin-top: 0.16rem !important;
-          margin-left: 1.15rem !important;
-        }
-      `}</style>
+    <figure className="not-content my-8 overflow-hidden rounded-xl border border-transparent bg-[linear-gradient(var(--sl-color-bg),var(--sl-color-bg))_padding-box,linear-gradient(135deg,color-mix(in_srgb,var(--sl-color-accent)_70%,transparent),color-mix(in_srgb,#67e8f9_42%,transparent),color-mix(in_srgb,var(--sl-color-accent)_16%,transparent))_border-box] shadow-[0_22px_70px_color-mix(in_srgb,var(--sl-color-accent)_13%,transparent)]">
       <figcaption className="flex min-w-0 items-center justify-between gap-4 border-b border-[var(--sl-color-gray-6)] bg-[linear-gradient(90deg,color-mix(in_srgb,var(--sl-color-accent)_12%,transparent),transparent_62%)] px-4 py-3">
         <span className="min-w-0 truncate text-[0.72rem] font-black uppercase leading-none text-[var(--sl-color-accent)]">
           {title}
@@ -116,18 +104,12 @@ export default function DocFileTree({ root, nodes, title = "Repository map", cap
         ) : null}
       </figcaption>
 
-      <div
-        className="relative m-0 overflow-x-auto bg-[radial-gradient(circle_at_12%_0%,color-mix(in_srgb,var(--sl-color-accent)_12%,transparent),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.024),transparent)] p-5"
-        style={{ marginTop: 0 }}
-      >
+      <div className="relative m-0 overflow-x-auto bg-[radial-gradient(circle_at_12%_0%,color-mix(in_srgb,var(--sl-color-accent)_12%,transparent),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.024),transparent)] p-5">
         <div className="inline-flex min-w-0 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--sl-color-accent)_35%,var(--sl-color-gray-5))] bg-[color-mix(in_srgb,var(--sl-color-accent)_10%,transparent)] px-3 py-1 font-mono text-[0.86rem] font-bold text-[var(--sl-color-white)]">
           <FolderIcon />
           <span>{root}</span>
         </div>
-        <ul
-          className="bs-doc-file-tree__list m-0 mt-2 grid min-w-max list-none gap-0 pb-1"
-          style={{ listStyle: "none", marginBottom: 0 }}
-        >
+        <ul className="m-0 mt-2 grid min-w-max list-none gap-0 p-0 pb-1">
           {nodes.map((node) => (
             <TreeNode key={node.name} node={node} />
           ))}
