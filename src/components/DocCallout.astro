@@ -1,0 +1,221 @@
+---
+type Variant = "note" | "tip" | "caution" | "danger" | "contract";
+
+interface Props {
+  title: string;
+  eyebrow?: string;
+  variant?: Variant;
+}
+
+const { title, eyebrow, variant = "note" } = Astro.props;
+
+const iconPaths: Record<Variant, string> = {
+  note: "M5 5.5h14M5 12h14M5 18.5h7M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z",
+  tip: "M12 3v3m6.36.64-2.12 2.12M21 12h-3M5.64 5.64l2.12 2.12M3 12h3m3 8h6m-5-4h4m-4.5-2.8a5 5 0 1 1 7 0c-.9.86-1.5 1.8-1.5 2.8h-4c0-1-.6-1.94-1.5-2.8Z",
+  caution: "M12 8v5m0 4h.01M10.3 3.9 2.7 17.2A2 2 0 0 0 4.4 20h15.2a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0Z",
+  danger: "M12 9v4m0 4h.01M4.9 4.9l14.2 14.2M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z",
+  contract: "M7 8h10M7 12h10M7 16h6M5 3h10l4 4v14H5V3Zm10 0v4h4",
+};
+---
+
+<aside class:list={["bs-doc-callout", `is-${variant}`]}>
+  <div class="bs-doc-callout__shell">
+    <div class="bs-doc-callout__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d={iconPaths[variant]} />
+      </svg>
+    </div>
+    <div class="bs-doc-callout__copy">
+      {eyebrow && <p class="bs-doc-callout__eyebrow">{eyebrow}</p>}
+      <p class="bs-doc-callout__title">{title}</p>
+      <div class="bs-doc-callout__body">
+        <slot />
+      </div>
+    </div>
+  </div>
+</aside>
+
+<style>
+  .bs-doc-callout {
+    --callout-a: #8b5cf6;
+    --callout-b: #67e8f9;
+    --callout-title: #ddd6fe;
+    --callout-bg: rgba(13, 15, 21, 0.74);
+    position: relative;
+    margin-block: 1.45rem;
+  }
+
+  :global([data-theme="light"]) .bs-doc-callout {
+    --callout-title: #4c1d95;
+    --callout-bg: rgba(255, 255, 255, 0.78);
+  }
+
+  .bs-doc-callout.is-tip {
+    --callout-a: #22c55e;
+    --callout-b: #a78bfa;
+    --callout-title: #86efac;
+  }
+
+  .bs-doc-callout.is-caution {
+    --callout-a: #f59e0b;
+    --callout-b: #f0abfc;
+    --callout-title: #fde68a;
+  }
+
+  .bs-doc-callout.is-danger {
+    --callout-a: #fb7185;
+    --callout-b: #a78bfa;
+    --callout-title: #fecdd3;
+  }
+
+  .bs-doc-callout.is-contract {
+    --callout-a: #67e8f9;
+    --callout-b: #8b5cf6;
+    --callout-title: #bae6fd;
+  }
+
+  :global([data-theme="light"]) .bs-doc-callout.is-tip {
+    --callout-title: #166534;
+  }
+
+  :global([data-theme="light"]) .bs-doc-callout.is-caution {
+    --callout-title: #92400e;
+  }
+
+  :global([data-theme="light"]) .bs-doc-callout.is-danger {
+    --callout-title: #be123c;
+  }
+
+  :global([data-theme="light"]) .bs-doc-callout.is-contract {
+    --callout-title: #075985;
+  }
+
+  .bs-doc-callout__shell {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.95rem;
+    overflow: hidden;
+    padding: 1rem 1.05rem;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background:
+      linear-gradient(var(--callout-bg), var(--callout-bg)) padding-box,
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--callout-a) 82%, transparent),
+        color-mix(in srgb, var(--callout-b) 54%, transparent),
+        color-mix(in srgb, var(--callout-a) 18%, transparent)
+      ) border-box;
+    box-shadow:
+      0 18px 48px color-mix(in srgb, var(--callout-a) 13%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  }
+
+  .bs-doc-callout__shell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 0 0, color-mix(in srgb, var(--callout-a) 26%, transparent), transparent 13rem),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px);
+    background-size: auto, 24px 24px, 24px 24px;
+    opacity: 0.72;
+  }
+
+  .bs-doc-callout__shell::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--callout-a), var(--callout-b));
+    box-shadow: 0 0 26px var(--callout-a);
+  }
+
+  .bs-doc-callout__icon,
+  .bs-doc-callout__copy {
+    position: relative;
+    z-index: 1;
+  }
+
+  .bs-doc-callout__icon {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid color-mix(in srgb, var(--callout-a) 46%, transparent);
+    border-radius: 8px;
+    color: var(--callout-title);
+    background: color-mix(in srgb, var(--callout-a) 13%, transparent);
+    box-shadow: 0 0 22px color-mix(in srgb, var(--callout-a) 28%, transparent);
+  }
+
+  .bs-doc-callout__icon svg {
+    width: 1.08rem;
+    height: 1.08rem;
+    stroke: currentColor;
+    stroke-width: 1.85;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .bs-doc-callout__eyebrow,
+  .bs-doc-callout__title {
+    margin: 0;
+  }
+
+  .bs-doc-callout__eyebrow {
+    color: color-mix(in srgb, var(--callout-title) 82%, var(--callout-b));
+    font-size: 0.72rem;
+    font-weight: 850;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0;
+  }
+
+  .bs-doc-callout__title {
+    color: var(--callout-title);
+    font-size: 0.98rem;
+    font-weight: 850;
+    line-height: 1.24;
+  }
+
+  .bs-doc-callout__eyebrow + .bs-doc-callout__title {
+    margin-top: 0.22rem;
+  }
+
+  .bs-doc-callout__body {
+    margin-top: 0.52rem;
+    color: var(--sl-color-text);
+    line-height: 1.65;
+  }
+
+  .bs-doc-callout__body :global(:first-child) {
+    margin-top: 0;
+  }
+
+  .bs-doc-callout__body :global(:last-child) {
+    margin-bottom: 0;
+  }
+
+  .bs-doc-callout__body :global(a) {
+    color: var(--callout-title);
+    text-decoration-color: color-mix(in srgb, var(--callout-a) 52%, transparent);
+  }
+
+  .bs-doc-callout__body :global(code) {
+    border-color: color-mix(in srgb, var(--callout-a) 34%, transparent);
+    color: var(--callout-title);
+    background: color-mix(in srgb, var(--callout-a) 12%, transparent);
+  }
+
+  @media (max-width: 640px) {
+    .bs-doc-callout__shell {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+      padding: 0.95rem;
+    }
+  }
+</style>

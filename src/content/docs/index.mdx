@@ -89,25 +89,70 @@ hero:
       </div>
       <p class="bs-code-caption">API -&gt; OpenAPI -&gt; UI, with Compose underneath and deploy docs beside the code.</p>
     </div>
+
   </section>
 
-  <section class="bs-stack-ribbon" aria-label="Composed templates">
-    <a href="/api/overview/">
-      <span>api-template</span>
-      <small>Bun / Elysia / Drizzle / auth / billing</small>
-    </a>
-    <a href="/ui/overview/">
-      <span>ui-template</span>
-      <small>React / Vite / OpenAPI client / Playwright</small>
-    </a>
-    <a href="/infra/overview/">
-      <span>infra-compose</span>
-      <small>Postgres / Valkey / Traefik / observability</small>
-    </a>
-    <a href="/topics/provisioning-with-tofu/">
-      <span>infra-tofu</span>
-      <small>VPS bootstrap / DNS / firewall / first boot</small>
-    </a>
+<section class="bs-stack-ribbon" aria-label="Composed templates">
+  <a href="/api/overview/">
+    <span>api-template</span>
+    <small>Bun / Elysia / Drizzle / auth / billing</small>
+  </a>
+  <a href="/ui/overview/">
+    <span>ui-template</span>
+    <small>React / Vite / OpenAPI client / Playwright</small>
+  </a>
+  <a href="/infra/overview/">
+    <span>infra-compose</span>
+    <small>Postgres / Valkey / Traefik / observability</small>
+  </a>
+  <a href="/topics/provisioning-with-tofu/">
+    <span>infra-tofu</span>
+    <small>VPS bootstrap / DNS / firewall / first boot</small>
+  </a>
+</section>
+
+  <section class="bs-docs-guide" aria-labelledby="bs-docs-title">
+    <div class="bs-docs-guide__intro">
+      <p class="bs-eyebrow">How to use this documentation</p>
+      <h2 id="bs-docs-title">Read the why. Keep the manual open.</h2>
+      <p>You can read every system in BoringStack end to end, but you do not have to. Start with what the stack delivers and why the pieces are shaped this way. Then come back to the docs over time when you are wiring a feature, changing deploys, or asking AI to work inside a specific part of the system.</p>
+    </div>
+
+    <div class="bs-docs-path" aria-label="Suggested documentation path">
+      <a class="bs-docs-step" href="/architecture/why-boringstack/">
+        <span class="bs-docs-step__number">01</span>
+        <span class="bs-docs-step__body">
+          <strong>Start with the bet.</strong>
+          <small>Understand the product-time and token-budget trade before memorizing parts.</small>
+        </span>
+      </a>
+      <a class="bs-docs-step" href="/architecture/stack/">
+        <span class="bs-docs-step__number">02</span>
+        <span class="bs-docs-step__body">
+          <strong>Map what already exists.</strong>
+          <small>Find the feature, template, tool, service, or workflow before you rebuild it.</small>
+        </span>
+      </a>
+      <a class="bs-docs-step" href="/quickstart/">
+        <span class="bs-docs-step__number">03</span>
+        <span class="bs-docs-step__body">
+          <strong>Boot it, then read on demand.</strong>
+          <small>Open auth while changing auth, queues while adding work, deploy when you are ready to ship.</small>
+        </span>
+      </a>
+    </div>
+
+    <div class="bs-docs-coverage" aria-label="Documentation coverage">
+      <strong>Manual pages cover</strong>
+      <span>auth</span>
+      <span>billing</span>
+      <span>queues</span>
+      <span>email</span>
+      <span>tenancy</span>
+      <span>testing</span>
+      <span>deploys</span>
+      <span>architecture rules</span>
+    </div>
   </section>
 
   <section class="bs-section bs-compose-section" aria-labelledby="bs-compose-title">
@@ -117,46 +162,58 @@ hero:
       <p>Most templates give you a UI and a login form. BoringStack gives you the seams that usually appear after launch: account boundaries, session rotation, idempotent jobs, webhooks, audit trails, deploy scripts, backups, and local services that match production closely enough to matter.</p>
     </div>
 
-    <div class="bs-story-list">
-      <a href="/api/overview/">
-        <span>API</span>
-        <strong>Auth, billing, queues, email, and audit are already wired.</strong>
-        <small>Bun, Elysia, Drizzle, Postgres, Valkey, BullMQ, Stripe hooks, OAuth, and transactional email form the backend skeleton of a real SaaS.</small>
+    <div class="bs-stack-flow" aria-label="BoringStack product spine">
+      <a class="bs-stack-flow__node" href="/api/overview/">
+        <span>api-template</span>
+        <strong>Business backend</strong>
+        <small>Auth, billing, queues, email, audit, roles, memberships, and Stripe hooks.</small>
       </a>
-      <a href="/ui/overview/">
-        <span>UI</span>
-        <strong>The React app is typed against the API, not hand-waved.</strong>
-        <small>Vite, TanStack Query, shadcn/ui, Playwright, i18n, and a generated OpenAPI client keep server and client changes moving together.</small>
+      <a class="bs-stack-flow__node" href="/ui/overview/">
+        <span>ui-template</span>
+        <strong>Typed product surface</strong>
+        <small>React, Vite, TanStack Query, Playwright, i18n, and generated OpenAPI client.</small>
       </a>
-      <a href="/infra/overview/">
-        <span>Infra</span>
-        <strong>Local Compose, production Compose, optional VPS bootstrap.</strong>
-        <small>Postgres, Valkey, Traefik, observability overlays, Mailpit, GlitchTip, WUD, backups, and OpenTofu are arranged as one deployable shape.</small>
+      <a class="bs-stack-flow__node" href="/infra/overview/">
+        <span>infra-compose</span>
+        <strong>Production-like local shape</strong>
+        <small>Postgres, Valkey, Mailpit, observability, logs, metrics, and overlays.</small>
+      </a>
+      <a class="bs-stack-flow__node" href="/topics/provisioning-with-tofu/">
+        <span>infra-tofu</span>
+        <strong>First real deploy path</strong>
+        <small>Traefik, TLS, backups, image updates, secrets, firewall rules, and optional OpenTofu.</small>
       </a>
     </div>
+
   </section>
 
   <section class="bs-section bs-proof-section" aria-labelledby="bs-proof-title">
     <div class="bs-section-heading">
       <p class="bs-eyebrow">Why people should try it</p>
       <h2 id="bs-proof-title">The first clone already feels like a company app.</h2>
+      <p>The point is not more boilerplate. It is starting from the decisions that normally arrive late, under pressure, after the first customers already exist.</p>
     </div>
-    <div class="bs-proof-grid">
-      <div>
-        <strong>Tenant-aware from the model up</strong>
-        <span>Accounts, memberships, roles, plan features, and active membership checks are part of the spine.</span>
+
+    <div class="bs-proof-compare" aria-label="What BoringStack gives you earlier">
+      <div class="bs-proof-compare__head">
+        <span>Usually postponed</span>
+        <span>Already in the first clone</span>
       </div>
-      <div>
-        <strong>Low-COGS by default</strong>
-        <span>Open-source runtime services first. Paid providers are integrations, not required foundations.</span>
+      <div class="bs-proof-compare__row">
+        <span>tenant model</span>
+        <strong>Accounts, memberships, roles, plan features, and active membership checks are part of the data model.</strong>
       </div>
-      <div>
-        <strong>Agent-ready architecture</strong>
-        <span>Custom ESLint plugins turn architectural intent into concrete failures before review.</span>
+      <div class="bs-proof-compare__row">
+        <span>COGS posture</span>
+        <strong>Open-source runtime services come first. Paid providers are integrations, not required foundations.</strong>
       </div>
-      <div>
-        <strong>Deployable shape, not toy shape</strong>
-        <span>TLS, firewall, backups, image updates, secrets, and runbooks live beside the code.</span>
+      <div class="bs-proof-compare__row">
+        <span>AI review contract</span>
+        <strong>Architecture lint rules turn intent into concrete failures before human review.</strong>
+      </div>
+      <div class="bs-proof-compare__row">
+        <span>real deploy shape</span>
+        <strong>TLS, firewall, backups, image updates, secrets, and runbooks live beside the code.</strong>
       </div>
     </div>
   </section>

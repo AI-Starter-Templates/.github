@@ -3,7 +3,7 @@ title: ACL & feature resolution
 description: CASL ability model, role rules, feature resolution order (override > plan > catalog default), and how account-scoping is enforced end-to-end.
 ---
 
-import { Aside } from "@astrojs/starlight/components";
+import DocCallout from "../../../components/DocCallout.astro";
 import FaqGroup from "../../../components/FaqGroup.astro";
 import FaqItem from "../../../components/FaqItem.astro";
 
@@ -21,13 +21,13 @@ Stripe never knows about feature keys or roles. The app never queries Stripe at 
 
 ## The critical invariant
 
-<Aside type="caution" title="Server authorization MUST NEVER depend on serialized client rules">
+<DocCallout variant="danger" title="Server authorization MUST NEVER depend on serialized client rules" eyebrow="Critical invariant">
   `/me.rules` is a UI-rendering hint only. Every privileged API
   handler rebuilds the ability server-side from trusted DB state
   (`account_memberships` + resolved features), or wraps the DB call
   in `requireAbility(...)`. A modified client cannot escalate by
   sending crafted rules.
-</Aside>
+</DocCallout>
 
 ## Resolution order
 
@@ -145,14 +145,14 @@ The cross-account isolation matrix in `tests/api/widgets/widgets.routes.test.ts`
 
 Single endpoint, every piece the UI needs to render the right buttons. The `features` block is the *resolved* set; overrides have already been applied.
 
-<Aside type="note" title="`isPlatformAdmin` is NOT in the payload">
+<DocCallout variant="contract" title="`isPlatformAdmin` is NOT in the payload" eyebrow="Response contract">
   Platform-admin status is a server-side flag (`users.is_platform_admin`) gating
   the separate `/admin/*` route mount and `requirePlatformAdmin` middleware.
   It is deliberately never shipped to the SPA. The product UI has no concept
   of "this user is also an admin," and `requireAbility` checks rebuild from
   DB state on every privileged call. If a fork wants admin tooling, build it
   as a separate app behind its own auth gate.
-</Aside>
+</DocCallout>
 
 ## Source
 

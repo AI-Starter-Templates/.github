@@ -3,39 +3,54 @@ title: Why BoringStack
 description: Battle-tested pieces linked together properly. Production-grade spine, clear layers, and lint that holds the architecture in place.
 ---
 
-import { Aside } from "@astrojs/starlight/components";
+import DocCallout from "../../../components/DocCallout.astro";
 import FaqGroup from "../../../components/FaqGroup.astro";
 import FaqItem from "../../../components/FaqItem.astro";
 
-BoringStack is for engineers who already write code and want a production-grade starting point: auth, contracts, deploy, background work, COGS discipline, and architecture rules already wired. You extend the product. You do not rebuild the spine on every greenfield.
+BoringStack exists because building products from scratch stopped feeling noble a long time ago.
+
+For years, I kept starting new products by rebuilding the same spine: authentication, sessions, account boundaries, billing hooks, email, background jobs, deployment scripts, observability, env validation, and the little rules that keep a codebase from turning into paste. It was expensive before AI. Now it is also obviously wasteful in tokens, context, and human attention.
+
+BoringStack is the stack I wanted to reach for instead: the boring production parts already composed, documented, and lint-enforced, so the first serious work is the product itself. Fork the templates, boot the system, and spend the same week shipping something real instead of re-deciding where auth, queues, billing, deploys, and API contracts should live.
+
+<DocCallout variant="contract" title="The promise" eyebrow="Why it exists">
+  Skip the repeat boilerplate. Keep the architecture. Start product work
+  immediately, with AI helping inside a codebase that already has shape.
+</DocCallout>
 
 ## Fit check
 
-| BoringStack is a good fit if... | It is probably the wrong fit if... |
-| --- | --- |
-| You are building a SaaS or B2B product with accounts, users, auth, billing, email, and background work. | You only need a static marketing site, brochure page, or no-code prototype. |
-| You want to own the core runtime on a VPS: Postgres, Valkey, Traefik, Docker Compose. | You want a serverless-first Vercel/Netlify path where the platform owns most runtime decisions. |
-| You want API and UI as separate jobs with an OpenAPI contract between them. | You prefer a single full-stack framework where server and client live in one app boundary. |
-| You expect humans and AI agents to edit the code and need lint rules to keep architecture intact. | You are comfortable relying on conventions, README prose, and review discipline alone. |
-| You want boring operational primitives now, with a path to managed Postgres or Kubernetes later. | You need Kubernetes, multi-region, or managed-everything infrastructure on day one. |
+| BoringStack is a good fit if...                                                                         | It is probably the wrong fit if...                                                              |
+| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| You are building a SaaS or B2B product with accounts, users, auth, billing, email, and background work. | You only need a static marketing site, brochure page, or no-code prototype.                     |
+| You want to own the core runtime on a VPS: Postgres, Valkey, Traefik, Docker Compose.                   | You want a serverless-first Vercel/Netlify path where the platform owns most runtime decisions. |
+| You want API and UI as separate jobs with an OpenAPI contract between them.                             | You prefer a single full-stack framework where server and client live in one app boundary.      |
+| You expect humans and AI agents to edit the code and need lint rules to keep architecture intact.       | You are comfortable relying on conventions, README prose, and review discipline alone.          |
+| You want boring operational primitives now, with a path to managed Postgres or Kubernetes later.        | You need Kubernetes, multi-region, or managed-everything infrastructure on day one.             |
 
 ## Problems it solves
 
 <FaqGroup>
   <FaqItem title="Rebuilding the same SaaS spine on every new project" open>
-    Auth, sessions, OAuth, email, env validation, audit log, billing hooks, queues, all wired and documented.
+    Auth, sessions, OAuth, email, env validation, audit log, billing hooks,
+    queues, all wired and documented.
   </FaqItem>
   <FaqItem title="API and UI drifting apart">
-    OpenAPI at `/swagger/json`. `pnpm generate:api` refreshes a typed client. Contract drift fails the typecheck.
+    OpenAPI at `/swagger/json`. `pnpm generate:api` refreshes a typed client.
+    Contract drift fails the typecheck.
   </FaqItem>
   <FaqItem title="Architecture slipping during fast iteration (including AI-assisted edits)">
-    Custom ESLint plugins encode the shape. [`validate`](/architecture/lint-as-contract/) is the merge gate.
+    Custom ESLint plugins encode the shape.
+    [`validate`](/architecture/lint-as-contract/) is the merge gate.
   </FaqItem>
   <FaqItem title="Deploy and ops eating weeks before you ship features">
-    Compose stack, Traefik TLS, optional [OpenTofu to Hetzner](/topics/provisioning-with-tofu/), observability overlays you can turn on.
+    Compose stack, Traefik TLS, optional [OpenTofu to
+    Hetzner](/topics/provisioning-with-tofu/), observability overlays you can
+    turn on.
   </FaqItem>
   <FaqItem title="User-facing events with no structure on day one">
-    Notification events, dispatch jobs, and channels live in the API. See [Background work](/architecture/background-work/).
+    Notification events, dispatch jobs, and channels live in the API. See
+    [Background work](/architecture/background-work/).
   </FaqItem>
 </FaqGroup>
 
@@ -65,15 +80,15 @@ That does not mean "never use SaaS." Stripe, Cloudflare, Sentry, Resend, SendGri
 
 ## Compared with common alternatives
 
-| Decision point | BoringStack | Typical Vercel/serverless starter | Hosted backend starter | One-off SaaS boilerplate |
-| --- | --- | --- | --- | --- |
-| Deployment path | Single-host VPS first; optional OpenTofu bootstrap | Platform-first; VPS path is usually DIY | Hosted service first | Varies by vendor |
-| Core data plane | Postgres + Valkey under your control | Usually external services | Hosted database/auth/storage | Varies |
-| COGS posture | Open-source core; one VPS can carry the whole app | Usage-based platform bill grows with traffic | Vendor pricing becomes part of the app shape | Varies |
-| API/UI contract | OpenAPI generated client | Often framework-coupled or hand-rolled | SDK/client generated by provider | Varies |
-| Auth/billing/queues/email | Wired as product infrastructure | Mostly app-specific assembly | Auth often built in; queues/billing/email vary | Often included, quality varies |
-| Architecture enforcement | Custom lint plugins and `validate` gates | Mostly conventions | Mostly provider boundaries | Usually prose and examples |
-| Best for | Product teams that want ownership and strong defaults | Fast frontend-heavy apps on a managed platform | Apps that fit the provider model | Buying a finished opinionated app shell |
+| Decision point            | BoringStack                                           | Typical Vercel/serverless starter              | Hosted backend starter                         | One-off SaaS boilerplate                |
+| ------------------------- | ----------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------- | --------------------------------------- |
+| Deployment path           | Single-host VPS first; optional OpenTofu bootstrap    | Platform-first; VPS path is usually DIY        | Hosted service first                           | Varies by vendor                        |
+| Core data plane           | Postgres + Valkey under your control                  | Usually external services                      | Hosted database/auth/storage                   | Varies                                  |
+| COGS posture              | Open-source core; one VPS can carry the whole app     | Usage-based platform bill grows with traffic   | Vendor pricing becomes part of the app shape   | Varies                                  |
+| API/UI contract           | OpenAPI generated client                              | Often framework-coupled or hand-rolled         | SDK/client generated by provider               | Varies                                  |
+| Auth/billing/queues/email | Wired as product infrastructure                       | Mostly app-specific assembly                   | Auth often built in; queues/billing/email vary | Often included, quality varies          |
+| Architecture enforcement  | Custom lint plugins and `validate` gates              | Mostly conventions                             | Mostly provider boundaries                     | Usually prose and examples              |
+| Best for                  | Product teams that want ownership and strong defaults | Fast frontend-heavy apps on a managed platform | Apps that fit the provider model               | Buying a finished opinionated app shell |
 
 The choice is not moral. BoringStack is intentionally biased toward ownership, explicit boundaries, low recurring infra cost, and code that remains understandable after many human and agent edits.
 
@@ -123,9 +138,14 @@ The templates come from codebases that have been in production for many years. F
 
 Architecture lives in tooling. Prose is context. Read [Lint as the contract](/architecture/lint-as-contract/).
 
-<Aside type="tip" title="Working in one repo at a time">
-  Sibling repos keep each layer's context small. Edit a route, a page, or a compose overlay without loading the whole stack into one tree.
-</Aside>
+<DocCallout
+  variant="tip"
+  title="Working in one repo at a time"
+  eyebrow="Context control"
+>
+  Sibling repos keep each layer's context small. Edit a route, a page, or a
+  compose overlay without loading the whole stack into one tree.
+</DocCallout>
 
 ## Room to grow
 

@@ -3,7 +3,8 @@ title: Quickstart
 description: Fork the API, UI, and infra templates, boot the local stack, sign in. About five minutes from zero to a working full-stack on your laptop.
 ---
 
-import { Steps, Aside } from "@astrojs/starlight/components";
+import { Steps } from "@astrojs/starlight/components";
+import DocCallout from "../../components/DocCallout.astro";
 import FaqGroup from "../../components/FaqGroup.astro";
 import FaqItem from "../../components/FaqItem.astro";
 
@@ -34,9 +35,9 @@ Fork [`infra-bootstrap-tofu-template`](https://github.com/AI-Starter-Templates/i
 
 Keep the canonical names if you want. Nothing breaks either way.
 
-<Aside type="note">
+<DocCallout variant="note" title="Skip the docs repo" eyebrow="Template boundary">
 The docs site source (`.github` repo) is **not** a template. It's BoringStack-specific content. Skip it.
-</Aside>
+</DocCallout>
 
 ## Step 2. Clone your forks as siblings
 
@@ -62,9 +63,9 @@ acme/
 
 If you renamed `api-template` or `ui-template`, either match the cloned directory name to what `compose/docker-compose.yml` expects, or edit the `build: context:` lines once.
 
-<Aside type="tip" title="Optional: setup.sh">
+<DocCallout variant="tip" title="Optional: setup.sh" eyebrow="Fast path">
 The workspace root ships a `setup.sh` that bootstraps `compose/.env`, generates a `GLITCHTIP_SECRET_KEY`, and (with `--up`) boots the stack. Skip if you prefer doing the steps by hand.
-</Aside>
+</DocCallout>
 
 ## Step 3. Boot the local stack
 
