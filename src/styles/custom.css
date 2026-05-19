@@ -181,6 +181,176 @@ html[data-theme="light"].bs-nav-scrolled site-search button[data-open-modal] {
   text-decoration-color: color-mix(in srgb, var(--bs-doc-cyan) 60%, transparent);
 }
 
+/* Docs tables */
+.sl-markdown-content table:not(:where(.not-content *, .starlight-aside *)) {
+  display: block;
+  width: 100%;
+  margin-block: 1.75rem 2.35rem;
+  overflow: auto;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  border-spacing: 0;
+  background:
+    linear-gradient(var(--bs-doc-panel-strong), var(--bs-doc-panel-strong)) padding-box,
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--sl-color-accent) 58%, transparent),
+      color-mix(in srgb, var(--bs-doc-cyan) 24%, transparent) 52%,
+      color-mix(in srgb, var(--bs-doc-pink) 34%, transparent)
+    ) border-box;
+  box-shadow:
+    0 20px 60px color-mix(in srgb, var(--bs-doc-glow) 58%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  scrollbar-color: color-mix(in srgb, var(--sl-color-accent) 52%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+.sl-markdown-content table:not(:where(.not-content *, .starlight-aside *))::-webkit-scrollbar {
+  height: 0.7rem;
+}
+
+.sl-markdown-content table:not(:where(.not-content *, .starlight-aside *))::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sl-markdown-content table:not(:where(.not-content *, .starlight-aside *))::-webkit-scrollbar-thumb {
+  border: 0.22rem solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sl-color-accent) 58%, transparent);
+  background-clip: content-box;
+}
+
+.sl-markdown-content table:not(:where(.not-content *, .starlight-aside *)) thead {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--sl-color-accent) 18%, transparent), transparent 64%),
+    color-mix(in srgb, var(--bs-doc-code-bg-soft) 88%, transparent);
+}
+
+.sl-markdown-content :is(th, td):not(:where(.not-content *, .starlight-aside *)) {
+  min-width: 11.5rem;
+  padding: 1rem 1.15rem;
+  border: 0;
+  border-inline-start: 1px solid color-mix(in srgb, var(--bs-doc-line) 78%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--bs-doc-line) 88%, transparent);
+  line-height: 1.58;
+  vertical-align: top;
+}
+
+.sl-markdown-content :is(th, td):first-child:not(:where(.not-content *, .starlight-aside *)) {
+  min-width: 13.5rem;
+  border-inline-start: 0;
+  color: var(--bs-doc-code-text);
+  font-weight: 700;
+}
+
+.sl-markdown-content :is(th, td):last-child:not(:where(.not-content *, .starlight-aside *)) {
+  padding-inline-end: 1.15rem;
+}
+
+.sl-markdown-content th:not(:where(.not-content *, .starlight-aside *)) {
+  color: var(--bs-doc-code-text);
+  font-size: 0.95rem;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.sl-markdown-content td:not(:where(.not-content *, .starlight-aside *)) {
+  color: color-mix(in srgb, var(--sl-color-text) 82%, var(--bs-doc-code-muted));
+  font-size: 0.96rem;
+}
+
+.sl-markdown-content tbody tr:last-child td:not(:where(.not-content *, .starlight-aside *)) {
+  border-bottom: 0;
+}
+
+.sl-markdown-content tbody tr:hover td:not(:where(.not-content *, .starlight-aside *)) {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+.sl-markdown-content table:has(th:nth-child(4)):not(:where(.not-content *, .starlight-aside *)) {
+  --bs-table-wide-width: 100%;
+}
+
+.sl-markdown-content table:has(th:nth-child(4)):not(:where(.not-content *, .starlight-aside *))
+  :is(th, td) {
+  min-width: 14rem;
+  padding-block: 1.12rem;
+}
+
+.sl-markdown-content table:has(th:nth-child(4)):not(:where(.not-content *, .starlight-aside *))
+  :is(th, td):first-child {
+  min-width: 15rem;
+}
+
+.sl-markdown-content table:has(th:nth-child(4)):not(:where(.not-content *, .starlight-aside *))
+  :is(th, td):nth-child(2) {
+  border-inline-color: color-mix(in srgb, var(--sl-color-accent) 28%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--sl-color-accent) 9%, transparent), transparent 12rem),
+    color-mix(in srgb, var(--sl-color-accent) 6%, transparent);
+}
+
+.sl-markdown-content table:has(th:nth-child(4)):not(:where(.not-content *, .starlight-aside *))
+  th:nth-child(2) {
+  color: var(--sl-color-accent-high);
+}
+
+.sl-markdown-content table:has(th:nth-child(4)):not(:where(.not-content *, .starlight-aside *))
+  tbody
+  tr:hover
+  td:nth-child(2) {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--sl-color-accent) 14%, transparent), transparent 12rem),
+    color-mix(in srgb, var(--sl-color-accent) 9%, transparent);
+}
+
+@media (min-width: 72rem) {
+  html[data-has-sidebar][data-has-toc]
+    .sl-markdown-content
+    table:has(th:nth-child(4)):not(:where(.not-content *, .starlight-aside *)) {
+    width: min(
+      76rem,
+      max(100%, calc(100vw - var(--sl-sidebar-width) - var(--sl-sidebar-width) - 5rem))
+    );
+    margin-inline: 0;
+  }
+
+  html[data-has-sidebar]:not([data-has-toc])
+    .sl-markdown-content
+    table:has(th:nth-child(4)):not(:where(.not-content *, .starlight-aside *)) {
+    width: min(76rem, max(100%, calc(100vw - var(--sl-sidebar-width) - 5rem)));
+    margin-inline: 0;
+  }
+
+  html:not([data-has-sidebar])
+    .sl-markdown-content
+    table:has(th:nth-child(4)):not(:where(.not-content *, .starlight-aside *)) {
+    width: min(76rem, calc(100vw - 4rem));
+    margin-inline: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 48rem) {
+  .sl-markdown-content table:not(:where(.not-content *, .starlight-aside *)) {
+    margin-block: 1.45rem 2rem;
+    border-radius: 8px;
+  }
+
+  .sl-markdown-content :is(th, td):not(:where(.not-content *, .starlight-aside *)),
+  .sl-markdown-content table:has(th:nth-child(4)):not(:where(.not-content *, .starlight-aside *))
+    :is(th, td) {
+    min-width: 12.5rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .sl-markdown-content :is(th, td):first-child:not(:where(.not-content *, .starlight-aside *)),
+  .sl-markdown-content table:has(th:nth-child(4)):not(:where(.not-content *, .starlight-aside *))
+    :is(th, td):first-child {
+    min-width: 12.5rem;
+  }
+}
+
 .expressive-code {
   margin-block: 1.35rem;
   --ec-brdRad: 8px;
