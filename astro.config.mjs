@@ -36,16 +36,16 @@ export default defineConfig({
         themeVariables: {
           // Surfaces — Starlight owns the page background.
           background: "transparent",
-          mainBkg: "rgba(139, 92, 246, 0.14)",
+          mainBkg: "rgba(251, 191, 36, 0.14)",
           secondBkg: "rgba(103, 232, 249, 0.10)",
           tertiaryColor: "rgba(240, 171, 252, 0.10)",
-          clusterBkg: "rgba(139, 92, 246, 0.05)",
-          clusterBorder: "rgba(196, 181, 253, 0.42)",
+          clusterBkg: "rgba(251, 191, 36, 0.05)",
+          clusterBorder: "rgba(253, 230, 138, 0.42)",
 
           // Primary palette — violet, the BoringStack accent.
-          primaryColor: "rgba(139, 92, 246, 0.16)",
-          primaryBorderColor: "#a78bfa",
-          primaryTextColor: "#ece9ff",
+          primaryColor: "rgba(251, 191, 36, 0.16)",
+          primaryBorderColor: "#fcd34d",
+          primaryTextColor: "#fef9c3",
 
           // Secondary palette — cyan accent for alt nodes.
           secondaryColor: "rgba(103, 232, 249, 0.12)",
@@ -57,14 +57,14 @@ export default defineConfig({
           tertiaryTextColor: "#fae8ff",
 
           // Edges / lines.
-          lineColor: "#c4b5fd",
-          arrowheadColor: "#c4b5fd",
+          lineColor: "#fde68a",
+          arrowheadColor: "#fde68a",
 
           // Text & default node.
-          textColor: "#ece9ff",
-          nodeBorder: "#a78bfa",
-          nodeTextColor: "#ece9ff",
-          titleColor: "#ddd6fe",
+          textColor: "#fef9c3",
+          nodeBorder: "#fcd34d",
+          nodeTextColor: "#fef9c3",
+          titleColor: "#fef3c7",
 
           // Edge label chips — mermaid paints a `.labelBkg` div per edge even when
           // there's no label. We restore the colored backing so real labels cover
@@ -72,24 +72,24 @@ export default defineConfig({
           // (see the wireMermaidCleanup head script).
           edgeLabelBackground: "rgba(13, 15, 18, 0.92)",
           labelBackground: "rgba(13, 15, 18, 0.92)",
-          labelTextColor: "#ece9ff",
+          labelTextColor: "#fef9c3",
           labelBoxBorderColor: "transparent",
 
           // Notes (sequence / generic).
-          noteBkgColor: "rgba(196, 181, 253, 0.12)",
-          noteTextColor: "#ddd6fe",
-          noteBorderColor: "#a78bfa",
+          noteBkgColor: "rgba(253, 230, 138, 0.12)",
+          noteTextColor: "#fef3c7",
+          noteBorderColor: "#fcd34d",
 
           // Sequence diagram surfaces.
-          actorBkg: "rgba(139, 92, 246, 0.16)",
-          actorBorder: "#a78bfa",
-          actorTextColor: "#ece9ff",
-          actorLineColor: "rgba(196, 181, 253, 0.4)",
-          signalColor: "#c4b5fd",
-          signalTextColor: "#ece9ff",
-          loopTextColor: "#ddd6fe",
-          activationBkgColor: "rgba(139, 92, 246, 0.22)",
-          activationBorderColor: "#a78bfa",
+          actorBkg: "rgba(251, 191, 36, 0.16)",
+          actorBorder: "#fcd34d",
+          actorTextColor: "#fef9c3",
+          actorLineColor: "rgba(253, 230, 138, 0.4)",
+          signalColor: "#fde68a",
+          signalTextColor: "#fef9c3",
+          loopTextColor: "#fef3c7",
+          activationBkgColor: "rgba(251, 191, 36, 0.22)",
+          activationBorderColor: "#fcd34d",
           sequenceNumberColor: "#0b0d11",
 
           // Typography.

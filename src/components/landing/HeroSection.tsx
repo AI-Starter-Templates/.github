@@ -8,7 +8,7 @@ export function HeroSection() {
   return (
     <section
       aria-labelledby="bs-hero-title"
-      className="relative grid min-h-0 grid-cols-[minmax(0,1fr)] items-center gap-[2.4rem] overflow-hidden bg-transparent px-4 py-[3rem_1rem_3.25rem] min-[641px]:gap-[clamp(2rem,5vw,5rem)] min-[641px]:bg-[radial-gradient(ellipse_at_66%_34%,rgba(139,92,246,0.075),transparent_30rem),radial-gradient(ellipse_at_88%_64%,rgba(196,181,253,0.03),transparent_34rem)] min-[641px]:px-0 min-[641px]:py-[4rem_0_3.25rem] lg:min-h-[min(680px,calc(100vh-6rem))] lg:grid-cols-[minmax(0,0.72fr)_minmax(30rem,1.12fr)]"
+      className="relative grid min-h-0 grid-cols-[minmax(0,1fr)] items-center gap-[2.4rem] overflow-hidden bg-transparent px-4 py-[3rem_1rem_3.25rem] min-[641px]:gap-[clamp(2rem,5vw,5rem)] min-[641px]:bg-[radial-gradient(ellipse_at_66%_34%,rgba(251,191,36,0.075),transparent_30rem),radial-gradient(ellipse_at_88%_64%,rgba(253,230,138,0.03),transparent_34rem)] min-[641px]:px-0 min-[641px]:py-[4rem_0_3.25rem] lg:min-h-[min(680px,calc(100vh-6rem))] lg:grid-cols-[minmax(0,0.72fr)_minmax(30rem,1.12fr)]"
     >
       <div className="relative z-[1] w-full min-w-0 max-w-full">
         <Eyebrow>Four templates. One production spine.</Eyebrow>
