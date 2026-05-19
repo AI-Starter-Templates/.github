@@ -6,7 +6,7 @@ description: "The UI-specific lint rules that hold the component anatomy in plac
 import FaqGroup from "../../../components/FaqGroup.tsx";
 import FaqItem from "../../../components/FaqItem.tsx";
 
-The ui-template enforces its architecture through ESLint, not vibes. The UI-specific work is [`eslint-plugin-react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture); the rules below are what it catches, grouped by intent. It composes with the shared plugins (resource-architecture, module-boundaries, structured-logging, env-access, test-conventions, code-flow) that both repos use, plus ui-only plugins for TanStack Query cache shape and static i18n keys. Full inventory at [Lint as the contract](/architecture/lint-as-contract/).
+The ui-template enforces its architecture through ESLint, not vibes. The UI-specific work is [`@boring-stack-pkg/eslint-plugin-react-component-architecture`](https://www.npmjs.com/package/@boring-stack-pkg/eslint-plugin-react-component-architecture); the rules below are what it catches, grouped by intent. It composes with the shared plugins (resource-architecture, module-boundaries, structured-logging, env-access, test-conventions, code-flow) that both repos use, plus ui-only plugins for TanStack Query cache shape and static i18n keys. Full inventory at [Lint as the contract](/architecture/lint-as-contract/).
 
 ## What it enforces
 
@@ -53,7 +53,7 @@ If you find yourself suppressing the same rule across many files, that's a signa
 
 ## Source
 
-Plugin source + per-rule docs: [`eslint-plugin-react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture). ui-template ESLint config: [`eslint.config.mjs`](https://github.com/AI-Starter-Templates/ui-template/blob/main/eslint.config.mjs).
+Plugin source + per-rule docs: [`@boring-stack-pkg/eslint-plugin-react-component-architecture`](https://www.npmjs.com/package/@boring-stack-pkg/eslint-plugin-react-component-architecture). ui-template ESLint config: [`eslint.config.mjs`](https://github.com/AI-Starter-Templates/ui-template/blob/main/eslint.config.mjs).
 
 ## Related
 
