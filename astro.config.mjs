@@ -13,21 +13,89 @@ export default defineConfig({
   integrations: [
     react(),
     mermaid({
-      theme: "default",
+      theme: "base",
       autoTheme: true,
       mermaidConfig: {
-        // Rough.js sketch strokes. Applies to flowchart and other diagram types that
-        // wire `look` into their renderer. sequenceDiagram (and several others) still
-        // render in the classic vector style in Mermaid 11.14 — only `neo` is special-
-        // cased there. Broader handDrawn coverage is tracked upstream (e.g. PR #7130).
-        look: "handDrawn",
-        handDrawnSeed: 42,
+        // Clean vector look — sharper, "futuristic" reads better than rough.js sketch
+        // for the BoringStack brand. CSS in custom.css adds neon glow + gradient
+        // border chrome on top of the mermaid output.
+        look: "classic",
+        flowchart: {
+          curve: "basis",
+          padding: 26,
+          nodeSpacing: 60,
+          rankSpacing: 70,
+          useMaxWidth: true,
+        },
+        sequence: {
+          actorMargin: 60,
+          messageMargin: 40,
+          wrap: true,
+          useMaxWidth: true,
+        },
         themeVariables: {
-          // Starlight owns the page surface. Mermaid dark theme defaults use #333
-          // (canvas) and secondBkg-derived fills for subgraph clusters; both read as
-          // a separate "card" on the docs background.
+          // Surfaces — Starlight owns the page background.
           background: "transparent",
-          clusterBkg: "transparent",
+          mainBkg: "rgba(139, 92, 246, 0.14)",
+          secondBkg: "rgba(103, 232, 249, 0.10)",
+          tertiaryColor: "rgba(240, 171, 252, 0.10)",
+          clusterBkg: "rgba(139, 92, 246, 0.05)",
+          clusterBorder: "rgba(196, 181, 253, 0.42)",
+
+          // Primary palette — violet, the BoringStack accent.
+          primaryColor: "rgba(139, 92, 246, 0.16)",
+          primaryBorderColor: "#a78bfa",
+          primaryTextColor: "#ece9ff",
+
+          // Secondary palette — cyan accent for alt nodes.
+          secondaryColor: "rgba(103, 232, 249, 0.12)",
+          secondaryBorderColor: "#67e8f9",
+          secondaryTextColor: "#cffafe",
+
+          // Tertiary palette — pink accent.
+          tertiaryBorderColor: "#f0abfc",
+          tertiaryTextColor: "#fae8ff",
+
+          // Edges / lines.
+          lineColor: "#c4b5fd",
+          arrowheadColor: "#c4b5fd",
+
+          // Text & default node.
+          textColor: "#ece9ff",
+          nodeBorder: "#a78bfa",
+          nodeTextColor: "#ece9ff",
+          titleColor: "#ddd6fe",
+
+          // Edge label chips — mermaid paints a `.labelBkg` div per edge even when
+          // there's no label. We restore the colored backing so real labels cover
+          // the edge line behind their text, then strip empty edge labels via JS
+          // (see the wireMermaidCleanup head script).
+          edgeLabelBackground: "rgba(13, 15, 18, 0.92)",
+          labelBackground: "rgba(13, 15, 18, 0.92)",
+          labelTextColor: "#ece9ff",
+          labelBoxBorderColor: "transparent",
+
+          // Notes (sequence / generic).
+          noteBkgColor: "rgba(196, 181, 253, 0.12)",
+          noteTextColor: "#ddd6fe",
+          noteBorderColor: "#a78bfa",
+
+          // Sequence diagram surfaces.
+          actorBkg: "rgba(139, 92, 246, 0.16)",
+          actorBorder: "#a78bfa",
+          actorTextColor: "#ece9ff",
+          actorLineColor: "rgba(196, 181, 253, 0.4)",
+          signalColor: "#c4b5fd",
+          signalTextColor: "#ece9ff",
+          loopTextColor: "#ddd6fe",
+          activationBkgColor: "rgba(139, 92, 246, 0.22)",
+          activationBorderColor: "#a78bfa",
+          sequenceNumberColor: "#0b0d11",
+
+          // Typography.
+          fontFamily:
+            "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+          fontSize: "14px",
         },
       },
     }),
@@ -95,10 +163,31 @@ export default defineConfig({
     }
   }
 
-  function start() {
+  // Mermaid renders a <g class="edgeLabel"> for every edge — even unlabeled ones.
+  // That stub contains an empty span/foreignObject + a colored .labelBkg div, which
+  // surfaces as a tiny dark pill mid-edge. Hide stubs whose text is whitespace-only.
+  function pruneEmptyEdgeLabels() {
+    var labels = document.querySelectorAll(".mermaid g.edgeLabel");
+    for (var i = 0; i < labels.length; i++) {
+      var el = labels[i];
+      if (el.dataset.bsPruned === "1") continue;
+      var text = (el.textContent || "").replace(/\\s+/g, "");
+      if (text.length === 0) {
+        el.style.display = "none";
+        el.dataset.bsPruned = "1";
+      }
+    }
+  }
+
+  function tick() {
     wireZoom();
+    pruneEmptyEdgeLabels();
+  }
+
+  function start() {
+    tick();
     // SVG can inject async after page-load; retry a few times
-    [50, 200, 500, 1200, 2500].forEach(function (d) { setTimeout(wireZoom, d); });
+    [50, 200, 500, 1200, 2500].forEach(function (d) { setTimeout(tick, d); });
   }
 
   if (document.readyState === "loading") {

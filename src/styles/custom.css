@@ -692,11 +692,9 @@ html[data-theme="light"].bs-nav-scrolled site-search button[data-open-modal] {
   background: color-mix(in srgb, var(--bs-aside-accent) 13%, transparent);
 }
 
-/* Mermaid diagrams: readable inline, click-to-zoom in a native dialog */
+/* Mermaid diagrams: branded chrome + neon nodes; click-to-zoom in native dialog */
 
-/* Starlight styles all <pre> as code frames; astro-mermaid also tints processed
-   blocks. Remove chrome so diagrams sit flush on the page (see astro-mermaid
-   injected rules for pre.mermaid[data-processed]). */
+/* Strip the integration's default tint so we own the container chrome. */
 .sl-markdown-content pre.mermaid,
 .sl-markdown-content pre.mermaid[data-processed],
 html[data-theme="dark"] .sl-markdown-content pre.mermaid[data-processed],
@@ -708,31 +706,296 @@ html[data-theme="light"] .sl-markdown-content pre.mermaid[data-processed] {
   box-shadow: none !important;
 }
 
+/* Mermaid container — gradient border + glow chrome matching tables / code frames */
 .mermaid {
+  position: relative;
   display: flex;
   justify-content: center;
-  padding: 1rem 0;
+  margin-block: 1.6rem;
+  padding: 1.6rem 1.4rem;
   cursor: zoom-in;
-  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background:
+    radial-gradient(
+      circle at 14% 0%,
+      color-mix(in srgb, var(--sl-color-accent) 14%, transparent),
+      transparent 22rem
+    ) padding-box,
+    radial-gradient(
+      circle at 100% 100%,
+      color-mix(in srgb, var(--bs-doc-cyan) 11%, transparent),
+      transparent 18rem
+    ) padding-box,
+    linear-gradient(var(--bs-doc-panel-strong), var(--bs-doc-panel-strong)) padding-box,
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--sl-color-accent) 70%, transparent),
+      color-mix(in srgb, var(--bs-doc-cyan) 38%, transparent) 50%,
+      color-mix(in srgb, var(--bs-doc-pink) 46%, transparent)
+    ) border-box;
+  box-shadow:
+    0 22px 60px color-mix(in srgb, var(--bs-doc-glow) 70%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  transition: transform 220ms ease, box-shadow 220ms ease;
 }
 
-/* ThemeVariables clear most fills; keep a belt for any leftover canvas rect */
+.mermaid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 28px 28px, 28px 28px;
+  opacity: 0.45;
+}
+
+.mermaid > svg {
+  position: relative;
+  z-index: 1;
+}
+
+.mermaid:hover {
+  box-shadow:
+    0 26px 72px color-mix(in srgb, var(--bs-doc-glow) 90%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="light"] .mermaid::before {
+  opacity: 0.25;
+}
+
+/* Belt-and-suspenders: drop any canvas/cluster fills the theme leaves behind */
 pre.mermaid svg rect.background,
 .mermaid-zoom-dialog svg rect.background {
   fill: transparent !important;
 }
 
-/* Subgraph cluster panels: no fill (stroke still from Mermaid theme) */
-pre.mermaid svg.flowchart .cluster rect,
-.mermaid-zoom-dialog svg.flowchart .cluster rect {
-  fill: transparent !important;
-}
-
 .mermaid svg {
-  /* Force a sensible minimum so diagrams aren't squeezed into a sliver */
   min-width: min(100%, 720px);
   max-width: 100%;
   height: auto !important;
+  /* Neon halo on the whole diagram */
+  filter:
+    drop-shadow(0 0 14px color-mix(in srgb, var(--sl-color-accent) 22%, transparent))
+    drop-shadow(0 6px 18px color-mix(in srgb, var(--bs-doc-cyan) 12%, transparent));
+}
+
+[data-theme="light"] .mermaid svg {
+  filter:
+    drop-shadow(0 0 12px color-mix(in srgb, var(--sl-color-accent) 12%, transparent))
+    drop-shadow(0 4px 14px rgba(46, 16, 101, 0.08));
+}
+
+/* Flowchart nodes — rounded corners + crisp accent stroke */
+.mermaid svg .node rect,
+.mermaid svg .node polygon,
+.mermaid svg .node circle,
+.mermaid svg .node ellipse,
+.mermaid svg .node path,
+.mermaid-zoom-dialog svg .node rect,
+.mermaid-zoom-dialog svg .node polygon,
+.mermaid-zoom-dialog svg .node circle,
+.mermaid-zoom-dialog svg .node ellipse,
+.mermaid-zoom-dialog svg .node path {
+  rx: 10px;
+  ry: 10px;
+  stroke-width: 1.4px;
+  transition: filter 200ms ease, stroke-width 200ms ease;
+}
+
+.mermaid svg .node:hover rect,
+.mermaid svg .node:hover polygon,
+.mermaid svg .node:hover circle,
+.mermaid svg .node:hover ellipse,
+.mermaid svg .node:hover path {
+  stroke-width: 2px;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--sl-color-accent) 50%, transparent));
+}
+
+/* Subgraph clusters — transparent panel with accent border */
+pre.mermaid svg .cluster rect,
+.mermaid-zoom-dialog svg .cluster rect {
+  fill: color-mix(in srgb, var(--sl-color-accent) 5%, transparent) !important;
+  stroke-dasharray: 4 3;
+  stroke-width: 1.2px;
+  rx: 14px;
+  ry: 14px;
+}
+
+.mermaid svg .cluster-label .nodeLabel,
+.mermaid svg .cluster-label foreignObject div {
+  color: var(--sl-color-accent-high) !important;
+}
+
+/* Edges — thicker, glowing strokes */
+.mermaid svg .edgePath path.path,
+.mermaid svg .edgePaths path,
+.mermaid-zoom-dialog svg .edgePath path.path,
+.mermaid-zoom-dialog svg .edgePaths path {
+  stroke-width: 1.6px;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--sl-color-accent) 38%, transparent));
+}
+
+.mermaid svg .flowchart-link,
+.mermaid-zoom-dialog svg .flowchart-link {
+  stroke-width: 1.6px;
+}
+
+.mermaid svg marker path,
+.mermaid-zoom-dialog svg marker path {
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--sl-color-accent) 50%, transparent));
+}
+
+/* Edge labels.
+   - Empty edges are pruned by JS (see pruneEmptyEdgeLabels in astro.config.mjs);
+     mermaid's per-edge `.labelBkg` div otherwise shows as a dark pill mid-edge.
+   - For real labels, mermaid's `.labelBkg` provides the backing rect that covers
+     the edge line behind the text. We restyle it as a soft pill chip.
+   - `foreignObject` clips to its measured bounds — that clips both our chip's
+     padding and any glyph rendering slightly wider than measured (e.g. trailing
+     "p" in "smtp"). Let it overflow. */
+.mermaid svg .edgeLabel foreignObject,
+.mermaid-zoom-dialog svg .edgeLabel foreignObject {
+  overflow: visible !important;
+}
+
+.mermaid svg .edgeLabel rect,
+.mermaid-zoom-dialog svg .edgeLabel rect {
+  fill: transparent !important;
+}
+
+.mermaid svg .edgeLabel,
+.mermaid-zoom-dialog svg .edgeLabel {
+  color: var(--sl-color-accent-high) !important;
+  font-size: 0.78rem !important;
+}
+
+/* The labelBkg div is mermaid's content-sized backing rect — turn it into a
+   soft pill with our accent glow. Hidden parent for empty edges via JS. */
+.mermaid svg .edgeLabel .labelBkg,
+.mermaid svg .edgeLabel foreignObject .labelBkg,
+.mermaid-zoom-dialog svg .edgeLabel .labelBkg,
+.mermaid-zoom-dialog svg .edgeLabel foreignObject .labelBkg {
+  border-radius: 999px;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--sl-color-accent) 28%, transparent),
+    0 4px 12px color-mix(in srgb, var(--bs-doc-glow) 40%, transparent);
+}
+
+/* Node labels — color override only. Do NOT bump font-weight/letter-spacing;
+   mermaid sizes the surrounding rect from rendered text width, and heavier
+   weight makes characters wider than the rect, clipping the last letter. */
+.mermaid svg .nodeLabel,
+.mermaid svg .node foreignObject div,
+.mermaid svg .node foreignObject span,
+.mermaid-zoom-dialog svg .nodeLabel,
+.mermaid-zoom-dialog svg .node foreignObject div,
+.mermaid-zoom-dialog svg .node foreignObject span {
+  color: var(--bs-doc-code-text) !important;
+}
+
+/* Sequence diagrams */
+.mermaid svg .actor,
+.mermaid-zoom-dialog svg .actor {
+  stroke-width: 1.4px;
+}
+
+.mermaid svg .actor:not(text),
+.mermaid-zoom-dialog svg .actor:not(text) {
+  rx: 10px;
+  ry: 10px;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--sl-color-accent) 28%, transparent));
+}
+
+.mermaid svg text.actor,
+.mermaid svg .actor tspan,
+.mermaid-zoom-dialog svg text.actor,
+.mermaid-zoom-dialog svg .actor tspan {
+  fill: var(--bs-doc-code-text) !important;
+}
+
+.mermaid svg line.actor-line,
+.mermaid-zoom-dialog svg line.actor-line {
+  stroke: color-mix(in srgb, var(--sl-color-accent) 45%, transparent) !important;
+  stroke-dasharray: 3 4;
+}
+
+.mermaid svg .messageLine0,
+.mermaid svg .messageLine1,
+.mermaid-zoom-dialog svg .messageLine0,
+.mermaid-zoom-dialog svg .messageLine1 {
+  stroke-width: 1.6px;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--sl-color-accent) 40%, transparent));
+}
+
+.mermaid svg .messageText,
+.mermaid-zoom-dialog svg .messageText {
+  fill: var(--sl-color-accent-high) !important;
+}
+
+.mermaid svg .note,
+.mermaid-zoom-dialog svg .note {
+  rx: 8px;
+  ry: 8px;
+  filter: drop-shadow(0 4px 12px color-mix(in srgb, var(--sl-color-accent) 22%, transparent));
+}
+
+.mermaid svg .noteText,
+.mermaid svg .note text,
+.mermaid svg .note tspan,
+.mermaid-zoom-dialog svg .noteText,
+.mermaid-zoom-dialog svg .note text,
+.mermaid-zoom-dialog svg .note tspan {
+  fill: var(--sl-color-accent-high) !important;
+}
+
+/* Light-mode overrides — flip text dark, dial glow back */
+[data-theme="light"] .mermaid svg .nodeLabel,
+[data-theme="light"] .mermaid svg .node foreignObject div,
+[data-theme="light"] .mermaid svg text.actor,
+[data-theme="light"] .mermaid svg .actor tspan,
+[data-theme="light"] .mermaid-zoom-dialog svg .nodeLabel,
+[data-theme="light"] .mermaid-zoom-dialog svg .node foreignObject div,
+[data-theme="light"] .mermaid-zoom-dialog svg text.actor,
+[data-theme="light"] .mermaid-zoom-dialog svg .actor tspan {
+  color: #1f1b2e !important;
+  fill: #1f1b2e !important;
+}
+
+[data-theme="light"] .mermaid svg .edgeLabel,
+[data-theme="light"] .mermaid-zoom-dialog svg .edgeLabel {
+  background: rgba(255, 255, 255, 0.94) !important;
+  color: #5b21b6 !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--sl-color-accent) 32%, transparent),
+    0 4px 10px rgba(46, 16, 101, 0.08);
+}
+
+[data-theme="light"] .mermaid svg .messageText,
+[data-theme="light"] .mermaid-zoom-dialog svg .messageText {
+  fill: #5b21b6 !important;
+}
+
+[data-theme="light"] .mermaid svg .cluster-label .nodeLabel,
+[data-theme="light"] .mermaid svg .cluster-label foreignObject div {
+  color: #4c1d95 !important;
+}
+
+/* Reduced motion — drop hover transforms */
+@media (prefers-reduced-motion: reduce) {
+  .mermaid,
+  .mermaid svg .node rect,
+  .mermaid svg .node polygon,
+  .mermaid svg .node circle,
+  .mermaid svg .node ellipse,
+  .mermaid svg .node path {
+    transition: none;
+  }
 }
 
 /* Zoom dialog */
