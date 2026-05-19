@@ -59,8 +59,22 @@ jobs:
 
       - name: Fail on osv findings
         run: |
-          if [ "${OSV_EXIT:-0}" != "0" ]; then
-            echo "osv-scanner exited ${OSV_EXIT} — see SARIF in the Security tab."
+          # osv-scanner exits non-zero whenever any vulnerability is found in
+          # the lockfile, regardless of whether every finding was filtered
+          # via osv-scanner.toml. We treat the SARIF as the source of truth:
+          # if it has zero unfiltered results, the build passes. This keeps
+          # the allowlist meaningful — only entries we have NOT documented
+          # in osv-scanner.toml fail CI.
+          if [ ! -f osv-results.sarif ]; then
+            echo "osv-results.sarif missing — osv-scanner failed to write output."
+            exit 1
+          fi
+
+          UNFILTERED=$(jq -r '[.runs[].results[]?] | length' osv-results.sarif)
+          echo "Unfiltered osv-scanner findings: ${UNFILTERED}"
+
+          if [ "${UNFILTERED}" != "0" ]; then
+            echo "osv-scanner reported ${UNFILTERED} unfiltered vulnerabilities — see SARIF in the Security tab."
             exit 1
           fi
 

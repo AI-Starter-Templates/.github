@@ -3,7 +3,7 @@ title: "UI template: overview"
 description: Vite + React 19 + TanStack Query + shadcn/ui + Zustand. A typed OpenAPI client and an ESLint-enforced component anatomy.
 ---
 
-import { Aside, FileTree } from "@astrojs/starlight/components";
+import DocFileTree from "../../../components/DocFileTree";
 import FaqGroup from "../../../components/FaqGroup.astro";
 import FaqItem from "../../../components/FaqItem.astro";
 
@@ -71,24 +71,53 @@ Every authenticated route renders inside `AppShell`: a brand-marked left sidebar
 
 ## File layout
 
-<FileTree>
-  - src/ - app/ App shell: providers, router, main entry - features/ Vertical
-  feature folders (auth, dashboard, ...). Add your own. - components/ - ui/
-  shadcn/ui primitives - core/ Composed components - global/ App-shell wrappers
-  - lib/ - api/ openapi-fetch client + generated schema - env/ Zod-validated
-  `import.meta.env` - auth/ OAuth start helper (server-side flow) - logger/
-  Structured client logs - i18n/ react-i18next setup + locales - hooks/
-  Cross-feature hooks - store/ App-level Zustand stores
-</FileTree>
+<DocFileTree
+  root="src/"
+  title="UI source map"
+  caption="typed product surface"
+  nodes={[
+    { name: "app/", detail: "App shell: providers, router, main entry" },
+    { name: "features/", detail: "Vertical feature folders: auth, dashboard, notifications, and yours" },
+    {
+      name: "components/",
+      children: [
+        { name: "ui/", detail: "shadcn/ui primitives" },
+        { name: "core/", detail: "composed components" },
+        { name: "global/", detail: "app-shell wrappers" },
+      ],
+    },
+    {
+      name: "lib/",
+      children: [
+        { name: "api/", detail: "openapi-fetch client + generated schema" },
+        { name: "env/", detail: "Zod-validated import.meta.env" },
+        { name: "auth/", detail: "OAuth start helper for the server-side flow" },
+        { name: "logger/", detail: "structured client logs" },
+        { name: "i18n/", detail: "react-i18next setup + locales" },
+      ],
+    },
+    { name: "hooks/", detail: "cross-feature hooks" },
+    { name: "store/", detail: "app-level Zustand stores" },
+  ]}
+/>
 
 A page or component folder always looks like:
 
-<FileTree>
-  - features/dashboard/components/DashboardPage/ - DashboardPage.tsx Pure JSX -
-  DashboardPage.hooks.ts All React hooks - DashboardPage.types.ts
-  `IDashboardPageView` - DashboardPage.constants.ts - DashboardPage.utils.ts -
-  DashboardPage.test.tsx - DashboardPage.stories.tsx - index.ts Re-export
-</FileTree>
+<DocFileTree
+  root="features/dashboard/components/DashboardPage/"
+  title="Component folder anatomy"
+  caption="the UI lint rules enforce this split"
+  nodes={[
+    { name: "DashboardPage.tsx", detail: "pure JSX" },
+    { name: "DashboardPage.hooks.ts", detail: "all React hooks" },
+    { name: "DashboardPage.types.ts", detail: "IDashboardPageView" },
+    { name: "DashboardPage.constants.ts" },
+    { name: "DashboardPage.utils.ts" },
+    { name: "DashboardPage.test.tsx" },
+    { name: "DashboardPage.stories.tsx" },
+    { name: "index.ts", detail: "re-export" },
+  ]}
+/>
 
 Stories ship 1:1 with the components and run under a global theme decorator (`@storybook/addon-themes` wired in `.storybook/preview.tsx`), so every story has a light/dark toggle in the Storybook toolbar with no per-story plumbing.
 

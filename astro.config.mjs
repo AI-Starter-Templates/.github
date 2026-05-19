@@ -39,7 +39,9 @@ export default defineConfig({
       customCss: ["./src/styles/tailwind.css", "./src/styles/custom.css"],
       tableOfContents: false,
       components: {
+        Footer: "./src/components/Footer.astro",
         Header: "./src/components/Header.astro",
+        Pagination: "./src/components/Pagination.astro",
       },
       head: [
         {

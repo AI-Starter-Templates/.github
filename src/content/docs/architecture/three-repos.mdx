@@ -3,7 +3,8 @@ title: Repository layout
 description: Why BoringStack ships as independent sibling repositories, what runs where, and how they wire together.
 ---
 
-import { Aside, FileTree } from "@astrojs/starlight/components";
+import { Aside } from "@astrojs/starlight/components";
+import DocFileTree from "../../../components/DocFileTree";
 import FaqGroup from "../../../components/FaqGroup.astro";
 import FaqItem from "../../../components/FaqItem.astro";
 
@@ -11,13 +12,17 @@ import FaqItem from "../../../components/FaqItem.astro";
 
 BoringStack is a set of sibling repos. The runtime is composed from `api-template`, `ui-template`, and `infra-docker-compose-template`. The `infra-bootstrap-tofu-template` repo is optional and only used to provision a VPS.
 
-<FileTree>
-- boringstack/
-  - api-template/ Bun + Elysia + Drizzle API
-  - ui-template/ Vite + React SPA
-  - infra-docker-compose-template/ docker-compose stack
-  - infra-bootstrap-tofu-template/ (optional) OpenTofu bootstrap
-</FileTree>
+<DocFileTree
+  root="boringstack/"
+  title="Composed repositories"
+  caption="separate repos, one local spine"
+  nodes={[
+    { name: "api-template/", detail: "Bun + Elysia + Drizzle API" },
+    { name: "ui-template/", detail: "Vite + React SPA" },
+    { name: "infra-docker-compose-template/", detail: "Docker Compose runtime" },
+    { name: "infra-bootstrap-tofu-template/", detail: "optional OpenTofu bootstrap" },
+  ]}
+/>
 
 Each repo has its own `package.json`, its own CI, its own deploy story (fork one and use it standalone if you want), and its own ESLint config tuned to the layer.
 
@@ -25,17 +30,30 @@ The runtime repos wire together through the infra repo's `docker-compose.yml`, w
 
 ## The disk layout
 
-```
-boringstack/                 ← parent dir; can have any name
-├── api-template/
-├── ui-template/
-└── infra-docker-compose-template/
-    └── compose/
-        ├── docker-compose.yml
-        │   #   build.context: ../../api-template
-        │   #   build.context: ../../ui-template
-        └── ...
-```
+<DocFileTree
+  root="boringstack/"
+  title="Disk layout"
+  caption="parent directory can have any name"
+  nodes={[
+    { name: "api-template/" },
+    { name: "ui-template/" },
+    {
+      name: "infra-docker-compose-template/",
+      children: [
+        {
+          name: "compose/",
+          children: [
+            {
+              name: "docker-compose.yml",
+              detail: "build.context points at ../../api-template and ../../ui-template",
+            },
+            { name: "...", detail: "profiles, labels, and overlays live beside the base file" },
+          ],
+        },
+      ],
+    },
+  ]}
+/>
 
 <Aside type="caution" title="Renaming a fork">
   If you rename your fork of `api-template` or `ui-template`, either rename

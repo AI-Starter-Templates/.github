@@ -3,7 +3,7 @@ title: Notifications
 description: TanStack Query feed, infinite list, optimistic mark-read, SSE consumer, Sonner toast on arrival, and a per-event-type × channel preferences grid. Backend ships pre-rendered strings so the UI is event-agnostic.
 ---
 
-import { Aside, FileTree } from "@astrojs/starlight/components";
+import DocFileTree from "../../../components/DocFileTree";
 import FaqGroup from "../../../components/FaqGroup.astro";
 import FaqItem from "../../../components/FaqItem.astro";
 
@@ -34,26 +34,34 @@ sequenceDiagram
 
 ## Folder shape
 
-<FileTree>
-- src/features/notifications/
-  - Notifications.constants.ts
-  - Notifications.list.queries.ts
-  - Notifications.mutations.ts
-  - Notifications.preferences.queries.ts
-  - Notifications.cache.ts
-  - Notifications.utils.ts
-  - Notifications.stream-utils.ts
-  - Notifications.types.ts
-  - useNotificationStream.ts
-  - components/
-    - NotificationBell/
-    - NotificationCenterPopover/
-    - NotificationListItem/
-    - NotificationsPage/
-    - NotificationsPreferencesPage/
-    - PreferenceRow/
-    - PreferenceCell/
-</FileTree>
+<DocFileTree
+  root="src/features/notifications/"
+  title="Notification feature map"
+  caption="queries, mutations, cache helpers, and UI pieces"
+  nodes={[
+    { name: "Notifications.constants.ts" },
+    { name: "Notifications.list.queries.ts", detail: "feed and unread count reads" },
+    { name: "Notifications.mutations.ts", detail: "optimistic mark-read/archive operations" },
+    { name: "Notifications.preferences.queries.ts", detail: "preference grid reads and writes" },
+    { name: "Notifications.cache.ts", detail: "cache merge and rollback helpers" },
+    { name: "Notifications.utils.ts" },
+    { name: "Notifications.stream-utils.ts", detail: "defensive SSE parsing" },
+    { name: "Notifications.types.ts" },
+    { name: "useNotificationStream.ts", detail: "mounted once from AppShell" },
+    {
+      name: "components/",
+      children: [
+        { name: "NotificationBell/" },
+        { name: "NotificationCenterPopover/" },
+        { name: "NotificationListItem/" },
+        { name: "NotificationsPage/" },
+        { name: "NotificationsPreferencesPage/" },
+        { name: "PreferenceRow/" },
+        { name: "PreferenceCell/" },
+      ],
+    },
+  ]}
+/>
 
 Same anatomy as `features/dashboard/` (queries + utils at the feature root, components in `components/<Name>/` with the 8-file layout). The query surface is split across three files (reads, mutations, preferences) to keep each file under the `max-hooks-per-file` threshold enforced by [`eslint-plugin-react-component-architecture`](https://github.com/agjs/eslint-plugin-react-component-architecture).
 

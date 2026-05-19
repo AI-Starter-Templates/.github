@@ -5,6 +5,7 @@ description: Fork the API, UI, and infra templates, boot the local stack, sign i
 
 import { Steps } from "@astrojs/starlight/components";
 import DocCallout from "../../components/DocCallout.astro";
+import DocFileTree from "../../components/DocFileTree";
 import FaqGroup from "../../components/FaqGroup.astro";
 import FaqItem from "../../components/FaqItem.astro";
 
@@ -53,13 +54,17 @@ git clone https://github.com/<you>/acme-infra
 git clone https://github.com/<you>/acme-bootstrap
 ```
 
-```
-acme/
-├── acme-api/         (your fork of api-template)
-├── acme-ui/          (your fork of ui-template)
-├── acme-infra/       (your fork of infra-docker-compose-template)
-└── acme-bootstrap/   (optional fork of infra-bootstrap-tofu-template)
-```
+<DocFileTree
+  root="acme/"
+  title="Sibling forks"
+  caption="the infra repo expects nearby app repos"
+  nodes={[
+    { name: "acme-api/", detail: "your fork of api-template" },
+    { name: "acme-ui/", detail: "your fork of ui-template" },
+    { name: "acme-infra/", detail: "your fork of infra-docker-compose-template" },
+    { name: "acme-bootstrap/", detail: "optional fork of infra-bootstrap-tofu-template" },
+  ]}
+/>
 
 If you renamed `api-template` or `ui-template`, either match the cloned directory name to what `compose/docker-compose.yml` expects, or edit the `build: context:` lines once.
 
