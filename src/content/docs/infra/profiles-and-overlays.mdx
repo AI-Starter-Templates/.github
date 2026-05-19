@@ -4,8 +4,8 @@ description: How `STACK=` and `WITH_*=1` flags compose docker-compose files. The
 ---
 
 import { Aside } from "@astrojs/starlight/components";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
 
 The infra stack defaults small: Postgres + Valkey + your apps. Everything else (observability, error tracking, queue dashboard, image-update detection, local email catcher) is opt-in via a flag. Traefik runs in the prod profile only; dev uses Vite's dev-server proxy for same-origin DX. Composition happens in `dev.sh`, which assembles the `docker-compose` invocation based on env vars.
 

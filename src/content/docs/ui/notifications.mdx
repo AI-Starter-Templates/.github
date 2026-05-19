@@ -4,8 +4,8 @@ description: TanStack Query feed, infinite list, optimistic mark-read, SSE consu
 ---
 
 import DocFileTree from "../../../components/DocFileTree";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
 
 The UI consumes the [API notifications subsystem](/api/notifications/). The feed is a TanStack Query infinite list, mutations are optimistic with rollback, and an optional SSE `EventSource` keeps the cache live while the user is authenticated. The bell + popover mount inside the new `AppShell`, so every authenticated route gets them for free.
 
@@ -118,13 +118,47 @@ You don't. The backend ships pre-rendered strings; the UI is event-agnostic by d
 
 If you ever need a per-event-type visual treatment (badge colour, icon), branch on `notification.eventType` inside `NotificationListItem` only. Don't fork the page.
 
+## Web Push (v1.1)
+
+Browser push notifications via the W3C Push API + VAPID. The whole flow
+lives in `useWebPush.hooks.ts` (under `src/hooks/`) plus a small service
+worker at `public/sw.js`. The Settings page renders a state-aware
+"Browser notifications" card that wraps the hook.
+
+<FaqGroup>
+  <FaqItem title="Setup" open>
+    Generate VAPID keys on the API (`bun run vapid:generate`) and paste
+    the public key into the UI as `VITE_VAPID_PUBLIC_KEY`. Without it,
+    the Settings card renders "Web Push is not configured for this
+    deploy."
+  </FaqItem>
+  <FaqItem title="Service worker">
+    `public/sw.js` is copied to the dist root by Vite (no plugin needed)
+    so the scope is `/`. Two handlers: `push` calls
+    `showNotification(title, { body, data: { url } })`;
+    `notificationclick` focuses the matching tab if open, otherwise
+    opens the URL. Registered once from `src/app/main.tsx` (gated on
+    `'serviceWorker' in navigator`).
+  </FaqItem>
+  <FaqItem title="useWebPush contract">
+    Returns `{ isSupported, isConfigured, permission, isSubscribed,
+    isPending, subscribe, unsubscribe }`. The Settings card maps that
+    state machine into copy: unsupported / not-configured / blocked /
+    not-subscribed / subscribed. Lives in `src/hooks/` because the
+    feature `accounts` consumes it without owning it.
+  </FaqItem>
+  <FaqItem title="Preference grid integration">
+    `web-push` appears alongside `in-app` and `email` in
+    `PREFERENCE_CHANNEL_COLUMNS`. Toggling it follows the same pattern as
+    other channels — the backend dispatcher reads
+    `notification_preference` rows for `(userId, eventType, channel)`.
+  </FaqItem>
+</FaqGroup>
+
 ## Out of scope (v1)
 
 <FaqGroup>
-  <FaqItem title="Web Push (Push API + VAPID + service worker)" open>
-    Deferred to v1.1 in lockstep with the backend's `web-push` channel.
-  </FaqItem>
-  <FaqItem title="Cross-tab sync via BroadcastChannel">
+  <FaqItem title="Cross-tab sync via BroadcastChannel" open>
     Each tab holds its own SSE connection; the badge converges via cache invalidation.
   </FaqItem>
   <FaqItem title="Notification grouping">

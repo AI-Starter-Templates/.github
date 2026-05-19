@@ -4,8 +4,8 @@ description: Postgres → rclone off-site, with retention. Runs from cron; resto
 ---
 
 import { Aside } from "@astrojs/starlight/components";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
 
 The infra template ships `scripts/backup-wrapper.example.sh`: `pg_dump` → gzip → `rclone copy` to a remote of your choice, with retention. Designed to be safe to run from cron; idempotent, logs to stdout, exits non-zero on failure.
 

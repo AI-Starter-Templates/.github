@@ -3,11 +3,28 @@ title: Queues
 description: BullMQ on Valkey (Redis-protocol) for background jobs. One QueueManager owns lifecycle; dispatch falls back to inline execution when queues are off.
 ---
 
-import { Aside } from "@astrojs/starlight/components";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import DocFileTree from "../../../components/DocFileTree";
+import FeatureGrid from "../../../components/docs-kit/FeatureGrid";
+import PageIntro from "../../../components/docs-kit/PageIntro";
 
-Background work uses [BullMQ](https://docs.bullmq.io) over the same Valkey the cache lives on. The mental model:
+<PageIntro
+  eyebrow="Background work that can start inline"
+  actions={[
+    { label: "Email dispatch", href: "/api/email/" },
+    { label: "Infra overlays", href: "/infra/profiles-and-overlays/" },
+  ]}
+  facts={[
+    { value: "BullMQ", label: "job lifecycle" },
+    { value: "Valkey", label: "queue backend" },
+    { value: "inline", label: "fallback when queues are off" },
+  ]}
+>
+  Background work uses BullMQ over the same Valkey the cache lives on. A single
+  QueueManager owns queues and workers, so request handlers dispatch intent
+  without knowing whether the work runs inline, locally, or in a worker.
+</PageIntro>
+
+The mental model:
 
 - A **queue** is a named work buffer in Valkey.
 - A **worker** is a long-lived process that pulls jobs off the queue and runs them.
@@ -37,45 +54,58 @@ sequenceDiagram
 
 ## Design choices
 
-<FaqGroup>
-  <FaqItem title="One QueueManager per process" open>
-    Centralized lifecycle, shutdown, admin stats; new queues cannot accidentally skip the retry config.
-  </FaqItem>
-  <FaqItem title="Per-queue directory with five small files">
-    Constants + queue + worker + setup + types stay together; producer and consumer cannot disagree on names.
-  </FaqItem>
-  <FaqItem title="Inline fallback when QUEUES_ENABLED=false">
-    Dev and tests boot without Valkey or a separate worker process.
-  </FaqItem>
-  <FaqItem title="removeOnComplete: { age: 1h, count: 100 }">
-    Bounded Valkey usage without losing recent successes for the dashboard.
-  </FaqItem>
-  <FaqItem title="removeOnFail: false">
-    Failed jobs stick around for inspection; manual purge if needed.
-  </FaqItem>
-</FaqGroup>
+<FeatureGrid
+  columns={3}
+  items={[
+    {
+      eyebrow: "manager",
+      title: "One QueueManager per process",
+      body: "Centralized lifecycle, shutdown, admin stats, and retry defaults.",
+    },
+    {
+      eyebrow: "shape",
+      title: "Per-queue directory",
+      body: "Constants, queue, worker, setup, and types stay together.",
+    },
+    {
+      eyebrow: "dev",
+      title: "Inline fallback",
+      body: "When QUEUES_ENABLED=false, dev and tests boot without a worker process.",
+    },
+    {
+      eyebrow: "success",
+      title: "Bounded success retention",
+      body: "removeOnComplete keeps one hour or the latest 100 successes.",
+    },
+    {
+      eyebrow: "failure",
+      title: "Failed jobs remain inspectable",
+      body: "removeOnFail is false, so the dashboard can show what broke.",
+    },
+    {
+      eyebrow: "lint",
+      title: "Workers are checked",
+      body: "The BullMQ lint plugin catches missing failed handlers and retry config.",
+    },
+  ]}
+/>
 
 ## The shape of a queue
 
 Every queue is a small directory under `src/queues/<name>/`:
 
-<FaqGroup>
-  <FaqItem title="name.constants.ts" open>
-    Queue name, job name, retry defaults; one place so producer + consumer cannot drift.
-  </FaqItem>
-  <FaqItem title="name.types.ts">
-    The job-data type. Strict: BullMQ serializes to JSON; type-drift here means 3 AM debugging.
-  </FaqItem>
-  <FaqItem title="name.queue.ts">
-    BullMQ `Queue` factory.
-  </FaqItem>
-  <FaqItem title="name.worker.ts">
-    BullMQ `Worker` + structured-logged event handlers.
-  </FaqItem>
-  <FaqItem title="name.setup.ts">
-    Wires queue + worker together at boot.
-  </FaqItem>
-</FaqGroup>
+<DocFileTree
+  root="src/queues/email-delivery/"
+  title="Queue anatomy"
+  caption="producer and consumer share one contract"
+  nodes={[
+    { name: "email-delivery.constants.ts", detail: "Queue name, job name, and retry defaults" },
+    { name: "email-delivery.types.ts", detail: "JSON-serializable job-data type" },
+    { name: "email-delivery.queue.ts", detail: "BullMQ Queue factory" },
+    { name: "email-delivery.worker.ts", detail: "Worker plus structured-logged event handlers" },
+    { name: "email-delivery.setup.ts", detail: "Boot wiring for queue + worker" },
+  ]}
+/>
 
 The reference implementation is `email-delivery`; it's the simplest worker that exists (render a template, hand off to the email provider), so it's a good copy-target.
 

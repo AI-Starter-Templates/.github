@@ -4,8 +4,8 @@ description: react-i18next with type-safe keys, a single namespace by default, a
 ---
 
 import { Aside } from "@astrojs/starlight/components";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
 
 The ui-template uses [react-i18next](https://react.i18next.com) for translation. Keys are type-safe (typos fail the build) and hardcoded strings in JSX are a lint error, so a forgotten translation can't ship.
 

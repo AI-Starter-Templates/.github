@@ -4,37 +4,67 @@ description: docker-compose for single-host deployments. Postgres + Valkey + Tra
 ---
 
 import DocFileTree from "../../../components/DocFileTree";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import CommandRun from "../../../components/docs-kit/CommandRun";
+import FeatureGrid from "../../../components/docs-kit/FeatureGrid";
+import PageIntro from "../../../components/docs-kit/PageIntro";
+import SignalGrid from "../../../components/docs-kit/SignalGrid";
 
-The infra-docker-compose-template composes the sibling repos into one running stack. Single-host VPS focus (Hetzner / OVH / DO / your laptop); a Kubernetes-flavored variant is planned as a separate repo.
+<PageIntro
+  eyebrow="Compose first, production close"
+  actions={[
+    { label: "Profiles", href: "/infra/profiles-and-overlays/" },
+    { label: "Secrets", href: "/infra/secrets/" },
+  ]}
+  facts={[
+    { value: "Compose", label: "local and single-host runtime" },
+    { value: "Traefik", label: "prod ingress and TLS" },
+    { value: "Overlays", label: "observability, mail, queues" },
+  ]}
+>
+  The infra-docker-compose-template composes the sibling repos into one running
+  stack. It targets your laptop and a first VPS before you need cluster
+  machinery, while keeping observability, email, and queue tooling close to the
+  app.
+</PageIntro>
 
 ## Service inventory
 
 The base stack (always on) plus per-profile services:
 
-<FaqGroup>
-  <FaqItem title="postgres (always)" open>App DB.</FaqItem>
-  <FaqItem title="valkey (always)">Cache + queues (Redis-protocol; Valkey fork).</FaqItem>
-  <FaqItem title="traefik (prod)">Reverse proxy + ACME; path-routes one apex domain.</FaqItem>
-  <FaqItem title="api-migrate (one-shot)">Schema push + optional superuser seed.</FaqItem>
-  <FaqItem title="api-dev (dev)">Bun + Elysia API, bind-mounted source.</FaqItem>
-  <FaqItem title="ui-dev (dev)">Vite dev server proxying to api-dev.</FaqItem>
-  <FaqItem title="api (prod)">API image from GHCR.</FaqItem>
-  <FaqItem title="ui (prod)">UI image from GHCR (nginx static).</FaqItem>
-</FaqGroup>
+<FeatureGrid
+  columns={4}
+  items={[
+    { eyebrow: "data", title: "postgres", body: "Always-on app database." },
+    { eyebrow: "cache", title: "valkey", body: "Redis-protocol cache plus BullMQ queue backend." },
+    { eyebrow: "edge", title: "traefik", body: "Prod reverse proxy, ACME, and one-domain path routing." },
+    { eyebrow: "migrate", title: "api-migrate", body: "One-shot schema push plus optional superuser seed." },
+    { eyebrow: "api", title: "api-dev / api", body: "Bun + Elysia in dev, GHCR image in production." },
+    { eyebrow: "ui", title: "ui-dev / ui", body: "Vite dev server locally, nginx static image in production." },
+    { eyebrow: "ops", title: "observability overlays", body: "Prometheus, Grafana, Loki, Promtail, and exporters on demand." },
+    { eyebrow: "dev", title: "mail and queue tools", body: "Mailpit, Bull Board, GlitchTip, and WUD are profile overlays." },
+  ]}
+/>
 
 ## Profile model
 
-```bash
-./dev.sh up -d                                 # baseline dev (no Traefik; Vite proxies /api/*)
-STACK=prod ./dev.sh up -d                      # production: GHCR images, Traefik, HTTPS via ACME
-WITH_OBSERVABILITY=1 ./dev.sh up -d            # + Prometheus/Grafana/Loki/Promtail/exporters
-WITH_GLITCHTIP=1 ./dev.sh up -d                # + self-hosted error tracking
-WITH_BULLMQ=1 ./dev.sh up -d                   # + queue dashboard at bullmq.localhost
-WITH_WUD=1 ./dev.sh up -d                      # + image-update detection (Discord webhook)
-WITH_MAILPIT=1 ./dev.sh up -d                  # + local SMTP catcher at :8025 (dev only)
-```
+<CommandRun
+  title="Profile model"
+  caption="flags compose over the same base stack"
+  command={[
+    "./dev.sh up -d",
+    "STACK=prod ./dev.sh up -d",
+    "WITH_OBSERVABILITY=1 ./dev.sh up -d",
+    "WITH_GLITCHTIP=1 ./dev.sh up -d",
+    "WITH_BULLMQ=1 ./dev.sh up -d",
+    "WITH_WUD=1 ./dev.sh up -d",
+    "WITH_MAILPIT=1 ./dev.sh up -d",
+  ]}
+  output={[
+    { text: "baseline dev: no Traefik; Vite proxies /api/*" },
+    { text: "prod: GHCR images, Traefik, HTTPS via ACME" },
+    { text: "overlays: metrics, logs, error tracking, queues, mail, image updates" },
+  ]}
+/>
 
 Flags compose: `WITH_OBSERVABILITY=1 WITH_GLITCHTIP=1 ./dev.sh up -d` brings up both overlays alongside the base. See [Profiles & overlays](/infra/profiles-and-overlays/).
 
@@ -87,14 +117,21 @@ Flags compose: `WITH_OBSERVABILITY=1 WITH_GLITCHTIP=1 ./dev.sh up -d` brings up 
 
 Two bridge networks. Services are intentionally split:
 
-<FaqGroup>
-  <FaqItem title="backend network" open>
-    postgres, valkey, api[-dev], api-migrate, exporters, glitchtip, mailpit
-  </FaqItem>
-  <FaqItem title="frontend network">
-    traefik (prod only), ui[-dev], glitchtip-web
-  </FaqItem>
-</FaqGroup>
+<SignalGrid
+  columns={2}
+  items={[
+    {
+      label: "backend",
+      title: "Data plane network",
+      body: "postgres, valkey, api[-dev], api-migrate, exporters, glitchtip, and mailpit.",
+    },
+    {
+      label: "frontend",
+      title: "Ingress network",
+      body: "traefik in prod, ui[-dev], and glitchtip-web. Traefik joins both when it needs to route.",
+    },
+  ]}
+/>
 
 In prod, Traefik joins both networks so it can route HTTPS from `frontend` to services on `backend`. The data plane (Postgres, Valkey) is never exposed to `frontend`.
 

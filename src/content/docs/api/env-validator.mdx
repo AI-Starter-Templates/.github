@@ -3,11 +3,27 @@ title: Env validator
 description: TypeBox for shape, hand-written predicates for cross-field rules. Boot fails fast with every error listed; nothing else may read `process.env` directly.
 ---
 
-import { Aside } from "@astrojs/starlight/components";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import CommandRun from "../../../components/docs-kit/CommandRun";
+import FeatureGrid from "../../../components/docs-kit/FeatureGrid";
+import PageIntro from "../../../components/docs-kit/PageIntro";
+import SignalGrid from "../../../components/docs-kit/SignalGrid";
 
-`env` is deploy-time configuration, not runtime state. The validator runs once at boot, freezes the result, and exposes a typed `env` object. Anything that needs to change at runtime belongs in a service.
+<PageIntro
+  eyebrow="Boot-time configuration contract"
+  actions={[
+    { label: "Env reference", href: "/reference/env-vars/" },
+    { label: "Lint contract", href: "/architecture/lint-as-contract/" },
+  ]}
+  facts={[
+    { value: "TypeBox", label: "shape validation" },
+    { value: "freeze", label: "runtime config object" },
+    { value: "lint", label: "no direct process.env" },
+  ]}
+>
+  Env is deploy-time configuration, not runtime state. The validator runs once
+  at boot, lists every problem it finds, freezes the result, and exposes a typed
+  env object to the rest of the app.
+</PageIntro>
 
 Two principles drive the design:
 
@@ -30,26 +46,41 @@ The two-pass split matters: running invariants on an already-shape-validated obj
 
 ## Design choices
 
-<FaqGroup>
-  <FaqItem title="TypeBox t.Object({...}) for shape" open>
-    Same library Elysia uses; nothing new to learn.
-  </FaqItem>
-  <FaqItem title="Hand-written predicates for cross-field rules">
-    Cross-field rules ("if A then B is required") do not fit a schema language cleanly.
-  </FaqItem>
-  <FaqItem title="All errors aggregated, not fail-on-first">
-    Fewer redeploys to discover the next missing var.
-  </FaqItem>
-  <FaqItem title="Frozen env with derived isProduction / isDevelopment / isTest">
-    Reads like `env.isProduction`, not `env.NODE_ENV === "production"`.
-  </FaqItem>
-  <FaqItem title="Empty-string defaults for optional integration keys">
-    Shape passes when feature is off; invariants enforce "if feature on, key non-empty".
-  </FaqItem>
-  <FaqItem title="nonEmpty(value, testFallback) for a few vars">
-    Tests boot without per-test env setup; never applied in production.
-  </FaqItem>
-</FaqGroup>
+<SignalGrid
+  columns={3}
+  items={[
+    {
+      label: "shape",
+      title: "TypeBox for field shape",
+      body: "Same library Elysia uses; no extra validation DSL to learn.",
+    },
+    {
+      label: "logic",
+      title: "Predicates for cross-field rules",
+      body: "If A then B rules stay readable as hand-written checks.",
+    },
+    {
+      label: "errors",
+      title: "All errors aggregate",
+      body: "One failed boot lists every missing var instead of one redeploy per problem.",
+    },
+    {
+      label: "runtime",
+      title: "Frozen derived env",
+      body: "Reads like env.isProduction, not repeated NODE_ENV string checks.",
+    },
+    {
+      label: "optional",
+      title: "Empty integration keys are allowed when off",
+      body: "Shape passes while invariants enforce keys when a feature is enabled.",
+    },
+    {
+      label: "tests",
+      title: "Test fallbacks are explicit",
+      body: "A few vars get nonEmpty(value, testFallback), never in production.",
+    },
+  ]}
+/>
 
 ## Shape vs. invariant
 
@@ -74,42 +105,35 @@ Predicates each return `string[]` and fan into one aggregated check, so every pr
 
 ## Current invariant set
 
-<FaqGroup>
-  <FaqItem title="NODE_ENV=production + ALLOWED_ORIGINS non-empty" open>
-    Every origin starts with `https://` and contains no wildcards. Empty `ALLOWED_ORIGINS` is valid (same-origin deployment, CORS not mounted).
-  </FaqItem>
-  <FaqItem title="NODE_ENV=production">
-    Matching email-provider key(s) non-empty (Cloudflare needs both account ID + token; smtp needs `SMTP_HOST`).
-  </FaqItem>
-  <FaqItem title="FRONTEND_URL / PUBLIC_API_URL / NOTIFICATION_SETTINGS_URL">
-    URL fields must be valid `http` or `https` URLs. `NOTIFICATION_SETTINGS_URL` is checked only when non-empty.
-  </FaqItem>
-  <FaqItem title="OAuth provider credentials">
-    Google, GitHub, and LinkedIn credentials must be supplied as client-id/client-secret pairs. Half-configured providers fail boot.
-  </FaqItem>
-  <FaqItem title="AI_ENABLED=true">
-    `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` depending on provider.
-  </FaqItem>
-  <FaqItem title="BILLING_ENABLED=true">
-    `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_FREE`, and `STRIPE_PRICE_ID_PRO`.
-  </FaqItem>
-  <FaqItem title="NODE_ENV=production + any Valkey-using feature">
-    `VALKEY_PASSWORD` non-empty when queues, Valkey cache, notification SSE, or OAuth is configured.
-  </FaqItem>
-</FaqGroup>
+<FeatureGrid
+  columns={3}
+  items={[
+    { eyebrow: "cors", title: "Production origins", body: "Non-empty ALLOWED_ORIGINS entries must be https and wildcard-free." },
+    { eyebrow: "email", title: "Provider keys", body: "Production requires the matching email-provider credentials." },
+    { eyebrow: "urls", title: "Public URLs", body: "FRONTEND_URL, PUBLIC_API_URL, and notification settings URLs must be valid http(s) URLs." },
+    { eyebrow: "oauth", title: "OAuth pairs", body: "Google, GitHub, and LinkedIn credentials must be supplied as client-id/client-secret pairs." },
+    { eyebrow: "ai", title: "AI provider keys", body: "AI_ENABLED=true requires the matching OpenAI or Anthropic key." },
+    { eyebrow: "stripe", title: "Billing keys", body: "BILLING_ENABLED=true requires Stripe secret, webhook secret, and price IDs." },
+    { eyebrow: "valkey", title: "Production password", body: "Queues, cache, notification SSE, or OAuth require VALKEY_PASSWORD in production." },
+  ]}
+/>
 
 `NODE_ENV=test` skips most of these so integration tests don't need real provider credentials.
 
 ## What a bad boot looks like
 
-```
-Invalid environment configuration:
-  - JWT_SECRET: Expected string length greater or equal to 32
-  - STRIPE_SECRET_KEY required when BILLING_ENABLED=true
-  - STRIPE_WEBHOOK_SECRET required when BILLING_ENABLED=true
-  - STRIPE_PRICE_ID_FREE required when BILLING_ENABLED=true
-  - Google OAuth requires both client id and client secret
-```
+<CommandRun
+  title="Bad boot output"
+  caption="one boot attempt, every fix listed"
+  command="bun run dev"
+  output={[
+    { tone: "warn", text: "JWT_SECRET: Expected string length greater or equal to 32" },
+    { tone: "warn", text: "STRIPE_SECRET_KEY required when BILLING_ENABLED=true" },
+    { tone: "warn", text: "STRIPE_WEBHOOK_SECRET required when BILLING_ENABLED=true" },
+    { tone: "warn", text: "STRIPE_PRICE_ID_FREE required when BILLING_ENABLED=true" },
+    { tone: "warn", text: "Google OAuth requires both client id and client secret" },
+  ]}
+/>
 
 Several problems, one redeploy to fix all of them.
 

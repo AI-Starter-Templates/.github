@@ -3,22 +3,88 @@ title: Multi-tenant model
 description: Accounts, memberships, invitations, ownership transfer, and soft-delete + hard-delete lifecycle. Multi-tenant from day one; solo users are the degenerate case.
 ---
 
-import { Aside } from "@astrojs/starlight/components";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import DocFileTree from "../../../components/DocFileTree";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
+import PageIntro from "../../../components/docs-kit/PageIntro";
+import SignalGrid from "../../../components/docs-kit/SignalGrid";
+
+<PageIntro
+  eyebrow="Tenant boundary from day one"
+  actions={[
+    { label: "ACL resolver", href: "/api/acl/" },
+    { label: "Authentication", href: "/api/auth/" },
+  ]}
+  facts={[
+    { value: "account", label: "tenant boundary" },
+    { value: "aid", label: "active account JWT claim" },
+    { value: "owner", label: "single active owner index" },
+  ]}
+>
+  Accounts, memberships, invitations, and billing plans ship as product
+  infrastructure. A solo user is just one user with one account, so the app can
+  grow into teams without a second data model.
+</PageIntro>
 
 ## The shape
 
-```
-auth.users
-  └── auth.account_memberships ─── app.accounts
-                                     ├── app.account_invitations
-                                     ├── app.account_feature_overrides
-                                     ├── billing.account_plans
-                                     └── app.widgets (and every other @account-scoped table)
-```
+<DocFileTree
+  root="tenant graph"
+  title="Multi-tenant data spine"
+  caption="user identity is separate from account ownership"
+  nodes={[
+    {
+      name: "auth.users",
+      detail: "identity and auth providers",
+      children: [
+        {
+          name: "auth.account_memberships",
+          detail: "user-account join with role and revocation state",
+          children: [
+            {
+              name: "app.accounts",
+              detail: "tenant boundary",
+              children: [
+                { name: "app.account_invitations", detail: "hashed one-time invite tokens" },
+                { name: "app.account_feature_overrides", detail: "manual feature gates" },
+                { name: "billing.account_plans", detail: "Stripe-backed plan state" },
+                { name: "app.widgets", detail: "sample @account-scoped table pattern" },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ]}
+/>
 
 Every account-scoped row carries `account_id`. Routes derive that ID from the JWT (the `aid` claim, populated at login / refresh / register / OAuth callback), never from URL params.
+
+<SignalGrid
+  columns={4}
+  items={[
+    {
+      label: "scope",
+      title: "account_id on scoped rows",
+      body: "Every product table that belongs to a tenant carries the tenant key explicitly.",
+    },
+    {
+      label: "jwt",
+      title: "aid comes from session",
+      body: "Handlers derive the active account from the cookie-backed JWT, not from request params.",
+    },
+    {
+      label: "owner",
+      title: "one active owner",
+      body: "A partial unique index keeps each account from ever having two active owners.",
+    },
+    {
+      label: "audit",
+      title: "soft deletes preserve history",
+      body: "Revoked memberships and deleted accounts keep enough state for audit trails and grace windows.",
+    },
+  ]}
+/>
 
 ## Signup
 

@@ -3,18 +3,58 @@ title: Quickstart
 description: Fork the API, UI, and infra templates, boot the local stack, sign in. About five minutes from zero to a working full-stack on your laptop.
 ---
 
-import { Steps } from "@astrojs/starlight/components";
+import CommandRun from "../../components/docs-kit/CommandRun";
 import DocCallout from "../../components/DocCallout.astro";
 import DocFileTree from "../../components/DocFileTree";
-import FaqGroup from "../../components/FaqGroup.astro";
-import FaqItem from "../../components/FaqItem.astro";
+import PageIntro from "../../components/docs-kit/PageIntro";
+import SignalGrid from "../../components/docs-kit/SignalGrid";
+import FaqGroup from "../../components/FaqGroup.tsx";
+import FaqItem from "../../components/FaqItem.tsx";
+
+<PageIntro
+  eyebrow="From empty folder to product spine"
+  actions={[
+    { label: "Boot the stack", href: "#step-3-boot-the-local-stack" },
+    { label: "See what runs", href: "#whats-running" },
+  ]}
+  facts={[
+    { value: "3", label: "template repos" },
+    { value: "5 min", label: "local boot path" },
+    { value: "0", label: "local Node or Bun installs" },
+  ]}
+>
+  Fork the API, UI, and infra templates as siblings, let Compose wire the local
+  runtime, then sign in to a real app shell. This path proves the whole spine:
+  Postgres, Valkey, API, UI, generated client, hot reload, and optional overlays.
+</PageIntro>
 
 ## TL;DR
 
-1. Click **"Use this template"** on the API, UI, and infra repos under your org.
-2. Clone your forks as siblings under one parent directory.
-3. `cd <infra-fork> && cp compose/.env.example compose/.env && ./scripts/compose-up.sh`
-4. Open `http://localhost:3001` and sign up.
+<SignalGrid
+  columns={4}
+  items={[
+    {
+      label: "01",
+      title: "Use the templates",
+      body: "Create API, UI, and infra repos under your org from the GitHub templates.",
+    },
+    {
+      label: "02",
+      title: "Clone as siblings",
+      body: "Keep the app repos beside the infra repo so Compose build contexts stay obvious.",
+    },
+    {
+      label: "03",
+      title: "Boot Compose",
+      body: "Seed the env, run the compose script, and let migrations prepare the API.",
+    },
+    {
+      label: "04",
+      title: "Sign in",
+      body: "Open the UI, create the first account, and start product work from a real shell.",
+    },
+  ]}
+/>
 
 You now have Postgres, Valkey, the API, and the UI running locally with hot reload. The optional OpenTofu repo is only needed when you want repeatable first-time VPS provisioning.
 
@@ -74,30 +114,24 @@ The workspace root ships a `setup.sh` that bootstraps `compose/.env`, generates 
 
 ## Step 3. Boot the local stack
 
-<Steps>
+<CommandRun
+  title="Boot locally"
+  caption="local production-like spine"
+  command={[
+    "cd acme-infra",
+    "cp compose/.env.example compose/.env",
+    "chmod +x compose/dev.sh scripts/*.sh",
+    "./scripts/compose-up.sh up -d --build",
+  ]}
+  output={[
+    { tone: "ok", text: "postgres ready on 5432" },
+    { tone: "ok", text: "valkey ready on 6379" },
+    { tone: "ok", text: "api-dev migrated and serving /openapi.json" },
+    { tone: "ok", text: "ui-dev generated client and started Vite" },
+  ]}
+/>
 
-1. Seed the env:
-
-   ```bash
-   cd acme-infra
-   cp compose/.env.example compose/.env
-   ```
-
-2. Make scripts executable:
-
-   ```bash
-   chmod +x compose/dev.sh scripts/*.sh
-   ```
-
-3. Run:
-
-   ```bash
-   ./scripts/compose-up.sh up -d --build
-   ```
-
-   First boot pulls base images, builds the api/ui dev images, runs migrations. If you set `SUPERUSER_EMAIL` + `SUPERUSER_PASSWORD` in `compose/.env`, an admin user is also created. About 3 minutes on a fast laptop.
-
-</Steps>
+First boot pulls base images, builds the api/ui dev images, and runs migrations. If you set `SUPERUSER_EMAIL` + `SUPERUSER_PASSWORD` in `compose/.env`, an admin user is also created. About 3 minutes on a fast laptop.
 
 ## Step 4. Sign in
 

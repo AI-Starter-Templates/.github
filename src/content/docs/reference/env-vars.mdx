@@ -4,8 +4,8 @@ description: One place to look up "what does FOO_BAR do, and where does it live?
 ---
 
 import { Aside } from "@astrojs/starlight/components";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
 
 Each repo has its own `.env.example` that is the **source of truth** for vars it consumes. This page is an index; it tells you which repo owns a given var, why it exists, and which `.env.example` to read for the full reference (defaults, comments, prod-only flags).
 

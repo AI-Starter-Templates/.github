@@ -3,8 +3,8 @@ title: Background work
 description: Email, notifications, and BullMQ jobs inside the API. Ready on day one, with a clear path when a piece needs its own process.
 ---
 
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
 
 Products need work off the HTTP critical path: email, notifications, retries. BoringStack puts that work in the API with BullMQ on Valkey, shared queue patterns, and dispatch helpers. You ship events and mail without standing up a separate job platform first.
 

@@ -4,8 +4,8 @@ description: An optional fourth template. One `tofu apply` provisions a Hetzner 
 ---
 
 import { Aside } from "@astrojs/starlight/components";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
 
 BoringStack's [Deployment](/topics/deployment/) path is manual: SSH into a VPS, install Docker, clone the infra repo, `compose pull && compose up -d`. Some operators prefer this.
 

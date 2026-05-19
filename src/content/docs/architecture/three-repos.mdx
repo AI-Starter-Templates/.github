@@ -5,10 +5,27 @@ description: Why BoringStack ships as independent sibling repositories, what run
 
 import { Aside } from "@astrojs/starlight/components";
 import DocFileTree from "../../../components/DocFileTree";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import PageIntro from "../../../components/docs-kit/PageIntro";
+import SignalGrid from "../../../components/docs-kit/SignalGrid";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
 
-[Why BoringStack](/architecture/why-boringstack/) covers the problems the templates solve. This page is the map: sibling repos for API, UI, and infra, each with its own CI and Docker image, composed locally through the infra repo's compose file.
+<PageIntro
+  eyebrow="Repository contract"
+  actions={[
+    { label: "Quickstart layout", href: "/quickstart/#step-2-clone-your-forks-as-siblings" },
+    { label: "Separation of concerns", href: "/architecture/separation-of-concerns/" },
+  ]}
+  facts={[
+    { value: "API", label: "security + data" },
+    { value: "UI", label: "product surface" },
+    { value: "infra", label: "runtime + deploy" },
+  ]}
+>
+  Sibling repos keep each layer's context small. API, UI, and infra each have
+  their own CI and deploy story, but Compose joins them locally through explicit
+  sibling paths.
+</PageIntro>
 
 BoringStack is a set of sibling repos. The runtime is composed from `api-template`, `ui-template`, and `infra-docker-compose-template`. The `infra-bootstrap-tofu-template` repo is optional and only used to provision a VPS.
 
@@ -27,6 +44,27 @@ BoringStack is a set of sibling repos. The runtime is composed from `api-templat
 Each repo has its own `package.json`, its own CI, its own deploy story (fork one and use it standalone if you want), and its own ESLint config tuned to the layer.
 
 The runtime repos wire together through the infra repo's `docker-compose.yml`, which references the API and UI via relative paths (`../../api-template`, `../../ui-template`).
+
+<SignalGrid
+  columns={3}
+  items={[
+    {
+      label: "context",
+      title: "Agents work in smaller trees",
+      body: "A UI diff does not need to load database schema, and an infra diff does not need component state.",
+    },
+    {
+      label: "release",
+      title: "Images ship independently",
+      body: "API and UI each publish their own GHCR image. The infra repo composes versions deliberately.",
+    },
+    {
+      label: "contract",
+      title: "The join points are explicit",
+      body: "OpenAPI links API to UI; Compose build contexts and env examples link app repos to infra.",
+    },
+  ]}
+/>
 
 ## The disk layout
 

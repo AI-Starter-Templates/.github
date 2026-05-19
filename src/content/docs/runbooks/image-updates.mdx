@@ -4,8 +4,8 @@ description: WUD (What's-Up-Docker) overlay; get a Discord ping when a base imag
 ---
 
 import { Aside } from "@astrojs/starlight/components";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
 
 `WITH_WUD=1` brings up [WUD](https://getwud.github.io/wud/): it watches every running container's image and pings a Discord webhook when a newer tag is available. Manual `docker compose pull` + recreate is still the apply step. No surprise restarts.
 

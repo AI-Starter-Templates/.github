@@ -4,16 +4,53 @@ description: Boring deployment. Single-host VPS, Docker, the templates forked, G
 ---
 
 import { Aside } from "@astrojs/starlight/components";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import CommandRun from "../../../components/docs-kit/CommandRun";
+import PageIntro from "../../../components/docs-kit/PageIntro";
+import SignalGrid from "../../../components/docs-kit/SignalGrid";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
 
-BoringStack runs on a VPS you control: Docker Compose, GHCR images, Traefik TLS, Cloudflare at the edge. [Why BoringStack](/architecture/why-boringstack/) ties that to the rest of the templates.
-
-Fork the templates, fill `compose/.env`, then `compose up -d` on the server, or use [OpenTofu](/topics/provisioning-with-tofu/) for first boot on Hetzner. HTTPS provisions via ACME. The perimeter uses Cloudflare plus a Hetzner cloud firewall.
+<PageIntro
+  eyebrow="Ship shape"
+  actions={[
+    { label: "Provision with OpenTofu", href: "/topics/provisioning-with-tofu/" },
+    { label: "Firewall runbook", href: "/runbooks/firewall-and-tls/" },
+  ]}
+  facts={[
+    { value: "GHCR", label: "immutable app images" },
+    { value: "Traefik", label: "same-origin TLS routing" },
+    { value: "Cloudflare", label: "edge + origin perimeter" },
+  ]}
+>
+  BoringStack runs on a VPS you control: Docker Compose, GHCR images, Traefik
+  TLS, and Cloudflare at the edge. Fork the templates, fill compose/.env, then
+  boot the production profile manually or let OpenTofu do first provisioning.
+</PageIntro>
 
 ## The mental model
 
 Push to `main` on `api-template` or `ui-template`. The release workflow builds a Docker image and pushes it to `ghcr.io/<your-owner>/<repo>:latest`. WUD on the VPS detects the new tag and notifies you. You pull and restart with two commands. Traefik handles TLS via Let's Encrypt; Cloudflare proxies all traffic to your single apex domain via same-origin path routing.
+
+<SignalGrid
+  columns={3}
+  items={[
+    {
+      label: "build",
+      title: "GitHub builds the app images",
+      body: "API and UI repos publish GHCR images from release workflows instead of building on the VPS.",
+    },
+    {
+      label: "notify",
+      title: "WUD sees the new tag",
+      body: "The server notices updates and pings you, but it does not restart production without your say-so.",
+    },
+    {
+      label: "route",
+      title: "Traefik keeps one origin",
+      body: "The SPA lives on / and the API on /api/* behind one apex, one cert, and one browser security model.",
+    },
+  ]}
+/>
 
 ## Design choices
 
@@ -116,20 +153,28 @@ You do **not** clone `api-template` or `ui-template` on the VPS. Their built ima
 
 For changes to the api or the ui, you don't touch the VPS:
 
-```bash
-# On your laptop:
-git push origin main
-# release.yml builds + pushes ghcr.io/.../...:latest + :sha-<7> + :<semver>
-```
+<CommandRun
+  title="Publish an app image"
+  caption="your laptop"
+  command="git push origin main"
+  output={[
+    { tone: "ok", text: "release.yml builds ghcr.io/.../...:latest" },
+    { tone: "ok", text: "release.yml also publishes :sha-<7> and semver tags when present" },
+  ]}
+/>
 
 WUD watches `latest` and posts a notification when a new tag appears. To apply:
 
-```bash
-ssh <vps>
-cd /opt/boringstack/infra
-docker compose pull
-docker compose up -d
-```
+<CommandRun
+  title="Apply on the VPS"
+  caption="manual production restart"
+  command={[
+    "ssh <vps>",
+    "cd /opt/boringstack/infra",
+    "docker compose pull",
+    "docker compose up -d",
+  ]}
+/>
 
 For changes to the infra YAML or env vars, `git pull` the infra repo on the VPS then re-run `compose up -d`.
 

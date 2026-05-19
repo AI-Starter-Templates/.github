@@ -4,8 +4,8 @@ description: Every service has CPU and memory caps driven by env vars. Defaults 
 ---
 
 import { Aside } from "@astrojs/starlight/components";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
 
 Every container in the stack has `deploy.resources.limits` and `deploy.resources.reservations` set from env vars. The defaults target a 4-vCPU / 8 GB VPS, the cheapest tier on Hetzner / OVH / DigitalOcean that's usable in production. Bigger box? Bump the knobs.
 

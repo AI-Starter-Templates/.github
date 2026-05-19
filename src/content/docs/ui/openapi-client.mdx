@@ -4,8 +4,8 @@ description: A typed API client generated from the api-template's OpenAPI schema
 ---
 
 import { Aside } from "@astrojs/starlight/components";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
 
 The UI never hand-writes `fetch(...)`. It calls a generated, typed client that knows every path, every request body, and every response shape the API exposes. When the API changes, you regenerate; if the UI now calls a path that no longer exists, TypeScript tells you before the user does.
 

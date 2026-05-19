@@ -788,30 +788,6 @@ pre.mermaid svg.flowchart .cluster rect,
   opacity: 0.7;
 }
 
-/* FAQ accordions (FaqGroup / FaqItem in src/components) */
-.faq-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  margin: 1.25rem 0 1.5rem;
-}
-
-.faq-group .faq-item {
-  margin: 0;
-}
-
-.faq-item__body {
-  padding-block: 0.35rem 0.15rem;
-}
-
-.faq-item__body > :first-child {
-  margin-top: 0;
-}
-
-.faq-item__body > :last-child {
-  margin-bottom: 0;
-}
-
 /* BoringStack landing page shell */
 .sl-container:has(.bs-landing) {
   max-width: none;

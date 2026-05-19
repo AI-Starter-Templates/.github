@@ -4,8 +4,8 @@ description: Async per-user notification dispatch over BullMQ. In-app, email, an
 ---
 
 import { Aside } from "@astrojs/starlight/components";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
 
 A `notifications.send(event, args)` call validates the payload, enqueues a BullMQ job, and returns. A worker resolves the event definition, runs dedup + self-action guards, checks per-user preferences, persists the notification row + per-channel delivery rows, then fans out to channel handlers (in-app, email, SSE).
 
@@ -173,13 +173,57 @@ Messages use a stable JSON envelope:
 }
 ```
 
+## Web Push channel (v1.1)
+
+Browser push notifications via the W3C Push API + VAPID. Plugged into the
+existing dispatcher without touching the fan-out logic — the channel
+registers itself conditionally when the VAPID env triplet is configured.
+
+<FaqGroup>
+  <FaqItem title="Setup" open>
+    Generate a fresh VAPID keypair: `bun run vapid:generate`. Paste the
+    three lines it prints into `.env.local` (server) and put the public
+    key into the UI's `VITE_VAPID_PUBLIC_KEY`. All three server vars must
+    be set together — `validate.ts` rejects partial configuration.
+  </FaqItem>
+  <FaqItem title="Endpoints">
+    `POST /api/v1/notifications/push/subscribe` upserts a row keyed on
+    `(userId, endpoint)`. `DELETE /api/v1/notifications/push/subscribe`
+    removes by endpoint. `GET /api/v1/notifications/push/subscriptions`
+    lists the user's own devices for a "Devices" panel. All three require
+    the standard auth cookie.
+  </FaqItem>
+  <FaqItem title="Storage">
+    One Drizzle table: `notifications.push_subscription` —
+    `(userId, endpoint, p256dhKey, authKey, userAgent?, expiresAt?,
+    createdAt, lastUsedAt)`. Unique on `(userId, endpoint)` so the same
+    browser re-subscribing rotates keys instead of creating duplicates.
+  </FaqItem>
+  <FaqItem title="Delivery semantics">
+    The channel resolves all live subscriptions for the recipient at
+    delivery time and enqueues one `web-push-delivery` job. The worker
+    fans out per-subscription POSTs in parallel and settles the
+    `notification_delivery` row: `sent` if any subscription accepted the
+    payload, `failed` if every attempt errored, `suppressed` if the user
+    had no live subscriptions.
+  </FaqItem>
+  <FaqItem title="410 cleanup">
+    A 410 Gone (or 404) from the push service means the browser has
+    invalidated the subscription. The worker deletes the row eagerly and
+    logs `notifications.web_push.subscription_expired` — no orphan rows
+    accumulate.
+  </FaqItem>
+  <FaqItem title="Conditional registration">
+    `setup-notifications.ts` only calls `channelRegistry.register(webPushChannel)`
+    when all three `WEB_PUSH_VAPID_*` env vars are set. A fork that doesn't
+    ship Web Push never sees the channel in the registry.
+  </FaqItem>
+</FaqGroup>
+
 ## Out of scope (v1)
 
 <FaqGroup>
-  <FaqItem title="Web Push (Push API + VAPID)" open>
-    The channel registry leaves a clean seam; v1.1 lands `webPushChannel` without touching the dispatcher.
-  </FaqItem>
-  <FaqItem title="Migrating auth transactional emails">
+  <FaqItem title="Migrating auth transactional emails" open>
     Email verification, password reset, etc. stay on the direct `sendTemplate(...)` path. Transactional ≠ subscription; preferences shouldn't be able to silence them.
   </FaqItem>
   <FaqItem title="Notification digest emails">
@@ -192,11 +236,13 @@ Messages use a stable JSON envelope:
 
 ## Source
 
-- `src/api/notifications/`: HTTP routes, schemas, service, SSE handler, scaffolded events.
-- `src/lib/notifications/`: channels, dispatch pipeline, event + channel registries, preferences, dedup, Valkey pub/sub.
+- `src/api/notifications/`: HTTP routes, schemas, service, SSE handler, scaffolded events, push subscription endpoints (`notifications.push.*`).
+- `src/lib/notifications/`: channels (in-app, email, sse, web-push), dispatch pipeline, event + channel registries, preferences, dedup, Valkey pub/sub.
 - `src/queues/notification-dispatch/`: BullMQ queue + worker.
 - `src/queues/notification-maintenance/`: repeatable dedup cleanup job.
-- `src/clients/postgres/schema/notifications.schema.ts`: four tables in the `notifications` Postgres schema.
+- `src/queues/web-push-delivery/`: BullMQ queue + worker for per-subscription HTTP fan-out to push services.
+- `src/clients/postgres/schema/notifications.schema.ts`: five tables in the `notifications` Postgres schema (notification, notification_dedup, notification_delivery, notification_preference, push_subscription).
+- `scripts/vapid-generate.ts`: VAPID keypair generator (`bun run vapid:generate`).
 
 ## Related
 

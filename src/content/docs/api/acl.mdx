@@ -4,18 +4,40 @@ description: CASL ability model, role rules, feature resolution order (override 
 ---
 
 import DocCallout from "../../../components/DocCallout.astro";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import DataMatrix from "../../../components/docs-kit/DataMatrix";
+import FeatureGrid from "../../../components/docs-kit/FeatureGrid";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
+import PageIntro from "../../../components/docs-kit/PageIntro";
 
-ACL is multi-tenant from day one. Solo-user products are the degenerate case: every signup creates a personal `accounts` row, one `account_memberships` row at `role: owner`, and a Free `account_plans` row, all in a single transaction. The account switcher and invitations UI are hidden until the user holds more than one membership.
+<PageIntro
+  eyebrow="Authorization and feature gates"
+  actions={[
+    { label: "Multi-tenant model", href: "/api/multi-tenant/" },
+    { label: "Billing", href: "/api/billing/" },
+  ]}
+  facts={[
+    { value: "role", label: "what the user can do" },
+    { value: "plan", label: "what the account paid for" },
+    { value: "CASL", label: "server-side ability builder" },
+  ]}
+>
+  ACL is multi-tenant from day one. Solo-user products are the degenerate case:
+  every signup creates a personal account, owner membership, and Free plan row
+  in one transaction. The team UI appears only when memberships make it real.
+</PageIntro>
 
 ## The three axes that feed every authorization check
 
-| Axis | Question it answers | Changes how often | Source |
-| --- | --- | --- | --- |
-| **Role** | What does this user play in this account? | Rarely | `auth.account_memberships.role` |
-| **Entitlement** | What did this account pay for? | Per Stripe webhook | `billing.account_plans` + `app.account_feature_overrides` |
-| **Resource ownership** | Does this row belong to this account? | Per request | CASL condition `{ accountId }` on role rules |
+<DataMatrix
+  caption="Authorization inputs"
+  columns={["Axis", "Question", "Changes", "Source"]}
+  rows={[
+    { cells: ["Role", "What does this user play in this account?", "Rarely", "auth.account_memberships.role"] },
+    { cells: ["Entitlement", "What did this account pay for?", "Per Stripe webhook", "billing.account_plans + app.account_feature_overrides"] },
+    { cells: ["Resource ownership", "Does this row belong to this account?", "Per request", "CASL condition { accountId } on role rules"] },
+  ]}
+/>
 
 Stripe never knows about feature keys or roles. The app never queries Stripe at request time. The two systems touch only at the webhook boundary.
 
@@ -43,28 +65,31 @@ First match wins. The CASL ability is built from the resolved feature set after 
 
 Four roles ship by default, **per-membership** (a user is `owner` of Account A, `viewer` of Account B):
 
-<FaqGroup>
-  <FaqItem title="owner" open>
-    Account creator, billing-aware. Manages billing, deletes the
-    account, transfers ownership. Exactly one per account (partial
-    unique index `uniq_account_memberships_active_owner` enforces it).
-  </FaqItem>
-  <FaqItem title="admin">
-    Account-level admin. Manages other members + settings. Zero or
-    more per account. Does NOT bypass plan checks; the server-side
-    `users.is_platform_admin` flag is the only role that does, and
-    every cross-account action it takes writes
-    `authz.platform_admin_bypass` to the audit log. That flag never
-    leaves the API; see the `/me` aside below.
-  </FaqItem>
-  <FaqItem title="member">
-    Regular authenticated user (default). Read + write the
-    account-scoped resources they own.
-  </FaqItem>
-  <FaqItem title="viewer">
-    Read-only: guest access, support, demos. Never writes.
-  </FaqItem>
-</FaqGroup>
+<FeatureGrid
+  columns={4}
+  items={[
+    {
+      eyebrow: "owner",
+      title: "Account creator",
+      body: "Manages billing, deletes the account, transfers ownership. Exactly one active owner per account.",
+    },
+    {
+      eyebrow: "admin",
+      title: "Account admin",
+      body: "Manages members and settings, but does not bypass plan checks.",
+    },
+    {
+      eyebrow: "member",
+      title: "Product user",
+      body: "Default authenticated role. Reads and writes account-scoped resources they own.",
+    },
+    {
+      eyebrow: "viewer",
+      title: "Read-only access",
+      body: "Guest, support, and demo role. Never writes.",
+    },
+  ]}
+/>
 
 Role rules carry CASL conditions (`{ accountId: membership.accountId }`) so resource ownership is encoded right at the rule, not duplicated in every handler.
 

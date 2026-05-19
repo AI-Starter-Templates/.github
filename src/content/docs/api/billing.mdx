@@ -4,10 +4,27 @@ description: Stripe subscriptions with configured plans, cookie-protected custom
 ---
 
 import { Aside } from "@astrojs/starlight/components";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import DataMatrix from "../../../components/docs-kit/DataMatrix";
+import FeatureGrid from "../../../components/docs-kit/FeatureGrid";
+import PageIntro from "../../../components/docs-kit/PageIntro";
 
-Billing is optional. When `BILLING_ENABLED=false`, the billing route group returns 404 and the API does not instantiate Stripe. When it is true, the env validator requires the Stripe secret key, webhook secret, and the Free/Pro price IDs.
+<PageIntro
+  eyebrow="Stripe without platform lock-in"
+  actions={[
+    { label: "ACL resolver", href: "/api/acl/" },
+    { label: "Env validator", href: "/api/env-validator/" },
+  ]}
+  facts={[
+    { value: "404", label: "when billing is disabled" },
+    { value: "raw", label: "webhook body verification" },
+    { value: "SQL", label: "idempotency claim" },
+  ]}
+>
+  Billing is optional. When BILLING_ENABLED=false, the billing route group
+  returns 404 and the API does not instantiate Stripe. When it is true, the env
+  validator requires the Stripe secret key, webhook secret, and price IDs before
+  the app listens.
+</PageIntro>
 
 The template ships the subscription spine, not a pricing strategy. It wires Stripe Checkout, Stripe Customer Portal, plan persistence, webhooks, audit events, and redirect safety. Forks can rename plans or add tiers once the product shape is real.
 
@@ -33,35 +50,54 @@ The customer portal follows the same pattern: authenticated user, `returnUrl` al
 
 ## Design choices
 
-<FaqGroup>
-  <FaqItem title="Billing is feature-flagged" open>
-    Local apps boot without Stripe credentials. Production billing only boots when every required Stripe env var is present.
-  </FaqItem>
-  <FaqItem title="Plans come from env">
-    `STRIPE_PRICE_ID_FREE` and `STRIPE_PRICE_ID_PRO` upsert the template's default plans, so a fresh database has usable plan rows without manual SQL.
-  </FaqItem>
-  <FaqItem title="Cookie-protected customer routes">
-    Checkout, portal, and plan reads use the same `cookieAuth` OpenAPI contract as the rest of the authenticated API.
-  </FaqItem>
-  <FaqItem title="Redirect URL allowlist">
-    Stripe-hosted flows may only return to the configured `FRONTEND_URL` origin. Arbitrary return URLs are rejected.
-  </FaqItem>
-  <FaqItem title="Raw-body webhook verification">
-    The webhook route reads `request.text()` and passes the exact payload to Stripe signature verification.
-  </FaqItem>
-  <FaqItem title="Postgres-backed idempotency">
-    Every Stripe event id is claimed in `billing.stripe_webhook_events` inside the same transaction as the side effect. Duplicate delivery becomes a logged no-op.
-  </FaqItem>
-</FaqGroup>
+<FeatureGrid
+  columns={3}
+  items={[
+    {
+      eyebrow: "flag",
+      title: "Billing is feature-flagged",
+      body: "Local apps boot without Stripe credentials. Production billing only boots when required env vars are present.",
+    },
+    {
+      eyebrow: "plans",
+      title: "Plans come from env",
+      body: "STRIPE_PRICE_ID_FREE and STRIPE_PRICE_ID_PRO upsert default plan rows without manual SQL.",
+    },
+    {
+      eyebrow: "cookie",
+      title: "Customer routes are protected",
+      body: "Checkout, portal, and plan reads use the same cookieAuth OpenAPI contract as the rest of the API.",
+    },
+    {
+      eyebrow: "return",
+      title: "Redirect URLs are allowlisted",
+      body: "Stripe-hosted flows may only return to the configured FRONTEND_URL origin.",
+    },
+    {
+      eyebrow: "webhook",
+      title: "Raw body verification",
+      body: "The webhook route passes the exact request payload to Stripe signature verification.",
+    },
+    {
+      eyebrow: "idempotent",
+      title: "Postgres-backed idempotency",
+      body: "Every Stripe event id is claimed in the same transaction as the side effect.",
+    },
+  ]}
+/>
 
 ## HTTP surface
 
-| Endpoint | Auth | Purpose |
-| --- | --- | --- |
-| `GET /api/v1/billing/plans` | cookie | List configured plans. |
-| `POST /api/v1/billing/stripe/checkout-session` | cookie | Create a Stripe Checkout session for the active account. |
-| `POST /api/v1/billing/stripe/portal-session` | cookie | Create a Stripe Customer Portal session for the active account. |
-| `POST /api/v1/billing/stripe/webhooks` | Stripe signature | Receive Stripe events using the raw request body. |
+<DataMatrix
+  caption="Billing HTTP surface"
+  columns={["Endpoint", "Auth", "Purpose"]}
+  rows={[
+    { cells: ["GET /api/v1/billing/plans", "cookie", "List configured plans."] },
+    { cells: ["POST /api/v1/billing/stripe/checkout-session", "cookie", "Create a Stripe Checkout session for the active account."] },
+    { cells: ["POST /api/v1/billing/stripe/portal-session", "cookie", "Create a Stripe Customer Portal session for the active account."] },
+    { cells: ["POST /api/v1/billing/stripe/webhooks", "Stripe signature", "Receive Stripe events using the raw request body."] },
+  ]}
+/>
 
 ## Webhook flow
 
@@ -92,20 +128,15 @@ Unknown event types are logged at debug level and ignored. Late or out-of-order 
 
 ## Required env
 
-<FaqGroup>
-  <FaqItem title="BILLING_ENABLED" open>
-    Turns the route group on. `false` means all billing paths return 404.
-  </FaqItem>
-  <FaqItem title="STRIPE_SECRET_KEY">
-    Used by the Stripe SDK for Checkout, Portal, and webhook construction.
-  </FaqItem>
-  <FaqItem title="STRIPE_WEBHOOK_SECRET">
-    Used to verify `Stripe-Signature` on raw webhook payloads.
-  </FaqItem>
-  <FaqItem title="STRIPE_PRICE_ID_FREE / STRIPE_PRICE_ID_PRO">
-    Seed and keep the built-in Free and Pro plan rows aligned with Stripe.
-  </FaqItem>
-</FaqGroup>
+<FeatureGrid
+  columns={4}
+  items={[
+    { eyebrow: "toggle", title: "BILLING_ENABLED", body: "Turns the route group on; false means all billing paths return 404." },
+    { eyebrow: "sdk", title: "STRIPE_SECRET_KEY", body: "Used by the Stripe SDK for Checkout, Portal, and webhook construction." },
+    { eyebrow: "webhook", title: "STRIPE_WEBHOOK_SECRET", body: "Used to verify Stripe-Signature on raw webhook payloads." },
+    { eyebrow: "plans", title: "STRIPE_PRICE_ID_FREE / PRO", body: "Seeds and keeps the built-in plan rows aligned with Stripe." },
+  ]}
+/>
 
 <Aside type="tip" title="Local webhook testing">
   Keep billing off unless you are actively testing Stripe. When billing is on

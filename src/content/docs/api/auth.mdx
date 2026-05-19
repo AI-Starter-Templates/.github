@@ -4,10 +4,29 @@ description: HttpOnly cookie auth with short-lived JWT access cookies, DB-backed
 ---
 
 import { Aside } from "@astrojs/starlight/components";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import PageIntro from "../../../components/docs-kit/PageIntro";
+import SignalGrid from "../../../components/docs-kit/SignalGrid";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
 
-Two login flows share one browser contract:
+<PageIntro
+  eyebrow="Auth contract"
+  actions={[
+    { label: "Request flow", href: "#how-a-request-gets-authenticated" },
+    { label: "Refresh flow", href: "#how-refresh-works" },
+  ]}
+  facts={[
+    { value: "15 min", label: "access cookie" },
+    { value: "30 days", label: "refresh session" },
+    { value: "0", label: "tokens in frontend storage" },
+  ]}
+>
+  Authentication is shaped around one browser contract: HttpOnly cookies,
+  server-side OAuth, verify-before-account signup, and DB-backed refresh
+  sessions that can be rotated or revoked without exposing tokens to the UI.
+</PageIntro>
+
+Two login flows share that contract:
 
 - Password: register / verify-email / login / forgot-password / reset-password.
 - OAuth: Google, GitHub, LinkedIn. Server-side; the SPA never holds a client secret.
@@ -20,6 +39,27 @@ Once verified, a session ends the same way regardless of which flow produced it:
 - `refresh_token`: a 30-day opaque `HttpOnly` cookie. The API stores only its HMAC hash in `auth.sessions`, rotates it on every refresh, and can revoke it on logout or password reset.
 
 So the model is intentionally hybrid: fast stateless access checks, stateful refresh sessions for revocation and safer long-lived login.
+
+<SignalGrid
+  columns={3}
+  items={[
+    {
+      label: "signup",
+      title: "No account before verification",
+      body: "Register writes a pending user and verification token. The tenant row appears only after email verification or verified OAuth.",
+    },
+    {
+      label: "browser",
+      title: "Frontend never stores tokens",
+      body: "The SPA relies on browser-managed HttpOnly cookies and the generated OpenAPI client.",
+    },
+    {
+      label: "session",
+      title: "Refresh is stateful",
+      body: "Long-lived login lives in auth.sessions as a hash, which can be rotated, revoked, or deleted on password reset.",
+    },
+  ]}
+/>
 
 ## Verify-before-account
 

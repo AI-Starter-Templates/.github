@@ -4,10 +4,27 @@ description: Vite + React 19 + TanStack Query + shadcn/ui + Zustand. A typed Ope
 ---
 
 import DocFileTree from "../../../components/DocFileTree";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import DataMatrix from "../../../components/docs-kit/DataMatrix";
+import FeatureGrid from "../../../components/docs-kit/FeatureGrid";
+import PageIntro from "../../../components/docs-kit/PageIntro";
+import SignalGrid from "../../../components/docs-kit/SignalGrid";
 
-The UI is a Vite + React SPA with a typed OpenAPI client: fast local feedback and a compile-time contract with the API. See [Why BoringStack](/architecture/why-boringstack/) and [Separation of concerns](/architecture/separation-of-concerns/).
+<PageIntro
+  eyebrow="Typed product surface"
+  actions={[
+    { label: "OpenAPI client", href: "/ui/openapi-client/" },
+    { label: "Testing model", href: "/ui/testing/" },
+  ]}
+  facts={[
+    { value: "Vite", label: "local feedback loop" },
+    { value: "React 19", label: "product shell" },
+    { value: "OpenAPI", label: "server contract" },
+  ]}
+>
+  The UI is a Vite + React SPA with a typed OpenAPI client: fast local
+  feedback and a compile-time contract with the API. Architecture rules keep
+  feature folders small enough for humans and agents to change safely.
+</PageIntro>
 
 A production-shaped SPA. Architecture rules (component anatomy, queries vs stores, OpenAPI client) keep features from turning into 600-line `.tsx` blobs as the codebase grows.
 
@@ -31,41 +48,63 @@ Components only ever see the **view object** from their hook. They never read Ta
 
 ## Design choices
 
-<FaqGroup>
-  <FaqItem title="Component as a folder (~8 files)" open>
-    Each file has one job; `useState` in `.tsx` is a lint error.
-  </FaqItem>
-  <FaqItem title="TanStack Query + Zustand">
-    Server state and client state stay in separate buckets.
-  </FaqItem>
-  <FaqItem title="OpenAPI-generated client">
-    Wrong paths and body shapes fail the typecheck.
-  </FaqItem>
-  <FaqItem title="shadcn/ui + Tailwind `@theme`">
-    You own primitives in `components/ui/`; tokens live in CSS.
-  </FaqItem>
-  <FaqItem title="E2e against the real stack">
-    Playwright hits the running API directly; there is no mock layer.
-  </FaqItem>
-</FaqGroup>
+<SignalGrid
+  columns={3}
+  items={[
+    {
+      label: "shape",
+      title: "Component as a folder",
+      body: "Each file has one job; useState in .tsx is a lint error.",
+    },
+    {
+      label: "state",
+      title: "TanStack Query + Zustand",
+      body: "Server state and client state stay in separate buckets.",
+    },
+    {
+      label: "contract",
+      title: "OpenAPI-generated client",
+      body: "Wrong paths and body shapes fail the typecheck.",
+    },
+    {
+      label: "tokens",
+      title: "shadcn/ui + Tailwind",
+      body: "You own primitives in components/ui while theme tokens stay centralized.",
+    },
+    {
+      label: "tests",
+      title: "E2e against the real stack",
+      body: "Playwright hits the running API directly; there is no mock layer.",
+    },
+    {
+      label: "agents",
+      title: "Lint keeps the surface honest",
+      body: "The folder anatomy is enforced before review, not remembered by convention.",
+    },
+  ]}
+/>
 
 ## Routes & shell
 
 Every authenticated route renders inside `AppShell`: a brand-marked left sidebar (`AppSidebar` with `NavLink` + `aria-[current=page]:` Tailwind active styling), a sticky header (account switcher · notification bell · theme toggle · logout), and the page content. On mobile the sidebar collapses into a `Sheet` drawer triggered from the header.
 
-| Route                        | Page                                                             | Auth      |
-| ---------------------------- | ---------------------------------------------------------------- | --------- |
-| `/` and `/login`             | `LoginPage`                                                      | public    |
-| `/signup`                    | `SignUpPage` (form → "check your inbox" confirmation)            | public    |
-| `/verify-email`              | `VerifyEmailPage` (verifying / success / token errors)           | public    |
-| `/oauth/success`             | `OAuthCallbackPage`                                              | public    |
-| `/dashboard`                 | `DashboardPage` (DashboardWelcome + StatsSection + ActivityFeed) | protected |
-| `/notifications`             | `NotificationsPage`                                              | protected |
-| `/notifications/preferences` | `NotificationsPreferencesPage`                                   | protected |
-| `/account/invitations`       | `InvitationsPage` (team)                                         | protected |
-| `/account/settings`          | `SettingsPage` (placeholder sections)                            | protected |
-| `/account/profile`           | `ProfilePage` (read-only `useMe` fields)                         | protected |
-| `*`                          | `NotFoundPage` (404)                                             | public    |
+<DataMatrix
+  caption="Route map"
+  columns={["Route", "Page", "Auth"]}
+  rows={[
+    { cells: ["/ and /login", "LoginPage", "public"] },
+    { cells: ["/signup", "SignUpPage with form and check-your-inbox confirmation", "public"] },
+    { cells: ["/verify-email", "VerifyEmailPage with verifying, success, and token-error states", "public"] },
+    { cells: ["/oauth/success", "OAuthCallbackPage", "public"] },
+    { cells: ["/dashboard", "DashboardPage with welcome, stats, and activity feed", "protected"] },
+    { cells: ["/notifications", "NotificationsPage", "protected"] },
+    { cells: ["/notifications/preferences", "NotificationsPreferencesPage", "protected"] },
+    { cells: ["/account/invitations", "InvitationsPage for team invites", "protected"] },
+    { cells: ["/account/settings", "SettingsPage placeholder sections", "protected"] },
+    { cells: ["/account/profile", "ProfilePage with read-only useMe fields", "protected"] },
+    { cells: ["*", "NotFoundPage", "public"] },
+  ]}
+/>
 
 `SettingsPage` ships with an explicit "placeholder, fill this in" copy block so a fork knows the page is wired into the nav but the form is yours to write.
 
@@ -125,18 +164,31 @@ Stories ship 1:1 with the components and run under a global theme decorator (`@s
 
 ## State, in one decision
 
-<FaqGroup>
-  <FaqItem title="Server (fetched)" open>
-    `*.queries.ts` with TanStack Query.
-  </FaqItem>
-  <FaqItem title="UI / client (modal open, step index)">
-    `*.store.ts` with Zustand.
-  </FaqItem>
-  <FaqItem title="Form">`*.hooks.ts` with React Hook Form + Zod.</FaqItem>
-  <FaqItem title="Render-derived">
-    `*.hooks.ts` returning `IXxxView`; no extra store.
-  </FaqItem>
-</FaqGroup>
+<FeatureGrid
+  columns={4}
+  items={[
+    {
+      eyebrow: "server",
+      title: "Fetched state",
+      body: "*.queries.ts with TanStack Query.",
+    },
+    {
+      eyebrow: "client",
+      title: "UI state",
+      body: "*.store.ts with Zustand for modals, drawers, and step indexes.",
+    },
+    {
+      eyebrow: "form",
+      title: "Input state",
+      body: "*.hooks.ts with React Hook Form and Zod.",
+    },
+    {
+      eyebrow: "view",
+      title: "Render-derived state",
+      body: "*.hooks.ts returns IXxxView; no extra store.",
+    },
+  ]}
+/>
 
 If you can't tell which bucket something belongs to, that's almost always a sign the boundary is wrong; not a need for a fifth bucket.
 
@@ -148,18 +200,15 @@ See [OpenAPI client](/ui/openapi-client/).
 
 ## Testing
 
-<FaqGroup>
-  <FaqItem title="Unit" open>
-    Vitest + Testing Library for hooks, utilities, schemas.
-  </FaqItem>
-  <FaqItem title="Component">
-    Vitest + Testing Library for one component and its hook.
-  </FaqItem>
-  <FaqItem title="e2e">Playwright against the running stack.</FaqItem>
-  <FaqItem title="Visual">
-    Playwright snapshots with per-platform baselines.
-  </FaqItem>
-</FaqGroup>
+<SignalGrid
+  columns={4}
+  items={[
+    { label: "unit", title: "Hooks and utilities", body: "Vitest + Testing Library for hooks, utilities, and schemas." },
+    { label: "component", title: "One component surface", body: "Render the component and its hook together, not a mocked product fantasy." },
+    { label: "e2e", title: "Real stack", body: "Playwright runs against the API and UI from Compose." },
+    { label: "visual", title: "Snapshot baselines", body: "Per-platform baselines catch layout drift before release." },
+  ]}
+/>
 
 See [Testing](/ui/testing/).
 

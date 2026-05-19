@@ -4,19 +4,48 @@ description: Battle-tested pieces linked together properly. Production-grade spi
 ---
 
 import DocCallout from "../../../components/DocCallout.astro";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import FeatureGrid from "../../../components/docs-kit/FeatureGrid";
+import PageIntro from "../../../components/docs-kit/PageIntro";
+import SignalGrid from "../../../components/docs-kit/SignalGrid";
 
-BoringStack exists because building products from scratch stopped feeling noble a long time ago.
+<PageIntro
+  eyebrow="Why it exists"
+  actions={[
+    { label: "Start the stack", href: "/quickstart/" },
+    { label: "See the contract", href: "/architecture/lint-as-contract/" },
+  ]}
+  facts={[
+    { value: "auth", label: "sessions, OAuth, verification" },
+    { value: "ops", label: "deploys, logs, backups" },
+    { value: "AI", label: "rules agents can follow" },
+  ]}
+>
+  BoringStack exists because rebuilding the same SaaS spine stopped feeling
+  noble a long time ago. Auth, billing, email, queues, deploys, observability,
+  env validation, and architecture rules are already composed, documented, and
+  lint-enforced, so the first serious work is the product itself.
+</PageIntro>
 
-For years, I kept starting new products by rebuilding the same spine: authentication, sessions, account boundaries, billing hooks, email, background jobs, deployment scripts, observability, env validation, and the little rules that keep a codebase from turning into paste. It was expensive before AI. Now it is also obviously wasteful in tokens, context, and human attention.
-
-BoringStack is the stack I wanted to reach for instead: the boring production parts already composed, documented, and lint-enforced, so the first serious work is the product itself. Fork the templates, boot the system, and spend the same week shipping something real instead of re-deciding where auth, queues, billing, deploys, and API contracts should live.
-
-<DocCallout variant="contract" title="The promise" eyebrow="Why it exists">
-  Skip the repeat boilerplate. Keep the architecture. Start product work
-  immediately, with AI helping inside a codebase that already has shape.
-</DocCallout>
+<SignalGrid
+  columns={3}
+  items={[
+    {
+      label: "Product time",
+      title: "Start on the second one.",
+      body: "The first clone already has the account, API, UI, job, email, and deploy shape you usually build before product work begins.",
+    },
+    {
+      label: "Token budget",
+      title: "Stop spending context on boilerplate.",
+      body: "AI assistance gets more valuable when agents edit product behavior inside a codebase whose boring contracts already exist.",
+    },
+    {
+      label: "Architecture",
+      title: "Keep the spine as you move fast.",
+      body: "Docs explain the why; lint and generated contracts keep routes, services, env, queues, and API clients from drifting.",
+    },
+  ]}
+/>
 
 ## Fit check
 
@@ -30,29 +59,45 @@ BoringStack is the stack I wanted to reach for instead: the boring production pa
 
 ## Problems it solves
 
-<FaqGroup>
-  <FaqItem title="Rebuilding the same SaaS spine on every new project" open>
-    Auth, sessions, OAuth, email, env validation, audit log, billing hooks,
-    queues, all wired and documented.
-  </FaqItem>
-  <FaqItem title="API and UI drifting apart">
-    OpenAPI at `/swagger/json`. `pnpm generate:api` refreshes a typed client.
-    Contract drift fails the typecheck.
-  </FaqItem>
-  <FaqItem title="Architecture slipping during fast iteration (including AI-assisted edits)">
-    Custom ESLint plugins encode the shape.
-    [`validate`](/architecture/lint-as-contract/) is the merge gate.
-  </FaqItem>
-  <FaqItem title="Deploy and ops eating weeks before you ship features">
-    Compose stack, Traefik TLS, optional [OpenTofu to
-    Hetzner](/topics/provisioning-with-tofu/), observability overlays you can
-    turn on.
-  </FaqItem>
-  <FaqItem title="User-facing events with no structure on day one">
-    Notification events, dispatch jobs, and channels live in the API. See
-    [Background work](/architecture/background-work/).
-  </FaqItem>
-</FaqGroup>
+<FeatureGrid
+  columns={3}
+  items={[
+    {
+      eyebrow: "spine",
+      title: "No more rebuilding the same SaaS base.",
+      body: "Auth, sessions, OAuth, email, env validation, audit log, billing hooks, and queues are wired and documented.",
+    },
+    {
+      eyebrow: "contract",
+      title: "API and UI move together.",
+      body: "OpenAPI at /swagger/json feeds the generated UI client; contract drift fails typecheck instead of shipping.",
+      href: "/ui/openapi-client/",
+    },
+    {
+      eyebrow: "agents",
+      title: "Fast edits still hit architecture rails.",
+      body: "Custom ESLint plugins encode route, service, env, and queue shape. validate is the merge gate.",
+      href: "/architecture/lint-as-contract/",
+    },
+    {
+      eyebrow: "ops",
+      title: "Deploys stop eating the first week.",
+      body: "Compose, Traefik TLS, optional OpenTofu, observability, logs, and backups already have a home.",
+      href: "/topics/deployment/",
+    },
+    {
+      eyebrow: "events",
+      title: "Background work has a real lane.",
+      body: "Notification events, dispatch jobs, email, and queues live in the API instead of ad-hoc frontend retries.",
+      href: "/architecture/background-work/",
+    },
+    {
+      eyebrow: "cost",
+      title: "The core app can run off the platform meter.",
+      body: "Postgres, Valkey, workers, and web traffic can start on one capable VPS before you buy managed services.",
+    },
+  ]}
+/>
 
 ## What “boring” means
 

@@ -4,19 +4,60 @@ description: Every dependency, every choice, grouped by template.
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import FeatureGrid from "../../../components/docs-kit/FeatureGrid";
+import PageIntro from "../../../components/docs-kit/PageIntro";
+import FaqGroup from "../../../components/FaqGroup.tsx";
+import FaqItem from "../../../components/FaqItem.tsx";
 
-Runtime and dev dependencies, what each does, and why. For what *boring* means (proven pieces that work), see [Why BoringStack](/architecture/why-boringstack/).
+<PageIntro
+  eyebrow="Stack map"
+  actions={[
+    { label: "Why these choices", href: "/architecture/why-boringstack/" },
+    { label: "Repo layout", href: "/architecture/three-repos/" },
+  ]}
+  facts={[
+    { value: "4", label: "template repos" },
+    { value: "1", label: "OpenAPI contract" },
+    { value: "validate", label: "architecture gate" },
+  ]}
+>
+  Runtime and dev dependencies, what each does, and why each piece exists.
+  BoringStack is intentionally composed from proven parts, then wired with
+  contracts so humans and AI agents can change one layer without guessing about
+  the others.
+</PageIntro>
 
 ## Summary
 
-| Template | Runtime shape | Main choices | Why it matters |
-| --- | --- | --- | --- |
-| api-template | Bun HTTP API + workers | Elysia, Drizzle, Postgres, Valkey, BullMQ, Pino | Owns security, persistence, background work, and the OpenAPI contract. |
-| ui-template | Vite React SPA | React 19, TanStack Query, Zustand, shadcn/ui, Playwright | Fast UI feedback with a generated client instead of hand-written API calls. |
-| infra-docker-compose | Single-host Compose runtime | Postgres, Valkey, Traefik, optional observability/error-tracking overlays | Boots local dev and production-like VPS deployments with the same primitives. |
-| infra-bootstrap-tofu | Optional first-deploy automation | OpenTofu, Hetzner, Cloudflare, cloud-init | Provisions a VPS and drops the Compose stack in place from your fork URLs. |
+<FeatureGrid
+  columns={4}
+  items={[
+    {
+      eyebrow: "api-template",
+      title: "Bun HTTP API + workers",
+      body: "Elysia, Drizzle, Postgres, Valkey, BullMQ, Pino. Owns security, persistence, background work, and OpenAPI.",
+      href: "/api/overview/",
+    },
+    {
+      eyebrow: "ui-template",
+      title: "Vite React product surface",
+      body: "React 19, TanStack Query, Zustand, shadcn/ui, Playwright, and a generated client instead of hand-written API calls.",
+      href: "/ui/overview/",
+    },
+    {
+      eyebrow: "infra-compose",
+      title: "Single-host Compose runtime",
+      body: "Postgres, Valkey, Traefik, and optional observability/error-tracking overlays for local and VPS environments.",
+      href: "/infra/overview/",
+    },
+    {
+      eyebrow: "infra-tofu",
+      title: "First real deploy path",
+      body: "OpenTofu, Hetzner, Cloudflare, and cloud-init provision a VPS and drop the Compose stack in place.",
+      href: "/topics/provisioning-with-tofu/",
+    },
+  ]}
+/>
 
 ## Full inventory
 

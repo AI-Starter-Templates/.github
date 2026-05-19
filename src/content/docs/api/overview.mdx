@@ -4,12 +4,26 @@ description: Bun + Elysia + Drizzle + Postgres + Valkey + BullMQ. The architectu
 ---
 
 import DocFileTree from "../../../components/DocFileTree";
-import FaqGroup from "../../../components/FaqGroup.astro";
-import FaqItem from "../../../components/FaqItem.astro";
+import FeatureGrid from "../../../components/docs-kit/FeatureGrid";
+import PageIntro from "../../../components/docs-kit/PageIntro";
+import SignalGrid from "../../../components/docs-kit/SignalGrid";
 
-The API layer owns security, data, and background work. [Why BoringStack](/architecture/why-boringstack/) and [Separation of concerns](/architecture/separation-of-concerns/) describe how that fits the rest of the stack.
-
-A production-shaped HTTP API: auth, sessions, OAuth, email, queues, audit log, Stripe billing, structured logging, env validator that refuses to boot if anything is missing. Architectural rules (routes vs services vs types, env access, queues) control costs as the codebase grows.
+<PageIntro
+  eyebrow="API product spine"
+  actions={[
+    { label: "Auth contract", href: "/api/auth/" },
+    { label: "Queues", href: "/api/queues/" },
+  ]}
+  facts={[
+    { value: "Elysia", label: "typed HTTP surface" },
+    { value: "Drizzle", label: "SQL-shaped data layer" },
+    { value: "BullMQ", label: "background work" },
+  ]}
+>
+  The API layer owns security, data, and background work: auth, sessions,
+  OAuth, email, queues, audit log, Stripe billing, structured logging, and an
+  env validator that refuses to boot if anything is missing.
+</PageIntro>
 
 ## How the layers split
 
@@ -27,23 +41,41 @@ A feature is three files with three jobs. Lint plugins forbid them from leaking 
 
 ## Design choices
 
-<FaqGroup>
-  <FaqItem title="Per-feature folders" open>
-    Adding a feature is one folder instead of edits across `routes/`, `services/`, and `models/`.
-  </FaqItem>
-  <FaqItem title="Routes / services / types enforced by lint">
-    The split survives refactors and new authors.
-  </FaqItem>
-  <FaqItem title="Frozen `env` object">
-    `process.env` only in the validator; misconfigured boots fail fast.
-  </FaqItem>
-  <FaqItem title="Pluggable infra">
-    Email, AI, cache, and queues swap with an env var; dev runs without vendor keys.
-  </FaqItem>
-  <FaqItem title="Drizzle ORM">
-    SQL-shaped schema and plain SQL migration files.
-  </FaqItem>
-</FaqGroup>
+<SignalGrid
+  columns={3}
+  items={[
+    {
+      label: "features",
+      title: "Per-feature folders",
+      body: "Adding product behavior means one folder, not scattered route/service/model edits.",
+    },
+    {
+      label: "lint",
+      title: "Routes, services, and types stay separate",
+      body: "The split survives refactors, new teammates, and agent-written code.",
+    },
+    {
+      label: "env",
+      title: "Frozen config at boot",
+      body: "process.env is read in one validator. Misconfigured deployments fail before serving traffic.",
+    },
+    {
+      label: "providers",
+      title: "Pluggable infra",
+      body: "Email, AI, cache, and queues swap through config; dev runs without vendor keys.",
+    },
+    {
+      label: "data",
+      title: "Drizzle ORM",
+      body: "TS-first models with SQL-shaped schema and real migration files.",
+    },
+    {
+      label: "contract",
+      title: "OpenAPI emits the UI boundary",
+      body: "The React app calls a generated client, so server changes become type errors instead of runtime surprises.",
+    },
+  ]}
+/>
 
 ## File layout
 
@@ -84,16 +116,19 @@ The shipped `auth`, `users`, `accounts`, `billing`, `dashboard`, `admin`, `healt
 
 ## Cross-cutting concerns
 
-Each lives in `src/lib/` or `src/config/` and has its own page:
-
-- [Authentication](/api/auth/). Short-lived access JWT cookies plus DB-backed refresh sessions.
-- [Multi-tenant model](/api/multi-tenant/). Accounts are the tenant boundary; users join via memberships with roles.
-- [ACL & feature resolution](/api/acl/). Server-authoritative CASL ability + plan/feature gates derived from Stripe and admin overrides.
-- [Billing](/api/billing/). Stripe Checkout, Customer Portal, raw-body webhooks, and DB-backed idempotency.
-- [Email](/api/email/). Pluggable provider, precompiled templates, queue-aware dispatch.
-- [Queues](/api/queues/). BullMQ with a `QueueManager`, inline fallback when disabled.
-- [Audit log](/api/audit-log/). Fire-and-forget append-only event log.
-- [Env validator](/api/env-validator/). TypeBox shape + hand-written invariants.
+<FeatureGrid
+  columns={4}
+  items={[
+    { eyebrow: "auth", title: "Cookie sessions", body: "Short-lived access JWT cookies plus DB-backed refresh sessions.", href: "/api/auth/" },
+    { eyebrow: "tenant", title: "Account boundary", body: "Accounts are the tenant boundary; users join via memberships with roles.", href: "/api/multi-tenant/" },
+    { eyebrow: "acl", title: "Feature resolution", body: "Server-authoritative CASL ability plus plan and feature gates.", href: "/api/acl/" },
+    { eyebrow: "billing", title: "Stripe spine", body: "Checkout, Customer Portal, raw-body webhooks, and DB-backed idempotency.", href: "/api/billing/" },
+    { eyebrow: "email", title: "Provider abstraction", body: "Pluggable provider, precompiled templates, queue-aware dispatch.", href: "/api/email/" },
+    { eyebrow: "queues", title: "Background work", body: "BullMQ with QueueManager and inline fallback when queues are disabled.", href: "/api/queues/" },
+    { eyebrow: "audit", title: "Append-only trail", body: "Fire-and-forget append-only event log for user and system actions.", href: "/api/audit-log/" },
+    { eyebrow: "env", title: "Boot guard", body: "TypeBox shape plus hand-written invariants before the API listens.", href: "/api/env-validator/" },
+  ]}
+/>
 
 ## Lint as the contract
 
