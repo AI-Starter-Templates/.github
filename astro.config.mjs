@@ -1,5 +1,7 @@
 import { defineConfig } from "astro/config";
+import react from "@astrojs/react";
 import starlight from "@astrojs/starlight";
+import tailwindcss from "@tailwindcss/vite";
 import mermaid from "astro-mermaid";
 
 import cloudflare from "@astrojs/cloudflare";
@@ -9,6 +11,7 @@ export default defineConfig({
   site: "https://boringstack.xyz",
 
   integrations: [
+    react(),
     mermaid({
       theme: "default",
       autoTheme: true,
@@ -33,7 +36,7 @@ export default defineConfig({
       description:
         "Postgres, HTTP, React, and Compose wired into a SaaS spine you can run locally. Fast Bun and Vite feedback, lint as the contract for humans and agents, OpenAPI between API and UI.",
       favicon: "/favicon.svg",
-      customCss: ["./src/styles/custom.css"],
+      customCss: ["./src/styles/tailwind.css", "./src/styles/custom.css"],
       tableOfContents: false,
       components: {
         Header: "./src/components/Header.astro",
@@ -115,72 +118,8 @@ export default defineConfig({
     document.documentElement.classList.toggle(scrolledClass, window.scrollY > 8);
   }
 
-  function getCodeTab(target) {
-    if (!target) return null;
-    if (target.nodeType !== 1) target = target.parentElement;
-    return target && target.closest ? target.closest("[data-bs-code-tab]") : null;
-  }
-
-  function activateCodeTab(tab) {
-    var container = tab.closest(".bs-hero-code");
-    if (!container) return;
-
-    var key = tab.getAttribute("data-bs-code-tab");
-    var tabs = container.querySelectorAll("[data-bs-code-tab]");
-    var panels = container.querySelectorAll("[data-bs-code-panel]");
-
-    for (var i = 0; i < tabs.length; i++) {
-      var isActiveTab = tabs[i] === tab;
-      tabs[i].classList.toggle("is-active", isActiveTab);
-      tabs[i].setAttribute("aria-selected", String(isActiveTab));
-      tabs[i].setAttribute("tabindex", isActiveTab ? "0" : "-1");
-    }
-
-    for (var j = 0; j < panels.length; j++) {
-      var isActivePanel = panels[j].getAttribute("data-bs-code-panel") === key;
-      panels[j].classList.toggle("is-active", isActivePanel);
-      if (isActivePanel) {
-        panels[j].removeAttribute("hidden");
-      } else {
-        panels[j].setAttribute("hidden", "");
-      }
-    }
-  }
-
-  function bindCodeTabs() {
-    var groups = document.querySelectorAll(".bs-code-tabs");
-    for (var i = 0; i < groups.length; i++) {
-      var group = groups[i];
-      if (group.dataset.bsTabsBound === "true") continue;
-      group.dataset.bsTabsBound = "true";
-
-      group.addEventListener("click", function (event) {
-        var tab = getCodeTab(event.target);
-        if (tab) activateCodeTab(tab);
-      });
-
-      group.addEventListener("keydown", function (event) {
-        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-
-        var current = getCodeTab(event.target);
-        if (!current) return;
-
-        var tabs = Array.prototype.slice.call(
-          current.closest(".bs-code-tabs").querySelectorAll("[data-bs-code-tab]")
-        );
-        var offset = event.key === "ArrowRight" ? 1 : -1;
-        var next = tabs[(tabs.indexOf(current) + offset + tabs.length) % tabs.length];
-
-        event.preventDefault();
-        next.focus();
-        activateCodeTab(next);
-      });
-    }
-  }
-
   function start() {
     updateHeaderSurface();
-    bindCodeTabs();
   }
 
   if (!window.__boringStackLandingBound) {
@@ -332,6 +271,10 @@ export default defineConfig({
       ],
     }),
   ],
+
+  vite: {
+    plugins: [tailwindcss()],
+  },
 
   adapter: cloudflare()
 });
