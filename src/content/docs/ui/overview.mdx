@@ -45,43 +45,52 @@ Components only ever see the **view object** from their hook. They never read Ta
     You own primitives in `components/ui/`; tokens live in CSS.
   </FaqItem>
   <FaqItem title="E2e against the real stack">
-    Playwright hits the running API instead of MSW mocks.
+    Playwright hits the running API directly; there is no mock layer.
   </FaqItem>
 </FaqGroup>
+
+## Routes & shell
+
+Every authenticated route renders inside `AppShell`: a brand-marked left sidebar (`AppSidebar` with `NavLink` + `aria-[current=page]:` Tailwind active styling), a sticky header (account switcher · notification bell · theme toggle · logout), and the page content. On mobile the sidebar collapses into a `Sheet` drawer triggered from the header.
+
+| Route                        | Page                                                             | Auth      |
+| ---------------------------- | ---------------------------------------------------------------- | --------- |
+| `/` and `/login`             | `LoginPage`                                                      | public    |
+| `/signup`                    | `SignUpPage` (form → "check your inbox" confirmation)            | public    |
+| `/verify-email`              | `VerifyEmailPage` (verifying / success / token errors)           | public    |
+| `/oauth/success`             | `OAuthCallbackPage`                                              | public    |
+| `/dashboard`                 | `DashboardPage` (DashboardWelcome + StatsSection + ActivityFeed) | protected |
+| `/notifications`             | `NotificationsPage`                                              | protected |
+| `/notifications/preferences` | `NotificationsPreferencesPage`                                   | protected |
+| `/account/invitations`       | `InvitationsPage` (team)                                         | protected |
+| `/account/settings`          | `SettingsPage` (placeholder sections)                            | protected |
+| `/account/profile`           | `ProfilePage` (read-only `useMe` fields)                         | protected |
+| `*`                          | `NotFoundPage` (404)                                             | public    |
+
+`SettingsPage` ships with an explicit "placeholder, fill this in" copy block so a fork knows the page is wired into the nav but the form is yours to write.
 
 ## File layout
 
 <FileTree>
-- src/
-  - app/                  App shell: providers, router, main entry
-  - features/             Vertical feature folders (auth, dashboard, ...). Add your own.
-  - components/
-    - ui/                 shadcn/ui primitives
-    - core/               Composed components
-    - global/             App-shell wrappers
-  - lib/
-    - api/                openapi-fetch client + generated schema
-    - env/                Zod-validated `import.meta.env`
-    - auth/               OAuth start helper (server-side flow)
-    - logger/             Structured client logs
-    - i18n/               react-i18next setup + locales
-  - hooks/                Cross-feature hooks
-  - store/                App-level Zustand stores
+  - src/ - app/ App shell: providers, router, main entry - features/ Vertical
+  feature folders (auth, dashboard, ...). Add your own. - components/ - ui/
+  shadcn/ui primitives - core/ Composed components - global/ App-shell wrappers
+  - lib/ - api/ openapi-fetch client + generated schema - env/ Zod-validated
+  `import.meta.env` - auth/ OAuth start helper (server-side flow) - logger/
+  Structured client logs - i18n/ react-i18next setup + locales - hooks/
+  Cross-feature hooks - store/ App-level Zustand stores
 </FileTree>
 
 A page or component folder always looks like:
 
 <FileTree>
-- features/dashboard/components/DashboardPage/
-  - DashboardPage.tsx        Pure JSX
-  - DashboardPage.hooks.ts   All React hooks
-  - DashboardPage.types.ts   `IDashboardPageView`
-  - DashboardPage.constants.ts
-  - DashboardPage.utils.ts
-  - DashboardPage.test.tsx
-  - DashboardPage.stories.tsx
-  - index.ts                 Re-export
+  - features/dashboard/components/DashboardPage/ - DashboardPage.tsx Pure JSX -
+  DashboardPage.hooks.ts All React hooks - DashboardPage.types.ts
+  `IDashboardPageView` - DashboardPage.constants.ts - DashboardPage.utils.ts -
+  DashboardPage.test.tsx - DashboardPage.stories.tsx - index.ts Re-export
 </FileTree>
+
+Stories ship 1:1 with the components and run under a global theme decorator (`@storybook/addon-themes` wired in `.storybook/preview.tsx`), so every story has a light/dark toggle in the Storybook toolbar with no per-story plumbing.
 
 `pnpm new:component <Name>` writes this anatomy. `pnpm new:feature <name>` writes a feature scaffold.
 
@@ -94,9 +103,7 @@ A page or component folder always looks like:
   <FaqItem title="UI / client (modal open, step index)">
     `*.store.ts` with Zustand.
   </FaqItem>
-  <FaqItem title="Form">
-    `*.hooks.ts` with React Hook Form + Zod.
-  </FaqItem>
+  <FaqItem title="Form">`*.hooks.ts` with React Hook Form + Zod.</FaqItem>
   <FaqItem title="Render-derived">
     `*.hooks.ts` returning `IXxxView`; no extra store.
   </FaqItem>
@@ -119,9 +126,7 @@ See [OpenAPI client](/ui/openapi-client/).
   <FaqItem title="Component">
     Vitest + Testing Library for one component and its hook.
   </FaqItem>
-  <FaqItem title="e2e">
-    Playwright against the running stack.
-  </FaqItem>
+  <FaqItem title="e2e">Playwright against the running stack.</FaqItem>
   <FaqItem title="Visual">
     Playwright snapshots with per-platform baselines.
   </FaqItem>
