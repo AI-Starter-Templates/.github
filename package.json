@@ -42,6 +42,9 @@
       "esbuild",
       "sharp",
       "workerd"
-    ]
+    ],
+    "overrides": {
+      "ws@<8.20.1": "^8.20.1"
+    }
   }
 }
