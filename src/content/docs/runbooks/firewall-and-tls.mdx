@@ -96,3 +96,11 @@ UFW + Cloudflare-IP-allowlist protects you from random scans hitting your origin
 - Compromise via SSH. Move SSH to a non-standard port, disable password auth, use a hardware key.
 
 The infra repo's `docs/security-hardening.md` has a full checklist.
+
+## Related
+
+- [Deployment](/topics/deployment/); the production sequence this firewall sits inside.
+- [Provisioning with OpenTofu](/topics/provisioning-with-tofu/); cloud-firewall path that complements UFW.
+- [Security pipeline](/topics/security/); SAST and supply-chain scans alongside this network hardening.
+- [Backups](/runbooks/backups/); the other half of "ready for prod."
+- [Image updates](/runbooks/image-updates/); patching cadence for the stack you just hardened.

@@ -144,3 +144,11 @@ Every service has `deploy.resources.limits` and `reservations` driven by env var
 - Kubernetes manifests. Planned as a separate repo. This template is Compose-first; mixing Compose and cluster YAML in one repo is exactly the kind of confusion BoringStack avoids.
 - Application code. The api-template and ui-template own that.
 - Cloud-provider provisioning. A separate [OpenTofu template](/topics/provisioning-with-tofu/) handles that.
+
+## Related
+
+- [Profiles & overlays](/infra/profiles-and-overlays/); how the `WITH_*=1` flags compose over the base.
+- [Resource limits](/infra/resource-limits/); the per-service budgets sized for a 4 vCPU / 8 GB host.
+- [Secrets](/infra/secrets/); how env values reach containers without leaking into images.
+- [Deployment](/topics/deployment/); the production runtime path end-to-end.
+- [Provisioning with OpenTofu](/topics/provisioning-with-tofu/); going from zero to a live VPS.

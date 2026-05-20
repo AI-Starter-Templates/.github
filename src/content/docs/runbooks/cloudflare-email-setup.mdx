@@ -30,6 +30,8 @@ flowchart LR
   domain --> token --> api
 ```
 
+<p class="bs-diagram-caption">Cloudflare Email setup chain: a Workers Paid plan unlocks the Email Service; enabling it on your domain auto-provisions SPF, DKIM, and DMARC; from there you capture the Account ID (used in the endpoint URL) and a scoped API token (used in the bearer header). The api-template reads both via <code>EMAIL_PROVIDER=cloudflare</code>.</p>
+
 You need both the account ID (in the endpoint URL) and the API token (in the bearer header). Lose either and sends fail.
 
 ## Setup
@@ -127,3 +129,10 @@ The env validator refuses to boot in production if the matching key is missing. 
 
 - Provider implementation: [`src/lib/email/providers/cloudflare.ts`](https://github.com/AI-Starter-Templates/api-template/blob/main/src/lib/email/providers/cloudflare.ts) in the api-template.
 - Cloudflare's own docs: [developers.cloudflare.com/email-service](https://developers.cloudflare.com/email-service/).
+
+## Related
+
+- [Cloudflare Email Service](/topics/cloudflare-email/); why it's the default and how it compares.
+- [Email](/api/email/); the pluggable provider abstraction behind every backend.
+- [Email in development](/topics/email-in-dev/); Mailpit when you don't want to hit a real provider.
+- [Env validator](/api/env-validator/); the boot-time check that catches a missing token before prod.

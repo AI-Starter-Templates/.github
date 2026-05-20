@@ -114,6 +114,56 @@ The template ships no retention policy on purpose. Three reasonable shapes:
 
 Pick consciously. Don't let the table grow to "huge and slow" and then think about it.
 
+## Operator queries
+
+Practical psql one-liners for "who did what" investigations. All assume you're connected to the app database (`docker compose exec postgres psql -U app -d app`).
+
+```sql
+-- Last 50 events for a specific user, newest first.
+SELECT created_at, action, resource, metadata
+FROM audit.audit_log
+WHERE user_id = '<uuid>'
+ORDER BY created_at DESC
+LIMIT 50;
+```
+
+```sql
+-- Login + session activity in the last 24 hours, grouped by action.
+SELECT action, count(*)
+FROM audit.audit_log
+WHERE action LIKE 'auth.%'
+  AND created_at > now() - interval '24 hours'
+GROUP BY 1
+ORDER BY 2 DESC;
+```
+
+```sql
+-- Every billing event ever recorded for one account.
+SELECT created_at, user_id, action, metadata
+FROM audit.audit_log
+WHERE action LIKE 'billing.%'
+  AND resource LIKE 'account:<account-uuid>%'
+ORDER BY created_at DESC;
+```
+
+```sql
+-- Compliance export: every action this user took (for a GDPR data-subject request).
+SELECT created_at, action, resource, metadata
+FROM audit.audit_log
+WHERE user_id = '<uuid>'
+ORDER BY created_at;
+```
+
+```sql
+-- Rate-limiting candidates: actors with the most events in the last hour.
+SELECT user_id, count(*) AS events
+FROM audit.audit_log
+WHERE created_at > now() - interval '1 hour'
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 20;
+```
+
 ## Lint coverage
 
 [`@boring-stack-pkg/eslint-plugin-audit-log`](https://www.npmjs.com/package/@boring-stack-pkg/eslint-plugin-audit-log) flags:

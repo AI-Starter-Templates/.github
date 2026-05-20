@@ -44,6 +44,8 @@ flowchart LR
   backend -- "https://...glitchtip.localhost/..." --> glitchtip["self-hosted GlitchTip"]
 ```
 
+<p class="bs-diagram-caption">Both api-template (@sentry/bun) and ui-template (@sentry/react) emit events to the same Sentry-compatible wire protocol. The DSN env var picks the destination: a <code>sentry.io</code> hostname for hosted Sentry, or a <code>glitchtip.localhost</code> hostname for the self-hosted overlay. The SDKs don't know which one they're talking to.</p>
+
 API side: Sentry initialises once at boot. If `SENTRY_DSN` is empty, init is a no-op. The shared `captureError` helper is wired into unhandled-rejection and uncaught-exception handlers, so anything that escapes the request loop reaches the backend.
 
 UI side: Sentry initialises once at app mount when `VITE_SENTRY_DSN` is set. Replays-on-error capture the error context; full-session replays are off to avoid capturing video of every session.
@@ -88,3 +90,10 @@ No SDK changes. The infrastructure is the variable, not the code.
 - API init: [`src/config/sentry.ts`](https://github.com/AI-Starter-Templates/api-template/blob/main/src/config/sentry.ts) + [`src/config/error-handlers.ts`](https://github.com/AI-Starter-Templates/api-template/blob/main/src/config/error-handlers.ts).
 - UI init: [`src/app/main.tsx`](https://github.com/AI-Starter-Templates/ui-template/blob/main/src/app/main.tsx).
 - GlitchTip overlay: [`compose/docker-compose.glitchtip.yml`](https://github.com/AI-Starter-Templates/infra-docker-compose-template/blob/main/compose/docker-compose.glitchtip.yml).
+
+## Related
+
+- [Observability](/topics/observability/); metrics and logs that sit alongside error events.
+- [Profiles & overlays](/infra/profiles-and-overlays/); how `WITH_GLITCHTIP=1` actually composes onto the stack.
+- [Security pipeline](/topics/security/); the broader telemetry surface this fits into.
+- [Notifications](/api/notifications/); how user-facing errors are surfaced back into the app.

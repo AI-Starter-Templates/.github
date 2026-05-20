@@ -1,0 +1,76 @@
+name: docs-linkcheck
+
+# Builds the BoringStack docs site and runs lychee against the built output.
+# Internal broken links fail the job; external 4xx/5xx are warnings only
+# (rate-limited APIs and intermittent third-party 503s are not the docs'
+# problem to solve at PR-review time).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "astro.config.mjs"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/docs-linkcheck.yml"
+  pull_request:
+    paths:
+      - "src/**"
+      - "astro.config.mjs"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/docs-linkcheck.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-linkcheck-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linkcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build docs site
+        run: pnpm build
+
+      - name: Internal link check (fail on broken)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --no-progress
+            --offline
+            --include-fragments
+            --base ./dist
+            './dist/**/*.html'
+          fail: true
+
+      - name: External link check (warning only)
+        uses: lycheeverse/lychee-action@v2
+        continue-on-error: true
+        with:
+          args: >-
+            --no-progress
+            --exclude-path './dist/llms-full.txt'
+            --exclude-path './dist/llms-small.txt'
+            --exclude '^https?://(localhost|127\.0\.0\.1|.*\.localhost)'
+            --exclude 'github\.com/AI-Starter-Templates/.*/(blob|tree)/'
+            './dist/**/*.html'
+          fail: false

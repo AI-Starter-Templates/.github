@@ -149,6 +149,56 @@ Unknown event types are logged at debug level and ignored. Late or out-of-order 
 
 [`src/api/billing/`](https://github.com/AI-Starter-Templates/api-template/tree/main/src/api/billing) and [`src/clients/postgres/schema/billing.schema.ts`](https://github.com/AI-Starter-Templates/api-template/blob/main/src/clients/postgres/schema/billing.schema.ts) on GitHub.
 
+## Operator queries
+
+Read-only psql snippets for "what's the subscription state right now?" questions. Run inside the app database (`docker compose exec postgres psql -U app -d app`).
+
+```sql
+-- Active subscriptions grouped by plan.
+SELECT plan_id, status, count(*)
+FROM billing.account_plans
+WHERE revoked_at IS NULL
+GROUP BY 1, 2
+ORDER BY 1, 2;
+```
+
+```sql
+-- Accounts on the Pro plan, with when each started + last status transition.
+SELECT a.name, ap.status, ap.created_at, ap.updated_at
+FROM billing.account_plans ap
+JOIN app.accounts a ON a.id = ap.account_id
+WHERE ap.plan_id = 'pro'
+  AND ap.revoked_at IS NULL
+ORDER BY ap.updated_at DESC;
+```
+
+```sql
+-- Webhook deliveries in the last 24 hours by event type.
+SELECT event_type, count(*)
+FROM billing.stripe_webhook_events
+WHERE created_at > now() - interval '24 hours'
+GROUP BY 1
+ORDER BY 2 DESC;
+```
+
+```sql
+-- Failed-payment accounts that need attention.
+SELECT a.name, ap.plan_id, ap.status, ap.updated_at
+FROM billing.account_plans ap
+JOIN app.accounts a ON a.id = ap.account_id
+WHERE ap.status IN ('past_due', 'unpaid', 'incomplete')
+  AND ap.revoked_at IS NULL
+ORDER BY ap.updated_at;
+```
+
+```sql
+-- Confirm idempotency works: every webhook event_id should appear exactly once.
+SELECT event_id, count(*)
+FROM billing.stripe_webhook_events
+GROUP BY 1
+HAVING count(*) > 1;
+```
+
 ## Related
 
 - [Authentication](/api/auth/); customer billing routes use cookie auth.

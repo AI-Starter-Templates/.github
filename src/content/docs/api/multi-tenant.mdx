@@ -45,10 +45,22 @@ import SignalGrid from "../../../components/docs-kit/SignalGrid";
               name: "app.accounts",
               detail: "tenant boundary",
               children: [
-                { name: "app.account_invitations", detail: "hashed one-time invite tokens" },
-                { name: "app.account_feature_overrides", detail: "manual feature gates" },
-                { name: "billing.account_plans", detail: "Stripe-backed plan state" },
-                { name: "app.widgets", detail: "sample @account-scoped table pattern" },
+                {
+                  name: "app.account_invitations",
+                  detail: "hashed one-time invite tokens",
+                },
+                {
+                  name: "app.account_feature_overrides",
+                  detail: "manual feature gates",
+                },
+                {
+                  name: "billing.account_plans",
+                  detail: "Stripe-backed plan state",
+                },
+                {
+                  name: "app.widgets",
+                  detail: "sample @account-scoped table pattern",
+                },
               ],
             },
           ],
@@ -138,8 +150,8 @@ DELETE /api/v1/accounts/:id/invitations/:iid
     `sha256(token + pepper)`.
   </FaqItem>
   <FaqItem title="Resend rotates the token">
-    Rotating on resend invalidates any leaked old link. The caller re-emails
-    the new raw token. Old emails stop working immediately.
+    Rotating on resend invalidates any leaked old link. The caller re-emails the
+    new raw token. Old emails stop working immediately.
   </FaqItem>
   <FaqItem title="Revoke is a soft-delete (`revoked_at`)">
     Subsequent accept attempts fail with `invitation_revoked`. The daily
@@ -171,8 +183,8 @@ DELETE /api/v1/accounts/:id/invitations/:iid
     now()`. The `hardDeleteSoftDeletedAccountsJob` background sweep hard-deletes
     rows past the grace window, cascading to memberships, invitations, feature
     overrides, account_plans, and every `@account-scoped` application table.
-    `audit.audit_log` survives by design. GDPR redaction (hash the user id,
-    keep the row) is a separate path.
+    `audit.audit_log` survives by design. GDPR redaction (hash the user id, keep
+    the row) is a separate path.
   </FaqItem>
 </FaqGroup>
 
@@ -184,30 +196,28 @@ The flag is the right shape for a B2B product where one email domain maps to one
 
 <FaqGroup>
   <FaqItem title="Email verification is the proof of ownership" open>
-    Clicking the verification link demonstrates control of an inbox at
-    the domain. That's enough for a starter template; harder evidence
-    (DNS TXT records, SAML/SCIM) is a follow-up an operator can layer
-    on without changing the claim mechanism.
+    Clicking the verification link demonstrates control of an inbox at the
+    domain. That's enough for a starter template; harder evidence (DNS TXT
+    records, SAML/SCIM) is a follow-up an operator can layer on without changing
+    the claim mechanism.
   </FaqItem>
   <FaqItem title="Public domains never claim">
     `src/lib/email-domain/public-domains.ts` ships a 51-entry allowlist
-    (gmail.com, outlook.com, proton.me, …). Signups from those
-    addresses always get a fresh personal account because no single
-    company owns those domains.
+    (gmail.com, outlook.com, proton.me, …). Signups from those addresses always
+    get a fresh personal account because no single company owns those domains.
   </FaqItem>
   <FaqItem title="Active-only partial unique index">
     `uniq_accounts_claimed_domain_active` is the DB-level safety net.
-    Soft-deleted accounts (`deleted_at IS NOT NULL`) release their
-    claim, so a successor signup after a deletion gets the domain
-    back. Two live accounts can never share a claim.
+    Soft-deleted accounts (`deleted_at IS NOT NULL`) release their claim, so a
+    successor signup after a deletion gets the domain back. Two live accounts
+    can never share a claim.
   </FaqItem>
   <FaqItem title="Approve / deny scaffolded, not wired">
-    `app.account_join_requests` is in the schema with the partial
-    unique index `uniq_account_join_requests_pending`. The request /
-    approve / deny endpoints are intentionally not shipped. Operators
-    flipping the flag on can wire that surface to whatever notification
-    model suits their product (Slack ping, in-app inbox, email
-    approval).
+    `app.account_join_requests` is in the schema with the partial unique index
+    `uniq_account_join_requests_pending`. The request / approve / deny endpoints
+    are intentionally not shipped. Operators flipping the flag on can wire that
+    surface to whatever notification model suits their product (Slack ping,
+    in-app inbox, email approval).
   </FaqItem>
 </FaqGroup>
 
@@ -240,6 +250,64 @@ The decision lives entirely inside `provisionAfterVerification`: read the flag, 
 - [`src/api/accounts/`](https://github.com/AI-Starter-Templates/api-template/tree/main/src/api/accounts)
 - [`src/clients/postgres/schema/app.schema.ts`](https://github.com/AI-Starter-Templates/api-template/blob/main/src/clients/postgres/schema/app.schema.ts): `accounts`, `account_invitations`, `account_feature_overrides`, `widgets` (sample account-scoped resource).
 - [`src/clients/postgres/schema/memberships.schema.ts`](https://github.com/AI-Starter-Templates/api-template/blob/main/src/clients/postgres/schema/memberships.schema.ts): `account_memberships` with both partial unique indexes.
+
+## Operator queries
+
+Read-only psql snippets for tenant-shape questions. Run inside the app database (`docker compose exec postgres psql -U app -d app`).
+
+```sql
+-- All active memberships for one account.
+SELECT m.role, u.email, m.created_at
+FROM auth.account_memberships m
+JOIN auth.users u ON u.id = m.user_id
+WHERE m.account_id = '<account-uuid>'
+  AND m.revoked_at IS NULL
+ORDER BY m.role, m.created_at;
+```
+
+```sql
+-- Members per role per account (top 20 accounts by size).
+SELECT a.id AS account_id, a.name, m.role, count(*) AS members
+FROM auth.account_memberships m
+JOIN app.accounts a ON a.id = m.account_id
+WHERE m.revoked_at IS NULL
+GROUP BY 1, 2, 3
+ORDER BY members DESC
+LIMIT 20;
+```
+
+```sql
+-- Accounts with NO active owner — should always return zero rows.
+-- If it doesn't, something bypassed the owner-transfer flow.
+SELECT a.id, a.name, a.created_at
+FROM app.accounts a
+WHERE NOT EXISTS (
+  SELECT 1 FROM auth.account_memberships m
+  WHERE m.account_id = a.id
+    AND m.role = 'owner'
+    AND m.revoked_at IS NULL
+);
+```
+
+```sql
+-- Users who belong to more than one active account (team members or operators).
+SELECT u.email, count(*) AS accounts
+FROM auth.users u
+JOIN auth.account_memberships m ON m.user_id = u.id AND m.revoked_at IS NULL
+GROUP BY 1
+HAVING count(*) > 1
+ORDER BY 2 DESC;
+```
+
+```sql
+-- Pending invitations older than 14 days, by account.
+SELECT i.account_id, i.email, i.created_at
+FROM app.account_invitations i
+WHERE i.accepted_at IS NULL
+  AND i.revoked_at IS NULL
+  AND i.created_at < now() - interval '14 days'
+ORDER BY i.created_at;
+```
 
 ## Related
 

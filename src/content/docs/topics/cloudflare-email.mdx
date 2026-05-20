@@ -73,3 +73,10 @@ The [env validator](/api/env-validator/) refuses to boot in production if the ma
 - Cloudflare Email Service is in beta. Pricing may evolve; daily limits are variable and account-scoped.
 - DNS must be on Cloudflare. Auto-provisioned SPF/DKIM/DMARC are how deliverability works; you can't skip the step.
 - New accounts can only send to verified addresses until upgraded. The runbook covers the unlock.
+
+## Related
+
+- [Cloudflare Email setup](/runbooks/cloudflare-email-setup/); the end-to-end walkthrough.
+- [Email](/api/email/); the pluggable provider abstraction.
+- [Email in development](/topics/email-in-dev/); Mailpit when you want to iterate without sending.
+- [Env validator](/api/env-validator/); the boot-time check that pairs with provider config.

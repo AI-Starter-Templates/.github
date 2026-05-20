@@ -37,6 +37,8 @@ flowchart LR
   service -.-> types
 ```
 
+<p class="bs-diagram-caption">Each API feature splits into three files with one job each: <code>routes.ts</code> owns HTTP and TypeBox validation but never touches the database; <code>service.ts</code> owns business logic and Drizzle queries but never imports Elysia; <code>types.ts</code> holds the shared interfaces both read. Lint rules forbid the cross-imports that would blur the split.</p>
+
 A feature is three files with three jobs. Lint plugins forbid them from leaking into each other: a `*.routes.ts` that imports `drizzle-orm` fails the build, and a `*.service.ts` that imports Elysia's `t` does too.
 
 ## Design choices
@@ -98,7 +100,7 @@ A feature is three files with three jobs. Lint plugins forbid them from leaking 
   ]}
 />
 
-A feature folder always looks like (for a hypothetical `posts` resource):
+A [feature folder](/reference/glossary#feature-folder) always looks like (for a hypothetical `posts` resource):
 
 <DocFileTree
   root="src/api/posts/"
@@ -137,3 +139,11 @@ The architecture is held in place by a family of [custom ESLint plugins](/archit
 ## Source
 
 [`api-template`](https://github.com/AI-Starter-Templates/api-template) on GitHub. Start in `src/api/` for the feature shape; `src/config/` for the boot wiring.
+
+## Related
+
+- [Lint as the contract](/architecture/lint-as-contract/); the family of plugins that keep these layers apart.
+- [Authentication](/api/auth/); cookie sessions and refresh on the same spine.
+- [ACL & feature resolution](/api/acl/); server-authoritative permissions and plan gates.
+- [Multi-tenant model](/api/multi-tenant/); accountId as the scoping primitive.
+- [Env validator](/api/env-validator/); the boot guard refusing misconfigured deploys.

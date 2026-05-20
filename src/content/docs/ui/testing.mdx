@@ -18,6 +18,8 @@ flowchart LR
   unit --> component --> e2e --> visual
 ```
 
+<p class="bs-diagram-caption">Four test layers in order of cost and scope: Vitest units (no backend) feed into Testing Library component tests (no backend), which give way to Playwright end-to-end against the real Compose stack, and finally per-platform Playwright visual snapshots.</p>
+
 ## Design choices
 
 <FaqGroup>
@@ -70,7 +72,7 @@ Unit and component tests focus on pure logic; anything HTTP-shaped is e2e agains
 
 Component test: render the component, assert on the rendered output. Don't reach into hook internals; hooks have their own test if they're complex enough to need one.
 
-Hook test: `renderHook` from Testing Library; assert on the returned view object (the `IXxxView` shape). Standard pattern for testing a component's logic without rendering the UI.
+Hook test: `renderHook` from Testing Library; assert on the returned [view object](/reference/glossary#view-object) (the `IXxxView` shape). Standard pattern for testing a component's logic without rendering the UI.
 
 E2E test: navigate, interact, assert. Use Playwright's page-object pattern under `e2e/pages/` for anything reused across specs. Baseline visual diffs live in `e2e/visual.spec.ts-snapshots/`.
 
@@ -89,3 +91,10 @@ Usually one of three things:
 ## Source
 
 [`vitest.config.ts`](https://github.com/AI-Starter-Templates/ui-template/blob/main/vitest.config.ts) · [`playwright.config.ts`](https://github.com/AI-Starter-Templates/ui-template/blob/main/playwright.config.ts) · [`e2e/`](https://github.com/AI-Starter-Templates/ui-template/tree/main/e2e) on GitHub.
+
+## Related
+
+- [Architecture rules](/ui/architecture-rules/); the folder anatomy these tests shadow 1:1.
+- [UI template overview](/ui/overview/); the SPA shell the tests cover end-to-end.
+- [OpenAPI client](/ui/openapi-client/); the typed contract whose drift e2e catches.
+- [Lint as the contract](/architecture/lint-as-contract/); the test-conventions plugin enforcing no-orphan tests.

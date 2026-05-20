@@ -40,6 +40,8 @@ flowchart LR
   ch --> sse[SSE via Valkey pub/sub]
 ```
 
+<p class="bs-diagram-caption">Notification flow: application code emits typed events through the <code>eventRegistry</code>; the <code>notification-dispatch</code> queue resolves channels; dispatched events fan out to three sinks — an in-app row in Postgres, an email template through the email provider, and a live SSE push via Valkey pub/sub.</p>
+
 1. **Define an event.** `defineNotificationEvent` registers type, payload shape, and which channels apply.
 2. **Emit.** Application code triggers the event; preferences and dedup run before enqueue.
 3. **Dispatch job.** The `notification-dispatch` worker resolves channels and delivers (in-app row, email template, live SSE to connected clients).

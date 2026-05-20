@@ -25,8 +25,21 @@ import FaqItem from "../../components/FaqItem.tsx";
 >
   Fork the API, UI, and infra templates as siblings, let Compose wire the local
   runtime, then sign in to a real app shell. This path proves the whole spine:
-  Postgres, Valkey, API, UI, generated client, hot reload, and optional overlays.
+  Postgres, Valkey, API, UI, generated client, hot reload, and optional [overlays](/reference/glossary#overlay).
 </PageIntro>
+
+<DocCallout
+  eyebrow="At the end of this page"
+  title="You'll have all of this running locally"
+  variant="tip"
+>
+  - A working dashboard at **`http://localhost:3001`** with sign-up, login, and JWT cookies.
+  - A typed **API** at `http://localhost:3000/api/*` with auto-generated OpenAPI docs at `/swagger`.
+  - **Postgres** with migrations applied and **Valkey** ready for cache + queues.
+  - A **generated TypeScript client** in the UI that fails to compile when the API contract drifts.
+  - Optional one-flag **overlays**: Mailpit, Bull Board, observability, error tracking, image-update notifications.
+  - Zero local Node, Bun, or Postgres installs &mdash; Compose owns every runtime piece.
+</DocCallout>
 
 ## TL;DR
 

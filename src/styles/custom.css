@@ -3,6 +3,65 @@
   --sl-content-width: 50rem;
 }
 
+/* Wrapper added by rehype-accessible-tables. The wrapper owns the scrolling
+   so axe-core's scrollable-region-focusable rule is satisfied; the inner
+   table stays a semantic <table>. Visual chrome lives on the wrapper too
+   so border-radius clips the overflow cleanly. */
+.sl-markdown-content .bs-table-scroll {
+  overflow-x: auto;
+  margin-block: 1.75rem 2.35rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background:
+    linear-gradient(var(--bs-doc-panel-strong), var(--bs-doc-panel-strong)) padding-box,
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--sl-color-accent) 58%, transparent),
+      color-mix(in srgb, var(--bs-doc-cyan) 24%, transparent) 52%,
+      color-mix(in srgb, var(--bs-doc-pink) 34%, transparent)
+    ) border-box;
+  box-shadow:
+    0 20px 60px color-mix(in srgb, var(--bs-doc-glow) 58%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  scrollbar-color: color-mix(in srgb, var(--sl-color-accent) 52%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+.sl-markdown-content .bs-table-scroll:focus-visible {
+  outline: 2px solid var(--sl-color-accent);
+  outline-offset: 3px;
+}
+
+.sl-markdown-content .bs-table-scroll::-webkit-scrollbar {
+  height: 0.7rem;
+}
+
+.sl-markdown-content .bs-table-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sl-markdown-content .bs-table-scroll::-webkit-scrollbar-thumb {
+  border: 0.22rem solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sl-color-accent) 58%, transparent);
+  background-clip: content-box;
+}
+
+/* Diagram caption — accessible text alternative under mermaid blocks. */
+.sl-markdown-content .bs-diagram-caption {
+  margin: -0.75rem auto 1.5rem;
+  max-width: 56ch;
+  text-align: center;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--sl-color-text) 64%, var(--sl-color-gray-3));
+  font-style: italic;
+}
+
+[data-theme="light"] .sl-markdown-content .bs-diagram-caption {
+  color: color-mix(in srgb, var(--sl-color-text) 78%, #0b0d11);
+}
+
 :root[data-theme="dark"] {
   --sl-color-bg: #111315;
   --sl-color-bg-nav: transparent;
@@ -189,43 +248,16 @@ html[data-theme="light"].bs-nav-scrolled site-search button[data-open-modal] {
   text-decoration-color: color-mix(in srgb, var(--bs-doc-cyan) 60%, transparent);
 }
 
-/* Docs tables */
+/* Docs tables — visual chrome is now on .bs-table-scroll (the wrapper added
+   by rehype-accessible-tables); the table stays semantic. The display +
+   overflow resets override Starlight's defaults which otherwise make the
+   table itself the scroll container (axe scrollable-region-focusable). */
 .sl-markdown-content table:not(:where(.not-content *, .starlight-aside *)) {
-  display: block;
+  display: table;
+  overflow: visible;
   width: 100%;
-  margin-block: 1.75rem 2.35rem;
-  overflow: auto;
-  border: 1px solid transparent;
-  border-radius: 8px;
   border-spacing: 0;
-  background:
-    linear-gradient(var(--bs-doc-panel-strong), var(--bs-doc-panel-strong)) padding-box,
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--sl-color-accent) 58%, transparent),
-      color-mix(in srgb, var(--bs-doc-cyan) 24%, transparent) 52%,
-      color-mix(in srgb, var(--bs-doc-pink) 34%, transparent)
-    ) border-box;
-  box-shadow:
-    0 20px 60px color-mix(in srgb, var(--bs-doc-glow) 58%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.035);
-  scrollbar-color: color-mix(in srgb, var(--sl-color-accent) 52%, transparent) transparent;
-  scrollbar-width: thin;
-}
-
-.sl-markdown-content table:not(:where(.not-content *, .starlight-aside *))::-webkit-scrollbar {
-  height: 0.7rem;
-}
-
-.sl-markdown-content table:not(:where(.not-content *, .starlight-aside *))::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sl-markdown-content table:not(:where(.not-content *, .starlight-aside *))::-webkit-scrollbar-thumb {
-  border: 0.22rem solid transparent;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--sl-color-accent) 58%, transparent);
-  background-clip: content-box;
+  margin: 0;
 }
 
 .sl-markdown-content table:not(:where(.not-content *, .starlight-aside *)) thead {

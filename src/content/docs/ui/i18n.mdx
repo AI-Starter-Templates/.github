@@ -47,6 +47,8 @@ flowchart LR
   hook --> component
 ```
 
+<p class="bs-diagram-caption">Translation flow: the LanguageDetector reads the browser's preferred language; JSON catalogs under <code>src/lib/i18n/locales/</code> feed i18next; the <code>useTranslation('common')</code> hook returns <code>t</code>; components call <code>t('key')</code> with statically-checked keys.</p>
+
 ## Using it
 
 ```tsx
@@ -89,3 +91,10 @@ The ui-template's lint config bans hardcoded JSX strings on user-facing text. Nu
 ## Source
 
 [`src/lib/i18n/`](https://github.com/AI-Starter-Templates/ui-template/tree/main/src/lib/i18n); config, locales, and the catalog JSON.
+
+## Related
+
+- [Architecture rules](/ui/architecture-rules/); the component anatomy that hosts `t("…")` calls.
+- [UI template overview](/ui/overview/); where the i18n layer sits in the SPA shell.
+- [Lint as the contract](/architecture/lint-as-contract/); the `eslint-plugin-i18n-keys` rule that catches typos at build.
+- [Testing](/ui/testing/); how view-object tests stay locale-stable.

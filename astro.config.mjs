@@ -1,16 +1,114 @@
+import { execSync } from "node:child_process";
 import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
+import sitemap from "@astrojs/sitemap";
 import starlight from "@astrojs/starlight";
 import tailwindcss from "@tailwindcss/vite";
 import mermaid from "astro-mermaid";
+import starlightLlmsTxt from "starlight-llms-txt";
 
 import cloudflare from "@astrojs/cloudflare";
+
+// Wrap every <table> so wide content stays keyboard-scrollable in Safari/Firefox.
+// Without this, axe-core flags "scrollable-region-focusable" on horizontally
+// overflowing tables (comparison tables, env tables, cost methodology).
+function rehypeAccessibleTables() {
+  return (tree) => {
+    const visit = (node, parent, index) => {
+      if (!node || typeof node !== "object") return;
+      if (
+        node.type === "element" &&
+        node.tagName === "table" &&
+        parent &&
+        !(
+          parent.type === "element" &&
+          parent.tagName === "div" &&
+          parent.properties?.role === "region"
+        )
+      ) {
+        const wrapper = {
+          type: "element",
+          tagName: "div",
+          properties: {
+            role: "region",
+            "aria-label": "Scrollable table",
+            tabIndex: 0,
+            className: ["bs-table-scroll"],
+          },
+          children: [node],
+        };
+        parent.children[index] = wrapper;
+        return;
+      }
+      if (Array.isArray(node.children)) {
+        for (let i = 0; i < node.children.length; i++) {
+          visit(node.children[i], node, i);
+        }
+      }
+    };
+    visit(tree, null, 0);
+  };
+}
+
+// Map each docs entry to the ISO timestamp of its most recent git commit.
+// Empty Map when git history is unavailable (shallow CI clones, etc.).
+function buildDocsLastmodMap() {
+  const map = new Map();
+  try {
+    const out = execSync(
+      "git log --pretty=format:%cI --name-only --diff-filter=AMR -- 'src/content/docs/**/*.mdx' 'src/content/docs/**/*.md'",
+      { encoding: "utf-8" },
+    );
+    let currentDate = "";
+    for (const raw of out.split("\n")) {
+      const line = raw.trim();
+      if (!line) continue;
+      if (/^\d{4}-\d{2}-\d{2}T/.test(line)) {
+        currentDate = line;
+      } else if (currentDate && !map.has(line)) {
+        map.set(line, currentDate);
+      }
+    }
+  } catch {
+    // No git history available — leave the map empty.
+  }
+  return map;
+}
+
+const docsLastmod = buildDocsLastmodMap();
+
+function lastmodForUrl(absoluteUrl) {
+  try {
+    const { pathname } = new URL(absoluteUrl);
+    const slug = pathname.replace(/^\/|\/$/g, "") || "index";
+    for (const ext of ["mdx", "md"]) {
+      const candidate = `src/content/docs/${slug}.${ext}`;
+      if (docsLastmod.has(candidate)) {
+        return docsLastmod.get(candidate);
+      }
+    }
+  } catch {}
+  return undefined;
+}
 
 // https://astro.build/config
 export default defineConfig({
   site: "https://boringstack.xyz",
 
+  markdown: {
+    rehypePlugins: [rehypeAccessibleTables],
+  },
+
   integrations: [
+    sitemap({
+      serialize(item) {
+        const lastmod = lastmodForUrl(item.url);
+        if (lastmod) {
+          item.lastmod = lastmod;
+        }
+        return item;
+      },
+    }),
     react(),
     mermaid({
       theme: "base",
@@ -105,10 +203,20 @@ export default defineConfig({
         "Postgres, HTTP, React, and Compose wired into a SaaS spine you can run locally. Fast Bun and Vite feedback, lint as the contract for humans and agents, OpenAPI between API and UI.",
       favicon: "/favicon.svg",
       customCss: ["./src/styles/tailwind.css", "./src/styles/custom.css"],
+      plugins: [
+        starlightLlmsTxt({
+          projectName: "BoringStack",
+          description:
+            "Composed SaaS starter: React, Bun, Elysia, Postgres, Valkey, Docker Compose, OpenTofu, and architecture lint rules. Production-ready spine for product teams that want ownership and strong defaults.",
+          rawContent: true,
+          exclude: ["index", "404"],
+        }),
+      ],
       tableOfContents: false,
       components: {
         Footer: "./src/components/Footer.astro",
         Header: "./src/components/Header.astro",
+        PageTitle: "./src/components/PageTitle.astro",
         Pagination: "./src/components/Pagination.astro",
       },
       head: [
@@ -262,6 +370,7 @@ export default defineConfig({
             },
             { label: "Repository layout", link: "/architecture/three-repos/" },
             { label: "Stack at a glance", link: "/architecture/stack/" },
+            { label: "Decision log", link: "/architecture/decisions/" },
             {
               label: "Lint as the contract",
               link: "/architecture/lint-as-contract/",
@@ -337,11 +446,22 @@ export default defineConfig({
           ],
         },
         {
+          label: "Recipes",
+          items: [
+            { label: "Add Stripe Checkout", link: "/recipes/add-stripe/" },
+            { label: "Add S3-compatible uploads", link: "/recipes/add-s3-uploads/" },
+            { label: "Add a background job", link: "/recipes/add-background-job/" },
+            { label: "Add a service to Compose", link: "/recipes/add-service-to-compose/" },
+          ],
+        },
+        {
           label: "Reference",
           items: [
             { label: "Environment variables", link: "/reference/env-vars/" },
             { label: "Commands cheatsheet", link: "/reference/commands/" },
+            { label: "Cost methodology", link: "/reference/cost-methodology/" },
             { label: "Glossary", link: "/reference/glossary/" },
+            { label: "What's new", link: "/changelog/" },
           ],
         },
         {

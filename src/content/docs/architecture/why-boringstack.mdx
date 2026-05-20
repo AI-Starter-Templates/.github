@@ -3,6 +3,7 @@ title: Why BoringStack
 description: Battle-tested pieces linked together properly. Production-grade spine, clear layers, and lint that holds the architecture in place.
 ---
 
+import CostCalculator from "../../../components/landing/CostCalculator.tsx";
 import DocCallout from "../../../components/DocCallout.tsx";
 import FeatureGrid from "../../../components/docs-kit/FeatureGrid";
 import PageIntro from "../../../components/docs-kit/PageIntro";
@@ -123,6 +124,8 @@ The core runtime is open source and self-hostable:
 
 That does not mean "never use SaaS." Stripe, Cloudflare, Sentry, Resend, SendGrid, Neon, Supabase, and other managed services can all make sense. The point is that BoringStack does not force your core application onto a platform meter before you have revenue. You can start nearly free on one capable VPS, then buy managed services only where the trade-off is worth it.
 
+<CostCalculator client:load />
+
 ## Compared with common alternatives
 
 | Decision point            | BoringStack                                           | Typical Vercel/serverless starter              | Hosted backend starter                         | One-off SaaS boilerplate                |
@@ -158,6 +161,8 @@ flowchart TB
   edge --> spa
   edge --> http
 ```
+
+<p class="bs-diagram-caption">Three stacked layers: the ui-template SPA sits above the api-template (HTTP server plus BullMQ workers), which sits on the infra layer (Traefik routing in front of Postgres and Valkey). The SPA reaches the API over a typed OpenAPI contract; both the API and the workers read and write the same data plane.</p>
 
 ### API
 

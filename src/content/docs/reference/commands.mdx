@@ -182,3 +182,11 @@ docker compose exec postgres psql -U app -d app
 # Connect to Valkey
 docker compose exec valkey valkey-cli
 ```
+
+## Related
+
+- [Quickstart](/quickstart/); the boot-from-clone path that produces this state.
+- [Environment variables](/reference/env-vars/); every knob you can flip alongside these commands.
+- [Profiles & overlays](/infra/profiles-and-overlays/); what the `WITH_*=1` flags actually toggle.
+- [Glossary](/reference/glossary/); the vocabulary (stack, overlay, profile, merge gate) the commands speak.
+- [Deployment](/topics/deployment/); the production sequence that wraps these locally-run commands.
